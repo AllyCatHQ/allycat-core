@@ -1,102 +1,96 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
-import inquirer from 'inquirer';
+import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 
-const program = new Command();
 const CONFIG_FILE_NAME = 'a11y-config.json';
 
-// רשימת האפשרויות המותרות (לצורך בדיקת אמיתות)
-const FRAMEWORKS = ['react', 'vue', 'angular', 'html'];
-const STANDARDS = ['israel', 'wcag-aa', 'wcag-aaa'];
-
-program
-  .name('a11y-guard')
-  .description('CLI tool for checking accessibility and Israeli standards')
-  .version('1.1.0');
-
-program
-  .command('init')
-  .action(async () => {
-    console.log(chalk.blue.bold('\n🛡️  A11y-Guard CLI Setup'));
+async function main() {
+    console.log(''); // שורת רווח
+    p.intro(`${chalk.bgBlue.white(' A11y-Guard ')} ${chalk.blue('Let\'s make the web accessible')}`);
 
     const configPath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
-    
+
+    // בדיקה אם קיים קובץ
     if (fs.existsSync(configPath)) {
-      const { overwrite } = await inquirer.prompt([{
-          type: 'confirm',
-          name: 'overwrite',
-          message: 'Overwrite existing config?',
-          default: false
-      }]);
-      if (!overwrite) return;
+        const overwrite = await p.confirm({
+            message: 'Configuration already exists. Overwrite it?',
+            initialValue: false,
+        });
+
+        if (p.isCancel(overwrite) || !overwrite) {
+            p.outro(chalk.yellow('Setup cancelled.'));
+            process.exit(0);
+        }
     }
 
-    // השתמשנו ב-rawlist כדי להבטיח תמיכה מלאה ב-VS Code Terminal
-    const answers = await inquirer.prompt([
-      {
-        type: 'rawlist', // שינוי ל-rawlist (בחירה לפי מספרים)
-        name: 'framework',
-        message: 'Select your project framework (type the number):',
-        choices: [
-            { name: 'React (JSX/TSX)', value: 'react' },
-            { name: 'Vue.js', value: 'vue' },
-            { name: 'Angular', value: 'angular' },
-            { name: 'Vanilla HTML/JS', value: 'html' }
-        ]
-      },
-      {
-        type: 'rawlist',
-        name: 'standard',
-        message: 'Select accessibility standard:',
-        choices: [
-            { name: 'Israeli Standard (IS 5568)', value: 'israel' },
-            { name: 'Global (WCAG 2.1 AA)', value: 'wcag-aa' },
-            { name: 'Strict (WCAG 2.1 AAA)', value: 'wcag-aaa' }
-        ]
-      },
-      {
-        type: 'confirm',
-        name: 'checkContrast',
-        message: 'Check Color Contrast?',
-        default: true
-      },
-      {
-        type: 'confirm',
-        name: 'useAI',
-        message: 'Enable AI suggestions?',
-        default: true
-      }
-    ]);
-
-    // --- בדיקת אמיתות התשובות (Validation) ---
-    // אם המשתמש הצליח להכניס ערך לא חוקי (כמו "d")
-    if (!FRAMEWORKS.includes(answers.framework) || !STANDARDS.includes(answers.standard)) {
-        console.log(chalk.red.bold('\n❌ Error: Invalid selection detected!'));
-        console.log(chalk.red('Please select an option from the list using the numbers provided.'));
-        return; // עוצר את השמירה
-    }
-
-    const config = {
-        framework: answers.framework,
-        standard: answers.standard,
-        rules: {
-            checkContrast: answers.checkContrast,
-            rtl: answers.standard === 'israel',
-            level: answers.standard === 'wcag-aaa' ? 'AAA' : 'AA'
+    // שאלון בעיצוב Vite
+    const group = await p.group(
+        {
+            framework: () => 
+                p.select({
+                    message: 'Select your project framework:',
+                    options: [
+                        { value: 'react', label: '⚛️  React' },
+                        { value: 'vue', label: '🟢 Vue.js' },
+                        { value: 'angular', label: '🅰️  Angular' },
+                        { value: 'html', label: '🌐 Vanilla HTML' },
+                    ],
+                }),
+            standard: () => 
+                p.select({
+                    message: 'Which accessibility standard do you need?',
+                    options: [
+                        { value: 'israel', label: '🇮🇱 Israeli Standard (AA + RTL)', hint: 'Recommended' },
+                        { value: 'wcag-aa', label: '🌍 Global WCAG 2.1 AA' },
+                        { value: 'wcag-aaa', label: '🏥 Strict WCAG 2.1 AAA' },
+                    ],
+                }),
+            checkContrast: () => 
+                p.confirm({
+                    message: 'Check for Color Contrast issues?',
+                    initialValue: true,
+                }),
+            useAI: () => 
+                p.confirm({
+                    message: 'Enable AI-powered auto-fix suggestions?',
+                    initialValue: true,
+                }),
         },
-        ai: { enabled: answers.useAI }
+        {
+            onCancel: () => {
+                p.outro(chalk.red('Setup aborted.'));
+                process.exit(0);
+            },
+        }
+    );
+
+    // עיבוד הלוגיקה
+    const config = {
+        framework: group.framework,
+        standard: group.standard,
+        rules: {
+            checkContrast: group.checkContrast,
+            rtl: group.standard === 'israel',
+            level: group.standard === 'wcag-aaa' ? 'AAA' : 'AA'
+        },
+        ai: { enabled: group.useAI }
     };
 
+    // שמירה
+    const s = p.spinner();
+    s.start('Saving configuration...');
+    
     try {
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-      console.log(chalk.green.bold('\n✅ Configuration saved!'));
-      console.log(chalk.cyan(`Framework: ${config.framework}, Standard: ${config.standard}`));
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        s.stop(chalk.green('Configuration saved!'));
+        
+        p.outro(`Next steps: Run ${chalk.cyan('node index.js scan')} to start.`);
     } catch (e) {
-      console.error(chalk.red('Failed to save config'), e);
+        s.stop(chalk.red('Failed to save configuration.'));
+        console.error(e);
     }
-  });
+}
 
-program.parse(process.argv);
+main().catch(console.error);
