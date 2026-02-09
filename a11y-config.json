@@ -1,10 +1,10 @@
 {
-  "framework": "angular",
-  "selectedStandard": "wcag-aaa",
+  "framework": "html",
+  "selectedStandard": "israel",
   "rules": {
-    "checkContrast": true,
-    "rtl": false,
-    "level": "AAA"
+    "checkContrast": false,
+    "rtl": true,
+    "level": "AA"
   },
   "ai": {
     "enabled": false
