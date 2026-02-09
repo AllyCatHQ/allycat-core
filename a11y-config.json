@@ -1,11 +1,12 @@
 {
-  "framework": "react",
-  "standard": "wcag-aa",
+  "framework": "angular",
+  "selectedStandard": "wcag-aaa",
   "rules": {
+    "checkContrast": true,
     "rtl": false,
-    "level": "AA"
+    "level": "AAA"
   },
   "ai": {
-    "enabled": true
+    "enabled": false
   }
 }
