@@ -1,0 +1,12 @@
+{
+  "framework": "angular",
+  "standard": "wcag-aa",
+  "rules": {
+    "checkContrast": false,
+    "rtl": false,
+    "level": "AA"
+  },
+  "ai": {
+    "enabled": false
+  }
+}
