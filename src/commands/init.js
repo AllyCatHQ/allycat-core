@@ -78,5 +78,5 @@ export async function initCommand() {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     s.stop(chalk.green('Configuration saved successfully!'));
 
-    p.outro(`Done! Now run ${chalk.cyan('node index.js scan')} to audit your code.`);
+    p.outro(`Done! Now run ${chalk.cyan('a11y-guard scan')} to audit your code.`);
 }
