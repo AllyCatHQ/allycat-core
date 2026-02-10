@@ -1,2 +1,3 @@
-# node index.js init
-# node index.js scan
+# npm link
+# a11y-guard init
+# a11y-guard scan
