@@ -9,21 +9,16 @@ export async function scanCommand() {
     console.log('');
     p.intro(`${chalk.bgMagenta.white(' A11y-Guard Scan ')}`);
 
-    p.log.info(`Scanning directory: ${process.cwd()}`);
-    
     const configPath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
 
-    // 1. Check if config exists
     if (!fs.existsSync(configPath)) {
         p.log.error(chalk.red('No configuration found.'));
-        p.outro(`Run ${chalk.yellow('a11y-guard init')} first.`);
+        p.outro(`Run ${chalk.yellow('node index.js init')} first.`);
         return;
     }
 
-    // 2. Load the data (This is where 'config' comes from!)
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
 
-    // 3. UI: Show the user what we are doing
     p.note(
         `Mode: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `Framework: ${chalk.bold(config.framework)}\n` +
@@ -32,19 +27,18 @@ export async function scanCommand() {
     );
 
     const s = p.spinner();
-    s.start(`Scanning ${config.framework} files...`);
+    s.start(`Analyzing source files...`);
 
     try {
-        // 4. THE CORE ACTION: Run the audit engine
         const violations = await runA11yAudit(config);
         s.stop(chalk.green('Analysis Complete.'));
 
-        // 5. RESULTS: Loop through the errors found by axe-core
         if (violations.length === 0) {
             p.outro(chalk.green('✔ No accessibility issues found!'));
         } else {
+            console.log(''); // שורת רווח ליופי
             violations.forEach(v => {
-                const impactColor = v.impact === 'critical' ? chalk.red : chalk.yellow;
+                const impactColor = v.impact === 'critical' || v.impact === 'serious' ? chalk.red : chalk.yellow;
                 p.log.error(`${impactColor.bold(v.impact.toUpperCase())}: ${v.description}`);
                 console.log(chalk.dim(`   File: ${v.file}`));
                 console.log(chalk.dim(`   Help: ${v.help}\n`));
