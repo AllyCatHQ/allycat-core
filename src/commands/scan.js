@@ -9,6 +9,8 @@ export async function scanCommand() {
     console.log('');
     p.intro(`${chalk.bgMagenta.white(' A11y-Guard Scan ')}`);
 
+    p.log.info(`Scanning directory: ${process.cwd()}`);
+    
     const configPath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
 
     // 1. Check if config exists
