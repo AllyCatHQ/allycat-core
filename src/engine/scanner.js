@@ -1,64 +1,79 @@
 import { glob } from 'glob';
 import fs from 'fs/promises';
+import { readFileSync } from 'fs';
 import { JSDOM } from 'jsdom';
-import axe from 'axe-core';
+import { createRequire } from 'module';
 import * as p from '@clack/prompts';
 
+// טריק קטן כדי להשיג את קובץ המקור של axe-core
+const require = createRequire(import.meta.url);
+const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
+
 export async function runA11yAudit(config) {
-    // 1. Find relevant files
     const patterns = config.framework === 'html' ? '**/*.html' : '**/*.{jsx,tsx,html}';
-    const files = await glob(patterns, { ignore: ['node_modules/**', 'dist/**'] });
+    const files = await glob(patterns, { ignore: ['node_modules/**', 'dist/**', 'build/**'] });
     
     p.log.info(`Found ${files.length} files to scan.`);
     let allResults = [];
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        p.log.step(`[${i + 1}/${files.length}] Scanning: ${file}`);
-        
         const content = await fs.readFile(file, 'utf8');
         
-        // 2. Create a virtual DOM for axe-core to scan
-        const dom = new JSDOM(content);
-        const { window } = dom;
-
-        // 3. Run axe-core on the virtual DOM
-        const results = await axe.run(window.document, {
-            runOnly: {
-                type: 'tag',
-                values: ['wcag2aa', 'best-practice']
-            }
-        });
-
-        // 4. Map results back to our format
-        if (results.violations.length > 0) {
-            p.log.warn(`Found ${results.violations.length} violations in ${file}`);
-            results.violations.forEach(v => {
-                allResults.push({
-                    file,
-                    id: v.id,
-                    impact: v.impact,
-                    description: v.description,
-                    help: v.help,
-                    nodes: v.nodes.length // How many elements broke this rule
-                });
+        try {
+            // 1. יצירת סביבת דפדפן מדומה שמסוגלת להריץ סקריפטים
+            const dom = new JSDOM(content, { 
+                runScripts: "dangerously", // מאפשר לנו להזריק קוד JS (את axe)
+                resources: "usable"
             });
+            
+            const { window } = dom;
+
+            // 2. הזרקת המוח: אנחנו טוענים את axe-core לתוך החלון המדומה
+            // עכשיו 'window.axe' קיים בתוך ה-JSDOM!
+            window.eval(axeSource);
+
+            // 3. הרצה "פנימית"
+            // אנחנו לא קוראים ל-axe מה-import שלנו, אלא ל-axe שחי בתוך ה-window
+            const results = await window.axe.run(window.document, {
+                runOnly: {
+                    type: 'tag',
+                    values: ['wcag2aa', 'best-practice']
+                },
+                reporter: 'v2' 
+            });
+
+            // 4. איסוף תוצאות
+            if (results.violations.length > 0) {
+                results.violations.forEach(v => {
+                    allResults.push({
+                        file,
+                        id: v.id,
+                        impact: v.impact || 'minor',
+                        description: v.description,
+                        help: v.help,
+                    });
+                });
+            }
+
+            // סגירה נקייה
+            window.close();
+
+        } catch (err) {
+            p.log.error(`Error auditing ${file}: ${err.message}`);
         }
-        
-        // 5. Custom Israeli Rule: RTL Check
+
+        // 5. בדיקת RTL הישראלית (סטטית, לא תלויה ב-axe)
         if (config.rules.rtl && !content.includes('dir="rtl"')) {
-            p.log.warn(`Missing RTL attribute in ${file}`);
             allResults.push({
                 file,
                 id: 'israel-rtl',
                 impact: 'serious',
                 description: 'Israeli law requires RTL direction for Hebrew interfaces.',
-                help: 'Add dir="rtl" to your wrapper element or <html> tag.',
-                nodes: 1
+                help: 'Add dir="rtl" to your <html> tag.',
             });
         }
     }
 
-    p.log.success(`Audit finished. Total issues found: ${allResults.length}`);
     return allResults;
 }
