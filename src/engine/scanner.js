@@ -103,7 +103,7 @@ async function scanFile(file, config) {
         const axeResults = await window.axe.run(window.document, {
             runOnly: {
                 type: 'tag',
-                values: ['wcag2aa', 'best-practice']
+                values: getAxeTags(config)  // Dynamic based on user config
             },
             reporter: 'v2'
         });
@@ -151,4 +151,28 @@ function checkRtlCompliance(document, file) {
     }
 
     return null;
+}
+
+function getAxeTags(config) {
+    const standard = config.selectedStandard;
+    const level = config.rules.level; // 'AA' or 'AAA'
+
+    const tags = ['best-practice'];
+
+    switch (standard) {
+        case 'israel':
+            // Israeli standard is based on WCAG 2.1 AA
+            tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
+            break;
+        case 'wcag-aaa':
+            // AAA includes all lower levels
+            tags.push('wcag2a', 'wcag2aa', 'wcag2aaa', 'wcag21a', 'wcag21aa', 'wcag21aaa');
+            break;
+        case 'wcag-aa':
+        default:
+            tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
+            break;
+    }
+
+    return tags;
 }
