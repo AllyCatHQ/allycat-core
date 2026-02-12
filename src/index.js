@@ -18,8 +18,9 @@ program
 
 // --- SCAN COMMAND ---
 program
-  .command('scan')
-  .description('Audit the project for accessibility issues')
-  .action(scanCommand);
+  .command('scan [target]')
+  .description('Audit specific file or folder for accessibility issues')
+  .option('-o, --output <format>', 'Output format: terminal, json', 'terminal')
+  .action((target, options) => scanCommand(target, options));
 
 program.parse(process.argv);
