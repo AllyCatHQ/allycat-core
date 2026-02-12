@@ -42,6 +42,10 @@ export async function initCommand() {
                     { value: 'wcag-aaa', label: '🏥 Strict Mode (WCAG 2.1 AAA)', hint: 'Government/Medical' },
                 ],
             }),
+            checkRTL: ({ results }) => results.standard !== 'israel' ? p.confirm({
+                message: 'Check for RTL support? (Hebrew, Arabic, Persian)',
+                initialValue: false,
+            }) : Promise.resolve(true),
             checkContrast: () => p.confirm({
                 message: 'Check for Color Contrast issues?',
                 initialValue: true,
@@ -65,7 +69,7 @@ export async function initCommand() {
         selectedStandard: group.standard,
         rules: {
             checkContrast: group.checkContrast,
-            rtl: group.standard === 'israel',
+            rtl: group.standard === 'israel' || group.checkRTL === true,
             level: group.standard === 'wcag-aaa' ? 'AAA' : 'AA'
         },
         ai: {
