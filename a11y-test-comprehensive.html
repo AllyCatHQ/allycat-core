@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<!--
+    A11y-Guard Test File - Comprehensive Accessibility Issues
+    
+    ISSUE CATEGORIES:
+    ==================
+    
+    [GENERAL] - Fails ALL standards (A, AA, AAA)
+    [AA]      - Fails AA and above (not just A)
+    [AAA]     - Fails ONLY AAA strict mode
+    [RTL]     - Fails Israeli RTL requirements
+    [ISRAEL]  - Specific to Israeli standard
+    
+    Use this file to test different configurations.
+-->
+
+<html lang="en">
+<!-- [RTL] Missing dir="rtl" - Israeli standard requires this for Hebrew sites -->
+
+<head>
+    <meta charset="UTF-8">
+    <title>Accessibility Test Page</title>
+    <!-- [AAA] Missing meta description for enhanced accessibility -->
+</head>
+
+<body>
+
+    <!-- ============================================== -->
+    <!-- SECTION 1: GENERAL ISSUES (Fail ALL standards) -->
+    <!-- ============================================== -->
+    
+    <h1>General Accessibility Issues</h1>
+    
+    <!-- [GENERAL] Image without alt attribute - WCAG 1.1.1 (Level A) -->
+    <img src="hero-banner.jpg">
+    
+    <!-- [GENERAL] Another image without alt -->
+    <img src="product-photo.png" width="300" height="200">
+    
+    <!-- [GENERAL] Empty button - no accessible name - WCAG 4.1.2 (Level A) -->
+    <button></button>
+    
+    <!-- [GENERAL] Icon button without label - WCAG 4.1.2 (Level A) -->
+    <button><i class="icon-search"></i></button>
+    
+    <!-- [GENERAL] Empty link - WCAG 2.4.4 (Level A) -->
+    <a href="/page"></a>
+    
+    <!-- [GENERAL] Non-descriptive link text - WCAG 2.4.4 (Level A) -->
+    <a href="/details">Click here</a>
+    <a href="/more">Read more</a>
+    
+    <!-- [GENERAL] Form input without label - WCAG 1.3.1 (Level A) -->
+    <form>
+        <input type="text" name="username" placeholder="Enter username">
+        <input type="email" name="email">
+        <input type="password" name="password">
+        <button type="submit">Submit</button>
+    </form>
+    
+    <!-- [GENERAL] Missing form labels - WCAG 1.3.1 (Level A) -->
+    <select name="country">
+        <option value="">Select country</option>
+        <option value="us">United States</option>
+        <option value="il">Israel</option>
+    </select>
+    
+    <!-- [GENERAL] Skipped heading level (h1 -> h3) - WCAG 1.3.1 (Level A) -->
+    <h1>Main Title</h1>
+    <h3>Skipped to H3</h3>
+    
+    <!-- [GENERAL] Auto-playing media - WCAG 1.4.2 (Level A) -->
+    <video autoplay src="promo.mp4"></video>
+    <audio autoplay src="background.mp3"></audio>
+
+
+    <!-- ============================================== -->
+    <!-- SECTION 2: AA LEVEL ISSUES                    -->
+    <!-- ============================================== -->
+    
+    <h2>AA Level Issues</h2>
+    
+    <!-- [AA] Low contrast text - WCAG 1.4.3 (Level AA) requires 4.5:1 ratio -->
+    <p style="color: #777777; background-color: #ffffff;">
+        This gray text on white background has poor contrast (about 4.48:1).
+    </p>
+    
+    <!-- [AA] Very low contrast - definitely fails AA -->
+    <p style="color: #aaaaaa; background-color: #ffffff;">
+        This light gray text is even harder to read (about 2.32:1).
+    </p>
+    
+    <!-- [AA] Low contrast link -->
+    <a href="/link" style="color: #8888ff; background-color: #ffffff;">
+        Low contrast link
+    </a>
+    
+    <!-- [AA] Text resize issues - WCAG 1.4.4 (Level AA) -->
+    <p style="font-size: 10px; line-height: 1;">
+        This text is too small and has cramped line height.
+    </p>
+    
+    <!-- [AA] Missing language on element with different language - WCAG 3.1.2 (Level AA) -->
+    <p>Welcome to our site. <span>Bienvenue sur notre site.</span></p>
+    
+    <!-- [AA] Inconsistent navigation - WCAG 3.2.3 (Level AA) -->
+    <!-- Navigation should be consistent across pages -->
+    
+    <!-- [AA] Error identification - WCAG 3.3.1 (Level AA) -->
+    <div class="error" style="color: red;">
+        Error in form!
+        <!-- Using only color to indicate error -->
+    </div>
+    
+    <!-- [AA] Focus not visible - WCAG 2.4.7 (Level AA) -->
+    <style>
+        .no-focus:focus { outline: none; }
+    </style>
+    <button class="no-focus">No visible focus</button>
+    
+    
+    <!-- ============================================== -->
+    <!-- SECTION 3: AAA LEVEL ISSUES (Strict Mode)     -->
+    <!-- ============================================== -->
+    
+    <h2>AAA Level Issues (Strict Mode Only)</h2>
+    
+    <!-- [AAA] Contrast below 7:1 - WCAG 1.4.6 (Level AAA) requires 7:1 -->
+    <!-- This passes AA (4.5:1) but fails AAA (7:1) -->
+    <p style="color: #595959; background-color: #ffffff;">
+        This text has 5.9:1 contrast - passes AA but fails AAA.
+    </p>
+    
+    <!-- [AAA] Link not distinguishable by more than color - WCAG 1.4.1 (Level AAA) -->
+    <p>
+        Read our <a href="/policy" style="color: blue; text-decoration: none;">privacy policy</a> for details.
+    </p>
+    
+    <!-- [AAA] No extended audio description - WCAG 1.2.7 (Level AAA) -->
+    <video src="tutorial.mp4" controls>
+        <!-- Has basic controls but no extended description -->
+    </video>
+    
+    <!-- [AAA] Reading level too high - WCAG 3.1.5 (Level AAA) -->
+    <p>
+        The epistemological ramifications of implementing comprehensive 
+        accessibility paradigms necessitate multifaceted considerations 
+        regarding the phenomenological aspects of user interaction dynamics.
+    </p>
+    
+    <!-- [AAA] No sign language interpretation - WCAG 1.2.6 (Level AAA) -->
+    <!-- Video content without sign language option -->
+    
+    <!-- [AAA] Timing not adjustable - WCAG 2.2.3 (Level AAA) -->
+    <div id="session-timeout">
+        Session expires in 30 seconds with no way to extend.
+    </div>
+    
+    <!-- [AAA] No context-sensitive help - WCAG 3.3.5 (Level AAA) -->
+    <input type="text" name="complex-field" placeholder="Enter value">
+    <!-- No contextual help provided for complex input -->
+    
+    <!-- [AAA] Pronunciation not provided - WCAG 3.1.6 (Level AAA) -->
+    <p>The word "lead" can mean different things.</p>
+    <!-- No pronunciation guidance for ambiguous words -->
+
+
+    <!-- ============================================== -->
+    <!-- SECTION 4: RTL / ISRAELI STANDARD ISSUES      -->
+    <!-- ============================================== -->
+    
+    <h2>RTL and Israeli Standard Issues</h2>
+    
+    <!-- [ISRAEL/RTL] Hebrew content without proper RTL -->
+    <p>שלום וברוכים הבאים לאתר שלנו</p>
+    
+    <!-- [ISRAEL/RTL] Mixed content without bidi handling -->
+    <p>המספר הוא 12345 והתאריך 01/01/2024</p>
+    
+    <!-- [ISRAEL/RTL] Hebrew navigation without RTL -->
+    <nav>
+        <a href="/">בית</a>
+        <a href="/about">אודות</a>
+        <a href="/contact">צור קשר</a>
+    </nav>
+    
+    <!-- [ISRAEL/RTL] Hebrew form without RTL alignment -->
+    <form>
+        <label>שם מלא</label>
+        <input type="text" name="fullname">
+        
+        <label>כתובת אימייל</label>
+        <input type="email" name="email">
+        
+        <button type="submit">שלח</button>
+    </form>
+    
+    <!-- [ISRAEL] Missing accessibility menu/widget -->
+    <!-- Israeli law requires accessibility adjustment options -->
+    
+    <!-- [ISRAEL/RTL] Table with Hebrew headers but no RTL -->
+    <table>
+        <thead>
+            <tr>
+                <th>שם</th>
+                <th>תאריך</th>
+                <th>סכום</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ישראל ישראלי</td>
+                <td>01/01/2024</td>
+                <td>₪1,000</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <!-- ============================================== -->
+    <!-- SECTION 5: MIXED ISSUES                       -->
+    <!-- ============================================== -->
+    
+    <h2>Additional Mixed Issues</h2>
+    
+    <!-- [GENERAL] Table without headers - WCAG 1.3.1 (Level A) -->
+    <table>
+        <tr>
+            <td>John</td>
+            <td>Doe</td>
+            <td>30</td>
+        </tr>
+        <tr>
+            <td>Jane</td>
+            <td>Smith</td>
+            <td>25</td>
+        </tr>
+    </table>
+    
+    <!-- [GENERAL] iframe without title - WCAG 2.4.1 (Level A) -->
+    <iframe src="https://example.com/widget"></iframe>
+    
+    <!-- [GENERAL] Redundant alt text -->
+    <img src="logo.png" alt="image">
+    <img src="photo.jpg" alt="photo.jpg">
+    
+    <!-- [AA] Touch target too small - WCAG 2.5.5 (Level AAA) / 2.5.8 (Level AA in 2.2) -->
+    <button style="width: 20px; height: 20px; padding: 0;">X</button>
+    
+    <!-- [GENERAL] Missing document language - already at html level but demonstrating -->
+    
+    <!-- [AA] Content reflow issues - WCAG 1.4.10 (Level AA) -->
+    <div style="width: 2000px; overflow: hidden;">
+        Content that requires horizontal scrolling at 400% zoom.
+    </div>
+    
+    <!-- [GENERAL] Marquee - WCAG 2.2.2 (Level A) - moving content without pause -->
+    <marquee>Breaking news: This is distracting scrolling text!</marquee>
+    
+    <!-- [GENERAL] Blink element - WCAG 2.2.2 (Level A) -->
+    <blink>This text blinks annoyingly!</blink>
+
+</body>
+</html>
