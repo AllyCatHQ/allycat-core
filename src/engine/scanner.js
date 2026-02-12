@@ -1,85 +1,154 @@
 import { glob } from 'glob';
 import fs from 'fs/promises';
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { JSDOM } from 'jsdom';
 import { createRequire } from 'module';
 import * as p from '@clack/prompts';
+import path from 'path';
 
-// Small trick to get the axe-core source file
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
 
-export async function runA11yAudit(config) {
-    const patterns = config.framework === 'html' ? '**/*.html' : '**/*.{jsx,tsx,html}';
-    const files = await glob(patterns, { ignore: ['node_modules/**', 'dist/**', 'build/**'] });
+export async function runA11yAudit(config, targetPath = null) {
+    const files = await resolveFiles(config, targetPath);
 
-    p.log.info(`Found ${files.length} files to scan.`);
-    let allResults = [];
+    if (files.length === 0) {
+        p.log.warn('No matching files found to scan.');
+        return [];
+    }
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const content = await fs.readFile(file, 'utf8');
+    p.log.info(`Found ${files.length} file${files.length > 1 ? 's' : ''} to scan.`);
 
-        try {
-            // 1. Create a virtual browser environment that can run scripts
-            const dom = new JSDOM(content, {
-                runScripts: "dangerously", // Allows us to inject JS code (axe)
-                resources: "usable"
-            });
+    const allResults = [];
 
-            const { window } = dom;
-
-            // 2. Inject the brain: we load axe-core into the virtual window
-            // Now 'window.axe' exists inside the JSDOM!
-            window.eval(axeSource);
-
-            // 3. Internal execution
-            // We don't call axe from our import, but the axe that lives inside the window
-            const results = await window.axe.run(window.document, {
-                runOnly: {
-                    type: 'tag',
-                    values: ['wcag2aa', 'best-practice']
-                },
-                reporter: 'v2'
-            });
-
-            // 4. Collect results
-            if (results.violations.length > 0) {
-                results.violations.forEach(v => {
-                    allResults.push({
-                        file,
-                        id: v.id,
-                        impact: v.impact || 'minor',
-                        description: v.description,
-                        help: v.help,
-                    });
-                });
-            }
-
-            // 5. Israeli RTL check (static, not dependent on axe)
-            // Check if the HTML tag has dir="rtl" attribute
-            if (config.rules.rtl) {
-                const htmlTag = window.document.documentElement;
-                const hasRtlDir = htmlTag && htmlTag.getAttribute('dir') === 'rtl';
-
-                if (!hasRtlDir) {
-                    allResults.push({
-                        file,
-                        id: 'israel-rtl',
-                        impact: 'serious',
-                        description: 'Israeli law requires RTL direction for Hebrew interfaces.',
-                        help: 'Add dir="rtl" to your <html> tag.',
-                    });
-                }
-            }
-
-            // Clean closure
-            window.close();
-
-        } catch (err) {
-            p.log.error(`Error auditing ${file}: ${err.message}`);
-        }
+    for (const file of files) {
+        const results = await scanFile(file, config);
+        allResults.push(...results);
     }
 
     return allResults;
+}
+
+async function resolveFiles(config, targetPath) {
+    // Determine file extensions based on framework
+    const extensions = getExtensions(config.framework);
+
+    if (targetPath) {
+        return await resolveTargetPath(targetPath, extensions);
+    }
+
+    // Default: scan entire project
+    const pattern = `**/*.{${extensions.join(',')}}`;
+    return await glob(pattern, {
+        ignore: ['node_modules/**', 'dist/**', 'build/**']
+    });
+}
+
+function getExtensions(framework) {
+    switch (framework) {
+        case 'react':
+            return ['jsx', 'tsx', 'html'];
+        case 'vue':
+            return ['vue', 'html'];
+        case 'angular':
+            return ['html', 'component.html'];
+        case 'html':
+        default:
+            return ['html'];
+    }
+}
+
+async function resolveTargetPath(targetPath, extensions) {
+    const stats = statSync(targetPath);
+
+    if (stats.isFile()) {
+        // Single file - validate extension
+        const ext = path.extname(targetPath).slice(1);
+        if (extensions.includes(ext)) {
+            return [targetPath];
+        }
+        p.log.warn(`File extension .${ext} not in scan list: ${extensions.join(', ')}`);
+        return [targetPath]; // Scan anyway, let the engine handle it
+    }
+
+    if (stats.isDirectory()) {
+        // Directory - glob within it
+        const pattern = `${targetPath}/**/*.{${extensions.join(',')}}`;
+        return await glob(pattern, {
+            ignore: ['**/node_modules/**', '**/dist/**', '**/build/**']
+        });
+    }
+
+    return [];
+}
+
+async function scanFile(file, config) {
+    const results = [];
+
+    try {
+        const content = await fs.readFile(file, 'utf8');
+
+        // Create virtual browser environment
+        const dom = new JSDOM(content, {
+            runScripts: 'dangerously',
+            resources: 'usable'
+        });
+
+        const { window } = dom;
+
+        // Inject axe-core into the virtual window
+        window.eval(axeSource);
+
+        // Run axe audit
+        const axeResults = await window.axe.run(window.document, {
+            runOnly: {
+                type: 'tag',
+                values: ['wcag2aa', 'best-practice']
+            },
+            reporter: 'v2'
+        });
+
+        // Collect violations
+        axeResults.violations.forEach(v => {
+            results.push({
+                file,
+                id: v.id,
+                impact: v.impact || 'minor',
+                description: v.description,
+                help: v.help,
+            });
+        });
+
+        // Israeli RTL check
+        if (config.rules.rtl) {
+            const rtlViolation = checkRtlCompliance(window.document, file);
+            if (rtlViolation) {
+                results.push(rtlViolation);
+            }
+        }
+
+        window.close();
+
+    } catch (err) {
+        p.log.error(`Error scanning ${file}: ${err.message}`);
+    }
+
+    return results;
+}
+
+function checkRtlCompliance(document, file) {
+    const htmlTag = document.documentElement;
+    const hasRtlDir = htmlTag && htmlTag.getAttribute('dir') === 'rtl';
+
+    if (!hasRtlDir) {
+        return {
+            file,
+            id: 'israel-rtl',
+            impact: 'serious',
+            description: 'Israeli law requires RTL direction for Hebrew interfaces.',
+            help: 'Add dir="rtl" to your <html> tag.',
+        };
+    }
+
+    return null;
 }
