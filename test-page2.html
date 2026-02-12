@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Accessibility Problems Example</title>
+</head>
+<body>
+    <h1>Welcome to My Page</h1>
+
+    <!-- Image without alt attribute (accessibility issue) -->
+    <img src="banner.png">
+
+    <!-- Clickable text without clear purpose for screen readers -->
+    <a href="page2.html">Click here</a>
+
+    <!-- Form without labels (accessibility issue) -->
+    <form action="/submit" method="post">
+        <input type="text" name="username">
+        <input type="password" name="password">
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- Using only color to convey meaning (accessibility issue) -->
+    <p style="color: red;">Items in red are required.</p>
+    <ul>
+        <li style="color: red;">Name</li>
+        <li>Email</li>
+    </ul>
+
+    <!-- Heading levels skipped (accessibility issue) -->
+    <h1>Main Section</h1>
+    <h3>Subsection</h3>
+
+</body>
+</html>
