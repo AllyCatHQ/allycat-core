@@ -9,6 +9,11 @@ import path from 'path';
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
 
+/**
+ * Main audit entry point
+ * @param {Object} config - User configuration
+ * @param {string|null} targetPath - Optional specific file/folder to scan
+ */
 export async function runA11yAudit(config, targetPath = null) {
     const files = await resolveFiles(config, targetPath);
 
@@ -18,6 +23,8 @@ export async function runA11yAudit(config, targetPath = null) {
     }
 
     p.log.info(`Found ${files.length} file${files.length > 1 ? 's' : ''} to scan.`);
+    p.log.info(`Using standard: ${config.selectedStandard.toUpperCase()}`);
+    p.log.info(`Axe tags: ${getAxeTags(config).join(', ')}`);
 
     const allResults = [];
 
@@ -29,8 +36,10 @@ export async function runA11yAudit(config, targetPath = null) {
     return allResults;
 }
 
+/**
+ * Resolve which files to scan based on target path or config
+ */
 async function resolveFiles(config, targetPath) {
-    // Determine file extensions based on framework
     const extensions = getExtensions(config.framework);
 
     if (targetPath) {
@@ -44,6 +53,9 @@ async function resolveFiles(config, targetPath) {
     });
 }
 
+/**
+ * Get file extensions based on framework
+ */
 function getExtensions(framework) {
     switch (framework) {
         case 'react':
@@ -58,21 +70,21 @@ function getExtensions(framework) {
     }
 }
 
+/**
+ * Resolve a specific target path (file or directory)
+ */
 async function resolveTargetPath(targetPath, extensions) {
     const stats = statSync(targetPath);
 
     if (stats.isFile()) {
-        // Single file - validate extension
         const ext = path.extname(targetPath).slice(1);
-        if (extensions.includes(ext)) {
-            return [targetPath];
+        if (!extensions.includes(ext)) {
+            p.log.warn(`File extension .${ext} not in expected list: ${extensions.join(', ')}`);
         }
-        p.log.warn(`File extension .${ext} not in scan list: ${extensions.join(', ')}`);
-        return [targetPath]; // Scan anyway, let the engine handle it
+        return [targetPath];
     }
 
     if (stats.isDirectory()) {
-        // Directory - glob within it
         const pattern = `${targetPath}/**/*.{${extensions.join(',')}}`;
         return await glob(pattern, {
             ignore: ['**/node_modules/**', '**/dist/**', '**/build/**']
@@ -82,6 +94,44 @@ async function resolveTargetPath(targetPath, extensions) {
     return [];
 }
 
+/**
+ * Get axe-core tags based on user's selected standard
+ * 
+ * Tag hierarchy:
+ * - wcag2a, wcag21a: Level A (basic)
+ * - wcag2aa, wcag21aa: Level AA (standard) 
+ * - wcag2aaa, wcag21aaa: Level AAA (strict)
+ */
+function getAxeTags(config) {
+    const tags = ['best-practice'];
+
+    switch (config.selectedStandard) {
+        case 'israel':
+            // Israeli IS 5568 is based on WCAG 2.1 AA
+            tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
+            break;
+
+        case 'wcag-aaa':
+            // AAA includes all levels (A + AA + AAA)
+            tags.push(
+                'wcag2a', 'wcag2aa', 'wcag2aaa',
+                'wcag21a', 'wcag21aa', 'wcag21aaa'
+            );
+            break;
+
+        case 'wcag-aa':
+        default:
+            // AA includes A + AA
+            tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
+            break;
+    }
+
+    return tags;
+}
+
+/**
+ * Scan a single file for accessibility issues
+ */
 async function scanFile(file, config) {
     const results = [];
 
@@ -96,19 +146,19 @@ async function scanFile(file, config) {
 
         const { window } = dom;
 
-        // Inject axe-core into the virtual window
+        // Inject axe-core into virtual browser
         window.eval(axeSource);
 
-        // Run axe audit
+        // Run axe with dynamic tags based on config
         const axeResults = await window.axe.run(window.document, {
             runOnly: {
                 type: 'tag',
-                values: getAxeTags(config)  // Dynamic based on user config
+                values: getAxeTags(config)
             },
             reporter: 'v2'
         });
 
-        // Collect violations
+        // Collect violations with WCAG level info
         axeResults.violations.forEach(v => {
             results.push({
                 file,
@@ -116,10 +166,11 @@ async function scanFile(file, config) {
                 impact: v.impact || 'minor',
                 description: v.description,
                 help: v.help,
+                wcagTags: v.tags.filter(t => t.startsWith('wcag')),
             });
         });
 
-        // Israeli RTL check
+        // Israeli RTL compliance check
         if (config.rules.rtl) {
             const rtlViolation = checkRtlCompliance(window.document, file);
             if (rtlViolation) {
@@ -136,6 +187,9 @@ async function scanFile(file, config) {
     return results;
 }
 
+/**
+ * Check RTL compliance for Israeli standard
+ */
 function checkRtlCompliance(document, file) {
     const htmlTag = document.documentElement;
     const hasRtlDir = htmlTag && htmlTag.getAttribute('dir') === 'rtl';
@@ -147,32 +201,9 @@ function checkRtlCompliance(document, file) {
             impact: 'serious',
             description: 'Israeli law requires RTL direction for Hebrew interfaces.',
             help: 'Add dir="rtl" to your <html> tag.',
+            wcagTags: ['israeli-standard'],
         };
     }
 
     return null;
-}
-
-function getAxeTags(config) {
-    const standard = config.selectedStandard;
-    const level = config.rules.level; // 'AA' or 'AAA'
-
-    const tags = ['best-practice'];
-
-    switch (standard) {
-        case 'israel':
-            // Israeli standard is based on WCAG 2.1 AA
-            tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
-            break;
-        case 'wcag-aaa':
-            // AAA includes all lower levels
-            tags.push('wcag2a', 'wcag2aa', 'wcag2aaa', 'wcag21a', 'wcag21aa', 'wcag21aaa');
-            break;
-        case 'wcag-aa':
-        default:
-            tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
-            break;
-    }
-
-    return tags;
 }
