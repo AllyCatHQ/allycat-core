@@ -1,0 +1,12 @@
+{
+  "framework": "react",
+  "selectedStandard": "israel",
+  "rules": {
+    "checkContrast": true,
+    "rtl": true,
+    "level": "AA"
+  },
+  "ai": {
+    "enabled": true
+  }
+}
