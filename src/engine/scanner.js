@@ -1,7 +1,7 @@
 import { glob } from 'glob';
 import fs from 'fs/promises';
 import { readFileSync, statSync } from 'fs';
-import { JSDOM } from 'jsdom';
+import { JSDOM, VirtualConsole } from 'jsdom';
 import { createRequire } from 'module';
 import * as p from '@clack/prompts';
 import path from 'path';
@@ -141,7 +141,14 @@ async function scanFile(file, config) {
         // Create virtual browser environment
         const dom = new JSDOM(content, {
             runScripts: 'dangerously',
-            resources: 'usable'
+            resources: 'usable',
+            pretendToBeVisual: true,
+            virtualConsole: (() => {
+                const vc = new VirtualConsole();
+                vc.on('error', () => { }); // Suppress errors
+                vc.on('warn', () => { });  // Suppress warnings
+                return vc;
+            })()
         });
 
         const { window } = dom;
