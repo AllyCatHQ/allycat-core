@@ -114,7 +114,7 @@ function outputTerminal(violations, scanMode) {
         
         p.log.error(`${impactColor.bold(v.impact.toUpperCase())}: ${v.description}`);
         console.log(chalk.dim(`   Rule: ${v.id}`));
-        console.log(chalk.dim(`   File: ${v.file}`));
+        console.log(chalk.cyan(`   File: ${v.file}`));
         console.log(chalk.dim(`   Help: ${v.help}`));
         
         if (v.wcagTags && v.wcagTags.length > 0) {
