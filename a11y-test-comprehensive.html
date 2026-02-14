@@ -30,7 +30,11 @@
     <!-- ============================================== -->
     
     <h1>General Accessibility Issues</h1>
-    
+    <!-- [AA] ~2.32:1 contrast - should fail AA -->
+<p style="color: #aaaaaa; background-color: #ffffff;">Light gray text</p>
+
+<!-- [AAA] ~5.9:1 contrast - passes AA, should fail AAA -->
+<p style="color: #595959; background-color: #ffffff;">Medium gray text</p>
     <!-- [GENERAL] Image without alt attribute - WCAG 1.1.1 (Level A) -->
     <img src="hero-banner.jpg">
     
