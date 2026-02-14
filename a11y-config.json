@@ -2,9 +2,11 @@
   "framework": "react",
   "selectedStandard": "israel",
   "rules": {
-    "checkContrast": true,
     "rtl": true,
     "level": "AA"
+  },
+  "scan": {
+    "defaultMode": "quick"
   },
   "ai": {
     "enabled": true

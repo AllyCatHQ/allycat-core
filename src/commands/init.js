@@ -22,7 +22,7 @@ export async function initCommand() {
         }
     }
 
-    // The full original questionnaire
+    // Configuration questionnaire
     const group = await p.group(
         {
             framework: () => p.select({
@@ -46,12 +46,23 @@ export async function initCommand() {
                 message: 'Check for RTL support? (Hebrew, Arabic, Persian)',
                 initialValue: false,
             }) : Promise.resolve(true),
-            checkContrast: () => p.confirm({
-                message: 'Check for Color Contrast issues?',
-                initialValue: true,
+            scanMode: () => p.select({
+                message: 'Default scan mode:',
+                options: [
+                    {
+                        value: 'quick',
+                        label: '⚡ Quick Scan',
+                        hint: 'Fast (~1s), skips contrast check'
+                    },
+                    {
+                        value: 'full',
+                        label: '🔍 Full Scan',
+                        hint: 'Slower (~5s), includes contrast check'
+                    },
+                ],
             }),
             useAI: () => p.confirm({
-                message: 'Enable AI-powered auto-fix suggestions?',
+                message: 'Enable AI-powered fix suggestions?',
                 initialValue: true,
             }),
         },
@@ -63,24 +74,42 @@ export async function initCommand() {
         }
     );
 
-    // Logic to translate choices into technical rules
+    // Build configuration object
     const config = {
         framework: group.framework,
         selectedStandard: group.standard,
         rules: {
-            checkContrast: group.checkContrast,
             rtl: group.standard === 'israel' || group.checkRTL === true,
             level: group.standard === 'wcag-aaa' ? 'AAA' : 'AA'
+        },
+        scan: {
+            defaultMode: group.scanMode  // 'quick' or 'full'
         },
         ai: {
             enabled: group.useAI
         }
     };
 
+    // Save configuration
     const s = p.spinner();
     s.start('Generating your config file...');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     s.stop(chalk.green('Configuration saved successfully!'));
 
-    p.outro(`Done! Now run ${chalk.cyan('a11y-guard scan')} to audit your code.`);
+    // Show summary
+    p.note(
+        `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
+        `Framework: ${chalk.bold(config.framework)}\n` +
+        `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
+        `Default Mode: ${chalk.bold(config.scan.defaultMode === 'full' ? 'Full (with contrast)' : 'Quick (fast)')}\n` +
+        `AI Suggestions: ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}`,
+        'Configuration Summary'
+    );
+
+    // Show next steps
+    const modeHint = config.scan.defaultMode === 'quick'
+        ? `\nTip: Use ${chalk.cyan('a11y-guard scan --full')} for contrast checking.`
+        : '';
+
+    p.outro(`Done! Run ${chalk.cyan('a11y-guard scan')} to audit your code.${modeHint}`);
 }
