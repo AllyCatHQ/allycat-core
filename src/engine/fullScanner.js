@@ -24,7 +24,7 @@ import {
     resolveFiles,
     getAxeTags,
     createRtlViolation,
-    processAxeViolations
+    createViolationFromNode
 } from '../utils/scannerUtils.js';
 import { findLineNumber } from '../utils/sourceMapper.js';
 
@@ -120,34 +120,26 @@ function enhanceWithContrastData(violation, axeViolation, node) {
  */
 function processFullScanViolations(filePath, violations, sourceContent) {
     const results = [];
-
     for (const violation of violations) {
         for (const node of violation.nodes) {
-            const htmlSnippet = node.html;
-            const cssSelector = node.target?.[0] || '';
-            const lineNumber = findLineNumber(sourceContent, htmlSnippet);
+            // Reuse shared violation creation logic
+            const baseViolation = createViolationFromNode(
+                filePath,
+                violation,
+                node,
+                sourceContent
+            );
 
-            let result = {
-                file: filePath,
-                id: violation.id,
-                impact: violation.impact || 'minor',
-                description: violation.description,
-                help: violation.help,
-                helpUrl: violation.helpUrl,
-                wcagTags: violation.tags.filter(tag => tag.startsWith('wcag')),
-                selector: cssSelector,
-                html: htmlSnippet,
-                lineNumber,
-                failureSummary: node.failureSummary,
-            };
+            // Enhance with contrast data if applicable (full scan specific)
+            const enhancedViolation = enhanceWithContrastData(
+                baseViolation,
+                violation,
+                node
+            );
 
-            // Add contrast data if applicable
-            result = enhanceWithContrastData(result, violation, node);
-
-            results.push(result);
+            results.push(enhancedViolation);
         }
     }
-
     return results;
 }
 
