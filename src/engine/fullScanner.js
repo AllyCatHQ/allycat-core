@@ -50,7 +50,6 @@ export async function runFullAudit(config, targetPath = null) {
     p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
     p.log.info('Using Playwright for full accessibility audit (including contrast)...');
 
-    // Launch browser once for all files
     const browser = await chromium.launch({ headless: true });
     const allViolations = [];
 
@@ -107,11 +106,13 @@ function enhanceWithContrastData(violation, axeViolation, node) {
 }
 
 // -----------------------------------------------------------------------------
-// Violation Processing (Full Scanner Specific)
+// Violation Processing
 // -----------------------------------------------------------------------------
 
 /**
  * Process axe violations with contrast data support
+ * 
+ * Uses shared createViolationFromNode() and enhances with contrast data.
  * 
  * @param {string} filePath - Source file path
  * @param {Array} violations - Array of axe violation objects
@@ -204,7 +205,6 @@ async function scanSingleFile(browser, filePath, config) {
 
         const axeResults = await axeBuilder.analyze();
 
-        // Process violations with contrast data support
         const axeViolations = processFullScanViolations(
             filePath,
             axeResults.violations,
@@ -212,7 +212,6 @@ async function scanSingleFile(browser, filePath, config) {
         );
         violations.push(...axeViolations);
 
-        // Check Israeli RTL compliance if enabled
         if (config.rules.rtl) {
             const rtlViolation = await checkRtlCompliancePlaywright(
                 page,
