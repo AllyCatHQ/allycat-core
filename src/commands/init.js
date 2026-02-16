@@ -1,17 +1,13 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
-import fs from 'fs';
-import path from 'path';
-import { CONFIG_FILE_NAME } from '../constants.js';
+import { configExists, saveConfig, getConfigPath } from '../utils/configLoader.js';
 
 export async function initCommand() {
     console.log('');
     p.intro(`${chalk.bgBlue.white(' A11y-Guard Setup ')}`);
 
-    const configPath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
-
     // Check if config exists
-    if (fs.existsSync(configPath)) {
+    if (configExists()) {
         const overwrite = await p.confirm({
             message: 'Configuration already exists. Overwrite it?',
             initialValue: false,
@@ -83,7 +79,7 @@ export async function initCommand() {
             level: group.standard === 'wcag-aaa' ? 'AAA' : 'AA'
         },
         scan: {
-            defaultMode: group.scanMode  // 'quick' or 'full'
+            defaultMode: group.scanMode
         },
         ai: {
             enabled: group.useAI
@@ -93,7 +89,7 @@ export async function initCommand() {
     // Save configuration
     const s = p.spinner();
     s.start('Generating your config file...');
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    saveConfig(config);
     s.stop(chalk.green('Configuration saved successfully!'));
 
     // Show summary
