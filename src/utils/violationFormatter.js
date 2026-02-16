@@ -108,6 +108,85 @@ function formatLocation(violation) {
     return displyedLocation;
 }
 
+// -----------------------------------------------------------------------------
+// Shared Helpers
+// -----------------------------------------------------------------------------
+
+/**
+ * Count violations grouped by impact level
+ * 
+ * @param {Array} violations - Array of violation objects
+ * @returns {Object} - Counts by impact level
+ */
+export function countByImpact(violations) {
+    return {
+        critical: violations.filter(v => v.impact === 'critical').length,
+        serious: violations.filter(v => v.impact === 'serious').length,
+        moderate: violations.filter(v => v.impact === 'moderate').length,
+        minor: violations.filter(v => v.impact === 'minor').length,
+    };
+}
+
+/**
+ * Group violations by file path
+ * 
+ * @param {Array} violations - Array of violation objects
+ * @returns {Object} - Violations grouped by file with counts
+ */
+export function groupByFile(violations) {
+    return violations.reduce((accumulator, violation) => {
+        const filePath = violation.file;
+
+        if (!accumulator[filePath]) {
+            accumulator[filePath] = { count: 0, critical: 0, serious: 0 };
+        }
+
+        accumulator[filePath].count++;
+
+        if (violation.impact === 'critical') {
+            accumulator[filePath].critical++;
+        }
+        if (violation.impact === 'serious') {
+            accumulator[filePath].serious++;
+        }
+
+        return accumulator;
+    }, {});
+}
+
+/**
+ * Format a single violation for JSON output
+ * 
+ * @param {Object} violation - Violation object
+ * @returns {Object} - JSON-formatted violation
+ */
+export function formatViolationForJson(violation) {
+    const formatted = {
+        file: violation.file,
+        line: violation.lineNumber,
+        rule: violation.id,
+        impact: violation.impact,
+        description: violation.description,
+        help: violation.help,
+        helpUrl: violation.helpUrl,
+        wcag: violation.wcagTags,
+        element: {
+            selector: violation.selector,
+            html: violation.html
+        }
+    };
+
+    if (violation.contrastData) {
+        formatted.contrast = violation.contrastData;
+    }
+
+    return formatted;
+}
+
+// -----------------------------------------------------------------------------
+// Terminal Formatting
+// -----------------------------------------------------------------------------
+
 /**
  * Format summary statistics
  * 
@@ -120,13 +199,8 @@ export function formatSummary(violations, scanMode) {
         return chalk.green('✔ No accessibility issues found!');
     }
     
-    // Group by impact
-    const byImpact = {
-        critical: violations.filter(v => v.impact === 'critical').length,
-        serious: violations.filter(v => v.impact === 'serious').length,
-        moderate: violations.filter(v => v.impact === 'moderate').length,
-        minor: violations.filter(v => v.impact === 'minor').length
-    };
+    // Use shared helper
+    const byImpact = countByImpact(violations);
     
     // Group by file
     const byFile = violations.reduce((acc, v) => {
