@@ -8,7 +8,7 @@ const program = new Command();
 program
   .name('a11y-guard')
   .description('Professional CLI for accessibility compliance')
-  .version('1.2.0');
+  .version('1.0.0');
 
 // --- INITIALIZATION COMMAND ---
 program
@@ -23,6 +23,7 @@ program
   .option('-o, --output <format>', 'Output format: terminal, json', 'terminal')
   .option('-q, --quick', 'Quick scan (fast, skips contrast check)')
   .option('-f, --full', 'Full scan (slower, includes contrast check)')
+  .option('--group-by-file', 'Group violations by file (default)', true)
   .action((target, options) => scanCommand(target, options));
 
 program.parse(process.argv);
