@@ -18,220 +18,63 @@
 
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
-import { glob } from 'glob';
 import fs from 'fs/promises';
-import { statSync } from 'fs';
 import * as p from '@clack/prompts';
-import path from 'path';
+import {
+    resolveFiles,
+    getAxeTags,
+    createRtlViolation,
+    processAxeViolations
+} from '../utils/scannerUtils.js';
 import { findLineNumber } from '../utils/sourceMapper.js';
+
+// -----------------------------------------------------------------------------
+// Public API
+// -----------------------------------------------------------------------------
 
 /**
  * Main full audit entry point
+ * 
  * @param {Object} config - User configuration
  * @param {string|null} targetPath - Optional specific file/folder to scan
+ * @returns {Promise<Array>} - Array of violation objects
  */
 export async function runFullAudit(config, targetPath = null) {
-    const files = await resolveFiles(config, targetPath);
+    const filesToScan = await resolveFiles(config, targetPath);
 
-    if (files.length === 0) {
+    if (filesToScan.length === 0) {
         p.log.warn('No matching files found to scan.');
         return [];
     }
 
-    p.log.info(`Found ${files.length} file${files.length > 1 ? 's' : ''} to scan.`);
+    p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
     p.log.info('Using Playwright for full accessibility audit (including contrast)...');
 
     // Launch browser once for all files
     const browser = await chromium.launch({ headless: true });
-    const allResults = [];
+    const allViolations = [];
 
     try {
-        for (const file of files) {
-            const results = await scanFile(browser, file, config);
-            allResults.push(...results);
+        for (const filePath of filesToScan) {
+            const fileViolations = await scanSingleFile(browser, filePath, config);
+            allViolations.push(...fileViolations);
         }
     } finally {
         await browser.close();
     }
 
-    return allResults;
+    return allViolations;
 }
 
-/**
- * Resolve which files to scan based on target path or config
- */
-async function resolveFiles(config, targetPath) {
-    const extensions = getExtensions(config.framework);
-
-    if (targetPath) {
-        return await resolveTargetPath(targetPath, extensions);
-    }
-
-    const pattern = `**/*.{${extensions.join(',')}}`;
-    return await glob(pattern, {
-        ignore: ['node_modules/**', 'dist/**', 'build/**']
-    });
-}
-
-/**
- * Get file extensions based on framework
- */
-function getExtensions(framework) {
-    switch (framework) {
-        case 'react':
-            return ['jsx', 'tsx', 'html'];
-        case 'vue':
-            return ['vue', 'html'];
-        case 'angular':
-            return ['html', 'component.html'];
-        case 'html':
-        default:
-            return ['html'];
-    }
-}
-
-/**
- * Resolve a specific target path (file or directory)
- */
-async function resolveTargetPath(targetPath, extensions) {
-    const stats = statSync(targetPath);
-
-    if (stats.isFile()) {
-        return [targetPath];
-    }
-
-    if (stats.isDirectory()) {
-        const pattern = `${targetPath}/**/*.{${extensions.join(',')}}`;
-        return await glob(pattern, {
-            ignore: ['**/node_modules/**', '**/dist/**', '**/build/**']
-        });
-    }
-
-    return [];
-}
-
-/**
- * Get axe-core tags based on user's selected standard
- */
-function getAxeTags(config) {
-    const tags = ['best-practice'];
-
-    switch (config.selectedStandard) {
-        case 'israel':
-            tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
-            break;
-
-        case 'wcag-aaa':
-            tags.push(
-                'wcag2a', 'wcag2aa', 'wcag2aaa',
-                'wcag21a', 'wcag21aa', 'wcag21aaa'
-            );
-            break;
-
-        case 'wcag-aa':
-        default:
-            tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
-            break;
-    }
-
-    return tags;
-}
-
-/**
- * Scan a single file using Playwright
- */
-async function scanFile(browser, file, config) {
-    const results = [];
-
-    try {
-        const content = await fs.readFile(file, 'utf8');
-        
-        const context = await browser.newContext();
-        const page = await context.newPage();
-
-        await page.setContent(content, { 
-            waitUntil: 'domcontentloaded' 
-        });
-
-        const axeBuilder = new AxeBuilder({ page })
-            .withTags(getAxeTags(config));
-
-        const axeResults = await axeBuilder.analyze();
-
-        // Process each violation - one result per element
-        for (const violation of axeResults.violations) {
-            for (const node of violation.nodes) {
-                const htmlSnippet = node.html;
-                const selector = node.target?.[0] || '';
-                
-                // Find line number by matching HTML snippet
-                const lineNumber = findLineNumber(content, htmlSnippet);
-                
-                const result = {
-                    file,
-                    id: violation.id,
-                    impact: violation.impact || 'minor',
-                    description: violation.description,
-                    help: violation.help,
-                    helpUrl: violation.helpUrl,
-                    wcagTags: violation.tags.filter(t => t.startsWith('wcag')),
-                    // Location data
-                    selector,
-                    html: htmlSnippet,
-                    lineNumber,
-                    // Failure details
-                    failureSummary: node.failureSummary,
-                };
-
-                // Add contrast data if applicable
-                if (violation.id.includes('contrast')) {
-                    result.contrastData = extractContrastData(node);
-                }
-
-                results.push(result);
-            }
-        }
-
-        // Israeli RTL compliance check
-        if (config.rules.rtl) {
-            const hasRtl = await page.evaluate(() => {
-                return document.documentElement.getAttribute('dir') === 'rtl';
-            });
-
-            if (!hasRtl) {
-                const htmlSnippet = await page.evaluate(() => {
-                    const html = document.documentElement;
-                    return html.outerHTML.split('>')[0] + '>';
-                });
-                
-                const lineNumber = findLineNumber(content, '<html');
-                
-                results.push({
-                    file,
-                    id: 'israel-rtl',
-                    impact: 'serious',
-                    description: 'Israeli law requires RTL direction for Hebrew interfaces.',
-                    help: 'Add dir="rtl" to your <html> tag.',
-                    helpUrl: 'https://www.gov.il/he/departments/policies/accessibility_standard',
-                    wcagTags: ['israeli-standard'],
-                    selector: 'html',
-                    html: htmlSnippet,
-                    lineNumber,
-                });
-            }
-        }
-
-        await context.close();
-
-    } catch (err) {
-        p.log.error(`Error scanning ${file}: ${err.message}`);
-    }
-
-    return results;
-}
+// -----------------------------------------------------------------------------
+// Contrast Data Extraction
+// -----------------------------------------------------------------------------
 
 /**
  * Extract contrast-specific data from violation node
+ * 
+ * @param {Object} node - Axe violation node
+ * @returns {Object} - Contrast data object
  */
 function extractContrastData(node) {
     const data = node.any?.[0]?.data || {};
@@ -243,4 +86,157 @@ function extractContrastData(node) {
         fontSize: data.fontSize,
         fontWeight: data.fontWeight,
     };
+}
+
+/**
+ * Enhance violation with contrast data if applicable
+ * 
+ * @param {Object} violation - Base violation object
+ * @param {Object} axeViolation - Original axe violation
+ * @param {Object} node - Axe node data
+ * @returns {Object} - Enhanced violation object
+ */
+function enhanceWithContrastData(violation, axeViolation, node) {
+    if (axeViolation.id.includes('contrast')) {
+        return {
+            ...violation,
+            contrastData: extractContrastData(node)
+        };
+    }
+    return violation;
+}
+
+// -----------------------------------------------------------------------------
+// Violation Processing (Full Scanner Specific)
+// -----------------------------------------------------------------------------
+
+/**
+ * Process axe violations with contrast data support
+ * 
+ * @param {string} filePath - Source file path
+ * @param {Array} violations - Array of axe violation objects
+ * @param {string} sourceContent - Original source code
+ * @returns {Array} - Array of formatted violation results
+ */
+function processFullScanViolations(filePath, violations, sourceContent) {
+    const results = [];
+
+    for (const violation of violations) {
+        for (const node of violation.nodes) {
+            const htmlSnippet = node.html;
+            const cssSelector = node.target?.[0] || '';
+            const lineNumber = findLineNumber(sourceContent, htmlSnippet);
+
+            let result = {
+                file: filePath,
+                id: violation.id,
+                impact: violation.impact || 'minor',
+                description: violation.description,
+                help: violation.help,
+                helpUrl: violation.helpUrl,
+                wcagTags: violation.tags.filter(tag => tag.startsWith('wcag')),
+                selector: cssSelector,
+                html: htmlSnippet,
+                lineNumber,
+                failureSummary: node.failureSummary,
+            };
+
+            // Add contrast data if applicable
+            result = enhanceWithContrastData(result, violation, node);
+
+            results.push(result);
+        }
+    }
+
+    return results;
+}
+
+// -----------------------------------------------------------------------------
+// Israeli RTL Compliance (Playwright-specific)
+// -----------------------------------------------------------------------------
+
+/**
+ * Check RTL compliance using Playwright page
+ * 
+ * @param {Object} page - Playwright page object
+ * @param {string} filePath - Source file path
+ * @param {string} sourceContent - Original source code
+ * @returns {Promise<Object|null>} - RTL violation object or null
+ */
+async function checkRtlCompliancePlaywright(page, filePath, sourceContent) {
+    const hasRtl = await page.evaluate(() => {
+        return document.documentElement.getAttribute('dir') === 'rtl';
+    });
+
+    if (hasRtl) {
+        return null;
+    }
+
+    const htmlOpenTag = await page.evaluate(() => {
+        const html = document.documentElement;
+        return html.outerHTML.split('>')[0] + '>';
+    });
+
+    const lineNumber = findLineNumber(sourceContent, '<html');
+
+    return createRtlViolation(filePath, htmlOpenTag, lineNumber);
+}
+
+// -----------------------------------------------------------------------------
+// File Scanning
+// -----------------------------------------------------------------------------
+
+/**
+ * Scan a single file using Playwright
+ * 
+ * @param {Object} browser - Playwright browser instance
+ * @param {string} filePath - File path to scan
+ * @param {Object} config - User configuration
+ * @returns {Promise<Array>} - Array of violation objects
+ */
+async function scanSingleFile(browser, filePath, config) {
+    const violations = [];
+
+    try {
+        const sourceContent = await fs.readFile(filePath, 'utf8');
+
+        const context = await browser.newContext();
+        const page = await context.newPage();
+
+        await page.setContent(sourceContent, {
+            waitUntil: 'domcontentloaded'
+        });
+
+        const axeBuilder = new AxeBuilder({ page })
+            .withTags(getAxeTags(config));
+
+        const axeResults = await axeBuilder.analyze();
+
+        // Process violations with contrast data support
+        const axeViolations = processFullScanViolations(
+            filePath,
+            axeResults.violations,
+            sourceContent
+        );
+        violations.push(...axeViolations);
+
+        // Check Israeli RTL compliance if enabled
+        if (config.rules.rtl) {
+            const rtlViolation = await checkRtlCompliancePlaywright(
+                page,
+                filePath,
+                sourceContent
+            );
+            if (rtlViolation) {
+                violations.push(rtlViolation);
+            }
+        }
+
+        await context.close();
+
+    } catch (error) {
+        p.log.error(`Error scanning ${filePath}: ${error.message}`);
+    }
+
+    return violations;
 }
