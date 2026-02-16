@@ -39,7 +39,7 @@ export function formatViolation(violation, options = {}) {
     
     // File location with line number (clickable in VS Code / iTerm2)
     const location = formatLocation(violation);
-    lines.push(chalk.cyan(`   File: ${location}`));
+    lines.push(location);
     
     // Element selector (simplified)
     if (showSelector && violation.selector) {
@@ -54,9 +54,9 @@ export function formatViolation(violation, options = {}) {
     }
     
     // Line number highlight
-    if (violation.lineNumber) {
-        lines.push(chalk.green(`   Line: ${violation.lineNumber}`));
-    }
+    // if (violation.lineNumber) {
+    //     lines.push(chalk.green(`   Line: ${violation.lineNumber}`));
+    // }
     
     // Help text
     lines.push(chalk.dim(`   Help: ${violation.help}`));
@@ -99,13 +99,13 @@ function formatImpact(impact) {
  */
 function formatLocation(violation) {
     const { file, lineNumber } = violation;
+   const displyedLocation = chalk.cyan(`   File: ${file}`);
     
     if (lineNumber) {
-        // Format as "file:line" - clickable in VS Code terminal
-        return `${file}:${lineNumber}`;
+        return displyedLocation+chalk.green(`:${lineNumber}`);
     }
     
-    return file;
+    return displyedLocation;
 }
 
 /**
