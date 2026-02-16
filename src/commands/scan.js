@@ -9,9 +9,9 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import { CONFIG_FILE_NAME } from '../constants.js';
+import { loadConfig } from '../utils/configLoader.js';
 import { runQuickAudit } from '../engine/quickScanner.js';
-import { formatSummary, formatByFile } from '../utils/violationFormatter.js';
+import { formatSummary, formatByFile, countByImpact, groupByFile, formatViolationForJson } from '../utils/violationFormatter.js';
 import { runFullAudit } from '../engine/fullScanner.js';
 
 // -----------------------------------------------------------------------------
@@ -60,15 +60,15 @@ export async function scanCommand(target = null, options = {}) {
  * @returns {Object|null} - Configuration object or null if not found
  */
 function loadConfiguration() {
-    const configPath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
+    const config = loadConfig();
 
-    if (!fs.existsSync(configPath)) {
+    if (!config) {
         p.log.error(chalk.red('No configuration found.'));
         p.outro(`Run ${chalk.yellow('a11y-guard init')} first.`);
         return null;
     }
 
-    return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    return config;
 }
 
 /**
@@ -319,80 +319,8 @@ function buildJsonReport(violations, config, scanMode) {
         rtlEnabled: config.rules.rtl,
         contrastChecked: scanMode === 'full',
         totalViolations: violations.length,
-        summary: buildImpactSummary(violations),
-        byFile: groupViolationsByFile(violations),
+        summary: countByImpact(violations),
+        byFile: groupByFile(violations),
         violations: violations.map(formatViolationForJson)
     };
-}
-
-/**
- * Build impact summary counts
- * 
- * @param {Array} violations - Scan violations
- * @returns {Object} - Impact counts
- */
-function buildImpactSummary(violations) {
-    return {
-        critical: violations.filter(v => v.impact === 'critical').length,
-        serious: violations.filter(v => v.impact === 'serious').length,
-        moderate: violations.filter(v => v.impact === 'moderate').length,
-        minor: violations.filter(v => v.impact === 'minor').length,
-    };
-}
-
-/**
- * Group violations by file for JSON output
- * 
- * @param {Array} violations - Scan violations
- * @returns {Object} - Violations grouped by file path
- */
-function groupViolationsByFile(violations) {
-    return violations.reduce((accumulator, violation) => {
-        const filePath = violation.file;
-
-        if (!accumulator[filePath]) {
-            accumulator[filePath] = { count: 0, critical: 0, serious: 0 };
-        }
-
-        accumulator[filePath].count++;
-
-        if (violation.impact === 'critical') {
-            accumulator[filePath].critical++;
-        }
-        if (violation.impact === 'serious') {
-            accumulator[filePath].serious++;
-        }
-
-        return accumulator;
-    }, {});
-}
-
-/**
- * Format a single violation for JSON output
- * 
- * @param {Object} violation - Violation object
- * @returns {Object} - JSON-formatted violation
- */
-function formatViolationForJson(violation) {
-    const formatted = {
-        file: violation.file,
-        line: violation.lineNumber,
-        rule: violation.id,
-        impact: violation.impact,
-        description: violation.description,
-        help: violation.help,
-        helpUrl: violation.helpUrl,
-        wcag: violation.wcagTags,
-        element: {
-            selector: violation.selector,
-            html: violation.html
-        }
-    };
-
-    // Add contrast data if present
-    if (violation.contrastData) {
-        formatted.contrast = violation.contrastData;
-    }
-
-    return formatted;
 }
