@@ -135,107 +135,118 @@ function getAxeTags(config) {
 }
 
 /**
- * Scan a single file for accessibility issues
+ * Create a quiet virtual console (suppresses JSDOM warnings)
  */
-async function scanFile(file, config) {
+function createQuietConsole() {
+    const vc = new VirtualConsole();
+    vc.on('error', () => { });
+    vc.on('warn', () => { });
+    return vc;
+}
+
+/**
+ * Create JSDOM instance with axe-core injected
+ * @param {string} content - HTML content to parse
+ * @returns {Object} - JSDOM window object
+ */
+function createJsdomInstance(content) {
+    const dom = new JSDOM(content, {
+        runScripts: 'dangerously',
+        resources: 'usable',
+        pretendToBeVisual: true,
+        virtualConsole: createQuietConsole()
+    });
+
+    const { window } = dom;
+
+    // Inject axe-core into virtual browser
+    window.eval(axeSource);
+
+    return window;
+}
+
+/**
+ * Run axe-core analysis on document
+ * @param {Object} window - JSDOM window object
+ * @param {Object} config - User configuration
+ * @returns {Promise<Object>} - Axe results
+ */
+async function runAxeAnalysis(window, config) {
+    return await window.axe.run(window.document, {
+        runOnly: {
+            type: 'tag',
+            values: getAxeTags(config)
+        },
+        rules: {
+            'color-contrast': { enabled: false },
+            'color-contrast-enhanced': { enabled: false }
+        },
+        reporter: 'v2'
+    });
+}
+
+/**
+ * Create a single violation result object
+ * @param {string} file - Source file path
+ * @param {Object} violation - Axe violation object
+ * @param {Object} node - Affected DOM node
+ * @param {string} sourceContent - Original source code
+ * @returns {Object} - Formatted violation result
+ */
+function createViolationResult(file, violation, node, sourceContent) {
+    const htmlSnippet = node.html;
+    const selector = node.target?.[0] || '';
+    const lineNumber = findLineNumber(sourceContent, htmlSnippet);
+
+    return {
+        file,
+        id: violation.id,
+        impact: violation.impact || 'minor',
+        description: violation.description,
+        help: violation.help,
+        helpUrl: violation.helpUrl,
+        wcagTags: violation.tags.filter(t => t.startsWith('wcag')),
+        selector,
+        html: htmlSnippet,
+        lineNumber,
+        failureSummary: node.failureSummary,
+    };
+}
+
+/**
+ * Process axe violations into result objects
+ * @param {string} file - Source file path
+ * @param {Array} violations - Axe violations array
+ * @param {string} sourceContent - Original source code
+ * @returns {Array} - Formatted violation results
+ */
+function processViolations(file, violations, sourceContent) {
     const results = [];
 
-    try {
-        const content = await fs.readFile(file, 'utf8');
-
-        // Create virtual browser environment
-        const dom = new JSDOM(content, {
-            runScripts: 'dangerously',
-            resources: 'usable',
-            pretendToBeVisual: true,
-            virtualConsole: createQuietConsole()
-        });
-
-        const { window } = dom;
-
-        // Inject axe-core into virtual browser
-        window.eval(axeSource);
-
-        // Run axe with contrast rules DISABLED (they don't work in JSDOM)
-        const axeResults = await window.axe.run(window.document, {
-            runOnly: {
-                type: 'tag',
-                values: getAxeTags(config)
-            },
-            rules: {
-                'color-contrast': { enabled: false },
-                'color-contrast-enhanced': { enabled: false }
-            },
-            reporter: 'v2'
-        });
-
-        // Process each violation
-        for (const violation of axeResults.violations) {
-            // Create one result per affected element (not per rule)
-            // This gives developers precise locations
-            for (const node of violation.nodes) {
-                const htmlSnippet = node.html;
-                const selector = node.target?.[0] || '';
-                
-                // Find line number by matching HTML snippet in source
-                const lineNumber = findLineNumber(content, htmlSnippet);
-                
-                results.push({
-                    file,
-                    id: violation.id,
-                    impact: violation.impact || 'minor',
-                    description: violation.description,
-                    help: violation.help,
-                    helpUrl: violation.helpUrl,
-                    wcagTags: violation.tags.filter(t => t.startsWith('wcag')),
-                    // Location data
-                    selector,
-                    html: htmlSnippet,
-                    lineNumber,
-                    // Failure details
-                    failureSummary: node.failureSummary,
-                });
-            }
+    for (const violation of violations) {
+        for (const node of violation.nodes) {
+            const result = createViolationResult(file, violation, node, sourceContent);
+            results.push(result);
         }
-
-        // Israeli RTL compliance check
-        if (config.rules.rtl) {
-            const rtlViolation = checkRtlCompliance(window.document, file, content);
-            if (rtlViolation) {
-                results.push(rtlViolation);
-            }
-        }
-
-        window.close();
-
-    } catch (err) {
-        p.log.error(`Error scanning ${file}: ${err.message}`);
     }
 
     return results;
 }
 
 /**
- * Create a quiet virtual console (suppresses JSDOM warnings)
- */
-function createQuietConsole() {
-    const vc = new VirtualConsole();
-    vc.on('error', () => {});
-    vc.on('warn', () => {});
-    return vc;
-}
-
-/**
  * Check RTL compliance for Israeli standard
+ * @param {Object} document - JSDOM document object
+ * @param {string} file - Source file path
+ * @param {string} sourceContent - Original source code
+ * @returns {Object|null} - RTL violation or null
  */
 function checkRtlCompliance(document, file, sourceContent) {
     const htmlTag = document.documentElement;
     const hasRtlDir = htmlTag && htmlTag.getAttribute('dir') === 'rtl';
 
     if (!hasRtlDir) {
-        // Find line number of <html> tag
         const lineNumber = findLineNumber(sourceContent, '<html');
-        
+
         return {
             file,
             id: 'israel-rtl',
@@ -251,4 +262,39 @@ function checkRtlCompliance(document, file, sourceContent) {
     }
 
     return null;
+}
+
+/**
+ * Scan a single file for accessibility issues
+ * @param {string} file - File path to scan
+ * @param {Object} config - User configuration
+ * @returns {Promise<Array>} - Array of violations
+ */
+async function scanFile(file, config) {
+    const results = [];
+
+    try {
+        const content = await fs.readFile(file, 'utf8');
+
+        const window = createJsdomInstance(content);
+
+        const axeResults = await runAxeAnalysis(window, config);
+
+        const violations = processViolations(file, axeResults.violations, content);
+        results.push(...violations);
+
+        if (config.rules.rtl) {
+            const rtlViolation = checkRtlCompliance(window.document, file, content);
+            if (rtlViolation) {
+                results.push(rtlViolation);
+            }
+        }
+
+        window.close();
+
+    } catch (err) {
+        p.log.error(`Error scanning ${file}: ${err.message}`);
+    }
+
+    return results;
 }
