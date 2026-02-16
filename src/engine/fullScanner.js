@@ -4,6 +4,11 @@
  * Complete scanning using real Chromium browser + axe-core.
  * Includes color contrast checking (requires browser layout engine).
  * 
+ * Enhanced with:
+ * - Element selectors
+ * - HTML snippets
+ * - Approximate line numbers
+ * 
  * Use for: Pre-commit checks, CI/CD pipelines, thorough audits
  * 
  * Requirements:
@@ -18,6 +23,7 @@ import fs from 'fs/promises';
 import { statSync } from 'fs';
 import * as p from '@clack/prompts';
 import path from 'path';
+import { findLineNumber } from '../utils/sourceMapper.js';
 
 /**
  * Main full audit entry point
@@ -61,7 +67,6 @@ async function resolveFiles(config, targetPath) {
         return await resolveTargetPath(targetPath, extensions);
     }
 
-    // Default: scan entire project
     const pattern = `**/*.{${extensions.join(',')}}`;
     return await glob(pattern, {
         ignore: ['node_modules/**', 'dist/**', 'build/**']
@@ -139,44 +144,53 @@ async function scanFile(browser, file, config) {
     const results = [];
 
     try {
-        // Read file content
         const content = await fs.readFile(file, 'utf8');
         
-        // Create context and page (required by axe-core/playwright)
         const context = await browser.newContext();
         const page = await context.newPage();
 
-        // Load HTML content directly
         await page.setContent(content, { 
             waitUntil: 'domcontentloaded' 
         });
 
-        // Run axe-core with full capabilities
         const axeBuilder = new AxeBuilder({ page })
             .withTags(getAxeTags(config));
 
         const axeResults = await axeBuilder.analyze();
 
-        // Collect violations - ONE per rule (not per element)
-        axeResults.violations.forEach(v => {
-            const result = {
-                file,
-                id: v.id,
-                impact: v.impact || 'minor',
-                description: v.description,
-                help: v.help,
-                wcagTags: v.tags.filter(t => t.startsWith('wcag')),
-                nodeCount: v.nodes.length,  // How many elements affected
-            };
+        // Process each violation - one result per element
+        for (const violation of axeResults.violations) {
+            for (const node of violation.nodes) {
+                const htmlSnippet = node.html;
+                const selector = node.target?.[0] || '';
+                
+                // Find line number by matching HTML snippet
+                const lineNumber = findLineNumber(content, htmlSnippet);
+                
+                const result = {
+                    file,
+                    id: violation.id,
+                    impact: violation.impact || 'minor',
+                    description: violation.description,
+                    help: violation.help,
+                    helpUrl: violation.helpUrl,
+                    wcagTags: violation.tags.filter(t => t.startsWith('wcag')),
+                    // Location data
+                    selector,
+                    html: htmlSnippet,
+                    lineNumber,
+                    // Failure details
+                    failureSummary: node.failureSummary,
+                };
 
-            // Add contrast data if this is a contrast violation
-            if (v.id.includes('contrast') && v.nodes.length > 0) {
-                const firstNode = v.nodes[0];
-                result.contrastData = extractContrastData(v, firstNode);
+                // Add contrast data if applicable
+                if (violation.id.includes('contrast')) {
+                    result.contrastData = extractContrastData(node);
+                }
+
+                results.push(result);
             }
-
-            results.push(result);
-        });
+        }
 
         // Israeli RTL compliance check
         if (config.rules.rtl) {
@@ -185,14 +199,24 @@ async function scanFile(browser, file, config) {
             });
 
             if (!hasRtl) {
+                const htmlSnippet = await page.evaluate(() => {
+                    const html = document.documentElement;
+                    return html.outerHTML.split('>')[0] + '>';
+                });
+                
+                const lineNumber = findLineNumber(content, '<html');
+                
                 results.push({
                     file,
                     id: 'israel-rtl',
                     impact: 'serious',
                     description: 'Israeli law requires RTL direction for Hebrew interfaces.',
                     help: 'Add dir="rtl" to your <html> tag.',
+                    helpUrl: 'https://www.gov.il/he/departments/policies/accessibility_standard',
                     wcagTags: ['israeli-standard'],
-                    nodeCount: 1,
+                    selector: 'html',
+                    html: htmlSnippet,
+                    lineNumber,
                 });
             }
         }
@@ -207,11 +231,9 @@ async function scanFile(browser, file, config) {
 }
 
 /**
- * Extract contrast-specific data from violation
+ * Extract contrast-specific data from violation node
  */
-function extractContrastData(violation, node) {
-    if (!violation.id.includes('contrast')) return null;
-
+function extractContrastData(node) {
     const data = node.any?.[0]?.data || {};
     return {
         contrastRatio: data.contrastRatio,

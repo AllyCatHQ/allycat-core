@@ -4,6 +4,11 @@
  * Fast scanning using JSDOM + axe-core.
  * Does NOT check color contrast (requires real browser).
  * 
+ * Enhanced with:
+ * - Element selectors
+ * - HTML snippets
+ * - Approximate line numbers
+ * 
  * Use for: Development, quick checks, CI fast-fail
  */
 
@@ -14,6 +19,7 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 import { createRequire } from 'module';
 import * as p from '@clack/prompts';
 import path from 'path';
+import { findLineNumber } from '../utils/sourceMapper.js';
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
@@ -109,12 +115,10 @@ function getAxeTags(config) {
 
     switch (config.selectedStandard) {
         case 'israel':
-            // Israeli IS 5568 is based on WCAG 2.1 AA
             tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
             break;
 
         case 'wcag-aaa':
-            // AAA includes all levels (A + AA + AAA)
             tags.push(
                 'wcag2a', 'wcag2aa', 'wcag2aaa',
                 'wcag21a', 'wcag21aa', 'wcag21aaa'
@@ -123,7 +127,6 @@ function getAxeTags(config) {
 
         case 'wcag-aa':
         default:
-            // AA includes A + AA
             tags.push('wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa');
             break;
     }
@@ -160,28 +163,44 @@ async function scanFile(file, config) {
                 values: getAxeTags(config)
             },
             rules: {
-                // Disable contrast rules - they require real browser layout
                 'color-contrast': { enabled: false },
                 'color-contrast-enhanced': { enabled: false }
             },
             reporter: 'v2'
         });
 
-        // Collect violations with WCAG level info
-        axeResults.violations.forEach(v => {
-            results.push({
-                file,
-                id: v.id,
-                impact: v.impact || 'minor',
-                description: v.description,
-                help: v.help,
-                wcagTags: v.tags.filter(t => t.startsWith('wcag')),
-            });
-        });
+        // Process each violation
+        for (const violation of axeResults.violations) {
+            // Create one result per affected element (not per rule)
+            // This gives developers precise locations
+            for (const node of violation.nodes) {
+                const htmlSnippet = node.html;
+                const selector = node.target?.[0] || '';
+                
+                // Find line number by matching HTML snippet in source
+                const lineNumber = findLineNumber(content, htmlSnippet);
+                
+                results.push({
+                    file,
+                    id: violation.id,
+                    impact: violation.impact || 'minor',
+                    description: violation.description,
+                    help: violation.help,
+                    helpUrl: violation.helpUrl,
+                    wcagTags: violation.tags.filter(t => t.startsWith('wcag')),
+                    // Location data
+                    selector,
+                    html: htmlSnippet,
+                    lineNumber,
+                    // Failure details
+                    failureSummary: node.failureSummary,
+                });
+            }
+        }
 
         // Israeli RTL compliance check
         if (config.rules.rtl) {
-            const rtlViolation = checkRtlCompliance(window.document, file);
+            const rtlViolation = checkRtlCompliance(window.document, file, content);
             if (rtlViolation) {
                 results.push(rtlViolation);
             }
@@ -209,18 +228,25 @@ function createQuietConsole() {
 /**
  * Check RTL compliance for Israeli standard
  */
-function checkRtlCompliance(document, file) {
+function checkRtlCompliance(document, file, sourceContent) {
     const htmlTag = document.documentElement;
     const hasRtlDir = htmlTag && htmlTag.getAttribute('dir') === 'rtl';
 
     if (!hasRtlDir) {
+        // Find line number of <html> tag
+        const lineNumber = findLineNumber(sourceContent, '<html');
+        
         return {
             file,
             id: 'israel-rtl',
             impact: 'serious',
             description: 'Israeli law requires RTL direction for Hebrew interfaces.',
             help: 'Add dir="rtl" to your <html> tag.',
+            helpUrl: 'https://www.gov.il/he/departments/policies/accessibility_standard',
             wcagTags: ['israeli-standard'],
+            selector: 'html',
+            html: htmlTag ? htmlTag.outerHTML.split('>')[0] + '>' : '<html>',
+            lineNumber,
         };
     }
 
