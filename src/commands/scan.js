@@ -1,9 +1,17 @@
+/**
+ * Scan Command
+ * 
+ * Orchestrates accessibility scanning with quick/full modes.
+ * Outputs violations with precise location data.
+ */
+
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { CONFIG_FILE_NAME } from '../constants.js';
 import { runQuickAudit } from '../engine/quickScanner.js';
+import { formatViolation, formatSummary, formatByFile } from '../utils/violationFormatter.js';
 
 export async function scanCommand(target = null, options = {}) {
     console.log('');
@@ -31,13 +39,15 @@ export async function scanCommand(target = null, options = {}) {
 
     // Validate target path if provided
     let resolvedTarget = null;
-    if (target) {
-        resolvedTarget = path.resolve(process.cwd(), target);
-        if (!fs.existsSync(resolvedTarget)) {
-            p.log.error(chalk.red(`Target path not found: ${target}`));
-            p.outro(chalk.yellow('Please provide a valid file or directory path.'));
-            return;
-        }
+if (target) {
+    const absolutePath = path.resolve(process.cwd(), target);
+    if (!fs.existsSync(absolutePath)) {
+        p.log.error(chalk.red(`Target path not found: ${target}`));
+        p.outro(chalk.yellow('Please provide a valid file or directory path.'));
+        return;
+    }
+    // Keep relative path for cleaner output
+    resolvedTarget = target;
         const stats = fs.statSync(resolvedTarget);
         const targetType = stats.isDirectory() ? 'Directory' : 'File';
         p.log.info(`Target: ${chalk.cyan(target)} (${targetType})`);
@@ -64,11 +74,9 @@ export async function scanCommand(target = null, options = {}) {
         let violations;
 
         if (scanMode === 'full') {
-            // Full scan with Playwright (includes contrast)
             const { runFullAudit } = await import('../engine/fullScanner.js');
             violations = await runFullAudit(config, resolvedTarget);
         } else {
-            // Quick scan with JSDOM (no contrast)
             violations = await runQuickAudit(config, resolvedTarget);
         }
 
@@ -78,71 +86,54 @@ export async function scanCommand(target = null, options = {}) {
         if (options.output === 'json') {
             outputJson(violations, config, scanMode);
         } else {
-            outputTerminal(violations, scanMode);
+            outputTerminal(violations, scanMode, options);
         }
     } catch (error) {
         s.stop(chalk.red('Analysis failed.'));
         p.log.error(error.message);
         
-        // Helpful hints for different Playwright errors
         if (error.message.includes("Cannot find package 'playwright'") || 
             error.message.includes("Cannot find module 'playwright'")) {
             p.log.info(chalk.dim('Hint: Run "npm install playwright @axe-core/playwright" first.'));
         } else if (error.message.includes('Executable doesn\'t exist') || 
                    error.message.includes('browserType.launch')) {
             p.log.info(chalk.dim('Hint: Run "npx playwright install chromium" to install the browser.'));
-        } else if (error.message.includes('newContext')) {
-            p.log.info(chalk.dim('Hint: This is a Playwright API issue. Please report this bug.'));
         }
     }
 }
 
 /**
- * Output violations to terminal with colors
+ * Output violations to terminal with enhanced formatting
  */
-function outputTerminal(violations, scanMode) {
+function outputTerminal(violations, scanMode, options = {}) {
     if (violations.length === 0) {
+        console.log('');
         p.outro(chalk.green('✔ No accessibility issues found!'));
         return;
     }
 
-    console.log('');
-    violations.forEach(v => {
-        const impactColor = v.impact === 'critical' || v.impact === 'serious' 
-            ? chalk.red 
-            : chalk.yellow;
-        
-        p.log.error(`${impactColor.bold(v.impact.toUpperCase())}: ${v.description}`);
-        console.log(chalk.dim(`   Rule: ${v.id}`));
-        console.log(chalk.cyan(`   File: ${v.file}`));
-        console.log(chalk.dim(`   Help: ${v.help}`));
-        
-        if (v.wcagTags && v.wcagTags.length > 0) {
-            console.log(chalk.dim(`   WCAG: ${v.wcagTags.join(', ')}`));
-        }
-
-        // Show element count if more than 1
-        if (v.nodeCount && v.nodeCount > 1) {
-            console.log(chalk.dim(`   Elements: ${v.nodeCount} affected`));
-        }
-
-        // Show contrast details if available
-        if (v.contrastData) {
-            const cd = v.contrastData;
-            if (cd.contrastRatio) {
-                console.log(chalk.dim(`   Contrast: ${cd.contrastRatio.toFixed(2)}:1 (needs ${cd.expectedRatio})`));
-            }
-        }
-
-        console.log('');
+    // Group by file for better readability
+    const output = formatByFile(violations, {
+        showSnippet: true,
+        showSelector: true
     });
-
-    // Summary with mode indicator
-    const modeNote = scanMode === 'quick' 
-        ? chalk.dim(' (use --full for contrast checking)')
-        : '';
     
-    p.outro(chalk.red(`Found ${violations.length} violations.${modeNote}`));
+    console.log(output);
+    
+    // Summary
+    const summary = formatSummary(violations, scanMode);
+    console.log(summary);
+    
+    // Tips
+    console.log('');
+    console.log(chalk.dim('─'.repeat(60)));
+    console.log(chalk.dim('Tips:'));
+    console.log(chalk.dim('  • File paths with line numbers are clickable in VS Code'));
+    console.log(chalk.dim('  • Use --output json for CI/CD integration'));
+    if (scanMode === 'quick') {
+        console.log(chalk.dim('  • Use --full to enable contrast checking'));
+    }
+    console.log('');
 }
 
 /**
@@ -162,9 +153,38 @@ function outputJson(violations, config, scanMode) {
             moderate: violations.filter(v => v.impact === 'moderate').length,
             minor: violations.filter(v => v.impact === 'minor').length,
         },
-        violations: violations
+        byFile: groupByFile(violations),
+        violations: violations.map(v => ({
+            file: v.file,
+            line: v.lineNumber,
+            rule: v.id,
+            impact: v.impact,
+            description: v.description,
+            help: v.help,
+            helpUrl: v.helpUrl,
+            wcag: v.wcagTags,
+            element: {
+                selector: v.selector,
+                html: v.html
+            },
+            ...(v.contrastData && { contrast: v.contrastData })
+        }))
     };
     
-    // Output raw JSON (no colors, no formatting from clack)
     console.log(JSON.stringify(report, null, 2));
+}
+
+/**
+ * Group violations by file for JSON output
+ */
+function groupByFile(violations) {
+    return violations.reduce((acc, v) => {
+        if (!acc[v.file]) {
+            acc[v.file] = { count: 0, critical: 0, serious: 0 };
+        }
+        acc[v.file].count++;
+        if (v.impact === 'critical') acc[v.file].critical++;
+        if (v.impact === 'serious') acc[v.file].serious++;
+        return acc;
+    }, {});
 }
