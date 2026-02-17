@@ -34,10 +34,15 @@ export async function resolveFiles(config, targetPath) {
     }
 
     // Default: scan entire project
-    const globPattern = `**/*.{${extensions.join(',')}}`;
-    return await glob(globPattern, {
-        ignore: ['node_modules/**', 'dist/**', 'build/**']
+    // Use multiple patterns to ensure root-level files are included
+    const patterns = extensions.map(ext => `**/*.${ext}`);
+    
+    const files = await glob(patterns, {
+        ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
+        dot: false
     });
+
+    return files;
 }
 
 /**
