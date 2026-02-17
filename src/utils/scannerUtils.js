@@ -12,6 +12,8 @@ import { statSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
 import { findLineNumber } from './sourceMapper.js';
+import { normalizeForGlob } from './pathUtils.js';
+
 
 // -----------------------------------------------------------------------------
 // File Resolution
@@ -74,7 +76,9 @@ export async function resolveTargetPath(targetPath, extensions) {
     }
 
     if (stats.isDirectory()) {
-        const globPattern = `${targetPath}/**/*.{${extensions.join(',')}}`;
+        // Normalize path separators for cross-platform glob compatibility
+        const normalizedPath = normalizeForGlob(targetPath);
+        const globPattern = `${normalizedPath}/**/*.{${extensions.join(',')}}`;
         return await glob(globPattern, {
             ignore: ['**/node_modules/**', '**/dist/**', '**/build/**']
         });
