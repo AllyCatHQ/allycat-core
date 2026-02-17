@@ -12,6 +12,7 @@ Fast, developer-friendly accessibility scanning with support for WCAG 2.1 AA/AAA
 - 📍 **Precise Locations** — Line numbers and clickable VS Code links
 - 📊 **Multiple Output Formats** — Terminal, JSON, and file export
 - ⚡ **CI/CD Ready** — JSON output for pipeline integration
+- 📖 **Built-in Help** — FAQ, examples, and guides included
 
 ## Installation
 
@@ -40,6 +41,8 @@ a11y-guard scan ./src
 a11y-guard scan ./src/components/Button.tsx
 ```
 
+---
+
 ## Commands
 
 ### `a11y-guard init`
@@ -58,6 +61,8 @@ Prompts for:
 
 Creates `a11y-config.json` in your project root.
 
+---
+
 ### `a11y-guard scan [target]`
 
 Scan files for accessibility violations.
@@ -73,7 +78,7 @@ a11y-guard scan ./src
 a11y-guard scan ./src/pages/Home.tsx
 ```
 
-## Scan Options
+#### Scan Options
 
 | Option | Short | Description |
 |--------|-------|-------------|
@@ -83,7 +88,7 @@ a11y-guard scan ./src/pages/Home.tsx
 | `--output <format>` | `-o` | Output format: `terminal`, `json` |
 | `--json-file [name]` | | Save JSON report to file |
 
-### Examples
+#### Examples
 
 ```bash
 # Quick scan (default)
@@ -100,12 +105,52 @@ a11y-guard scan -o json
 
 # Save JSON report (auto-generated filename)
 a11y-guard scan --json-file
-# Output: a11y-report-2025-02-17-143052.json
+# Output: a11y-report-2025-05-27-143052.json
 
 # Save JSON report with custom name
 a11y-guard scan --json-file my-report
 # Output: my-report.json
+
+# Combined options
+a11y-guard scan ./src --full --summary
+a11y-guard scan ./src -f --json-file
 ```
+
+---
+
+### `a11y-guard help [topic]`
+
+Access built-in documentation, FAQ, and examples.
+
+```bash
+# List all help topics
+a11y-guard help
+
+# Specific topics
+a11y-guard help faq        # Common questions and answers
+a11y-guard help examples   # Real-world usage examples
+a11y-guard help ci         # CI/CD integration guide
+a11y-guard help standards  # Accessibility standards explained
+```
+
+#### Help Topics
+
+| Topic | Description |
+|-------|-------------|
+| `faq` | Common questions about contrast, Playwright, config, paths |
+| `examples` | 15+ examples grouped by category |
+| `ci` | Copy-paste configs for GitHub Actions, GitLab CI, Jenkins |
+| `standards` | WCAG AA vs AAA vs Israeli comparison |
+
+#### Command-Specific Help
+
+```bash
+a11y-guard --help        # Overview of all commands
+a11y-guard init --help   # Init command details
+a11y-guard scan --help   # Scan command details with all options
+```
+
+---
 
 ## Output Formats
 
@@ -186,6 +231,105 @@ a11y-guard scan --summary
    (use --full for contrast checking)
 ```
 
+---
+
+## Scan Modes
+
+### Quick Mode (Default)
+
+- Uses JSDOM for fast HTML parsing
+- ~1 second per file
+- **Skips contrast checking** (requires real browser)
+- Best for: Development, quick feedback
+
+### Full Mode
+
+- Uses Playwright with real Chromium browser
+- ~5 seconds startup + ~1 second per file
+- **Includes contrast checking**
+- Best for: CI/CD, comprehensive audits
+
+```bash
+# Set default in config via init wizard
+a11y-guard init
+
+# Or override per scan
+a11y-guard scan --full
+a11y-guard scan --quick
+```
+
+---
+
+## Accessibility Standards
+
+| Standard | Contrast Ratio | RTL Required | Best For |
+|----------|----------------|--------------|----------|
+| **WCAG AA** | 4.5:1 | No | Most websites |
+| **WCAG AAA** | 7:1 | No | Government, Medical |
+| **Israeli IS 5568** | 4.5:1 | Yes | Israeli websites |
+
+Set your standard during `a11y-guard init` or in `a11y-config.json`.
+
+---
+
+## Configuration
+
+The `a11y-config.json` file stores your project settings:
+
+```json
+{
+  "framework": "react",
+  "selectedStandard": "wcag-aa",
+  "rules": {
+    "rtl": false,
+    "level": "AA"
+  },
+  "scan": {
+    "defaultMode": "quick"
+  },
+  "ai": {
+    "enabled": true
+  }
+}
+```
+
+### Configuration Options
+
+| Option | Values | Description |
+|--------|--------|-------------|
+| `framework` | `react`, `vue`, `angular`, `html` | Determines file extensions to scan |
+| `selectedStandard` | `wcag-aa`, `wcag-aaa`, `israel` | Accessibility ruleset |
+| `rules.rtl` | `true`, `false` | Enable RTL direction checking |
+| `rules.level` | `AA`, `AAA` | WCAG conformance level |
+| `scan.defaultMode` | `quick`, `full` | Default scan mode |
+
+---
+
+## Supported Frameworks
+
+| Framework | Extensions | Status |
+|-----------|------------|--------|
+| React | `.jsx`, `.tsx`, `.html` | ✅ Supported |
+| Vue | `.vue`, `.html` | ✅ Supported |
+| Angular | `.html`, `.component.html` | ✅ Supported |
+| HTML | `.html` | ✅ Supported |
+
+---
+
+## Path Handling
+
+A11y-Guard supports both forward slashes and backslashes (cross-platform):
+
+```bash
+# All of these work
+a11y-guard scan ./src
+a11y-guard scan .\src
+a11y-guard scan src/components
+a11y-guard scan src\components
+```
+
+---
+
 ## CI/CD Integration
 
 ### GitHub Actions
@@ -222,89 +366,43 @@ jobs:
           path: a11y-report.json
 ```
 
-### Exit Codes
+### GitLab CI
 
-| Code | Meaning |
-|------|---------|
-| 0 | No violations found |
-| 0 | Violations found (currently non-blocking) |
+```yaml
+accessibility:
+  image: node:20
+  script:
+    - npm ci
+    - npm install -g a11y-guard
+    - a11y-guard scan --json-file a11y-report
+  artifacts:
+    paths:
+      - a11y-report.json
+```
 
-> **Note:** Future versions may add `--fail-on-critical` to exit with code 1 when critical violations are found.
+### Jenkins
 
-## Configuration
-
-The `a11y-config.json` file stores your project settings:
-
-```json
-{
-  "framework": "react",
-  "selectedStandard": "wcag-aa",
-  "rules": {
-    "rtl": false,
-    "level": "AA"
-  },
-  "scan": {
-    "defaultMode": "quick"
-  },
-  "ai": {
-    "enabled": true
+```groovy
+stage('Accessibility') {
+  steps {
+    sh 'npm install -g a11y-guard'
+    sh 'a11y-guard scan --json-file a11y-report'
+    archiveArtifacts artifacts: 'a11y-report.json'
   }
 }
 ```
 
-### Standards
+> 💡 **Tip:** Run `a11y-guard help ci` for more CI/CD examples.
 
-| Standard | Description | Tags |
-|----------|-------------|------|
-| `wcag-aa` | WCAG 2.1 Level AA | `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` |
-| `wcag-aaa` | WCAG 2.1 Level AAA | All AA tags + `wcag2aaa`, `wcag21aaa` |
-| `israel` | Israeli IS 5568 | AA tags + RTL checks |
+### Exit Codes
 
-## Scan Modes
+| Code | Meaning |
+|------|---------|
+| 0 | Scan completed (with or without violations) |
 
-### Quick Mode (Default)
+> **Note:** Future versions may add `--fail-on-critical` to exit with code 1 when critical violations are found.
 
-- Uses JSDOM for fast HTML parsing
-- ~1 second per file
-- **Skips contrast checking** (requires real browser)
-- Best for: Development, quick feedback
-
-### Full Mode
-
-- Uses Playwright with real Chromium browser
-- ~5 seconds startup + ~1 second per file
-- **Includes contrast checking**
-- Best for: CI/CD, comprehensive audits
-
-```bash
-# Set default in config via init wizard
-a11y-guard init
-
-# Or override per scan
-a11y-guard scan --full
-a11y-guard scan --quick
-```
-
-## Path Handling
-
-A11y-Guard supports both forward slashes and backslashes:
-
-```bash
-# All of these work
-a11y-guard scan ./src
-a11y-guard scan .\src
-a11y-guard scan src/components
-a11y-guard scan src\components
-```
-
-## Supported Frameworks
-
-| Framework | Extensions | Status |
-|-----------|------------|--------|
-| React | `.jsx`, `.tsx`, `.html` | ✅ Supported |
-| Vue | `.vue`, `.html` | ✅ Supported |
-| Angular | `.html`, `.component.html` | ✅ Supported |
-| HTML | `.html` | ✅ Supported |
+---
 
 ## Troubleshooting
 
@@ -329,10 +427,46 @@ Contrast checking requires a real browser. Use `--full` mode:
 a11y-guard scan --full
 ```
 
+### Files not being scanned
+
+Check these common issues:
+1. File extension matches your framework config
+2. Files are not in `node_modules/`, `dist/`, or `build/`
+3. Framework is set correctly in `a11y-config.json`
+
+> 💡 **Tip:** Run `a11y-guard help faq` for more troubleshooting tips.
+
+---
+
+## Getting Help
+
+```bash
+# Built-in help
+a11y-guard --help           # Command overview
+a11y-guard help faq         # Common questions
+a11y-guard help examples    # Usage examples
+a11y-guard help standards   # Standards explained
+
+# Online
+# GitHub Issues: https://github.com/YOUR_USERNAME/a11y-guard/issues
+```
+
+---
+
 ## License
 
 MIT
 
+---
+
 ## Contributing
 
 Contributions welcome! Please read our contributing guidelines before submitting PRs.
+
+---
+
+## Acknowledgments
+
+- [axe-core](https://github.com/dequelabs/axe-core) — Accessibility testing engine
+- [Playwright](https://playwright.dev/) — Browser automation for full scans
+- [JSDOM](https://github.com/jsdom/jsdom) — DOM implementation for quick scans
