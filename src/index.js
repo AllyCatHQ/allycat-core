@@ -24,6 +24,7 @@ program
   .option('-q, --quick', 'Quick scan (fast, skips contrast check)')
   .option('-f, --full', 'Full scan (slower, includes contrast check)')
   .option('-s, --summary', 'Show only violation counts (no details)')
+  .option('--json-file [filename]', 'Save JSON report to file (auto-generates timestamp name if not specified)')
   .option('--group-by-file', 'Group violations by file (default)', true)
   .action((target, options) => scanCommand(target, options));
 
