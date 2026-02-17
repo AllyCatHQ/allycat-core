@@ -233,9 +233,31 @@ function isBrowserNotInstalledError(error) {
 function outputResults(violations, config, scanMode, options) {
     if (options.output === 'json') {
         outputJson(violations, config, scanMode);
+    } else if (options.summary) {
+        outputSummaryOnly(violations, scanMode);
     } else {
         outputTerminal(violations, scanMode);
     }
+}
+
+/**
+ * Output only violation counts (no details)
+ * 
+ * Provides a minimal output for quick checks and CI logs.
+ * 
+ * @param {Array} violations - Scan violations
+ * @param {string} scanMode - Current scan mode
+ */
+function outputSummaryOnly(violations, scanMode) {
+    const summary = formatSummary(violations, scanMode);
+    console.log(summary);
+    
+    if (violations.length > 0) {
+        console.log('');
+        console.log(chalk.dim('Use without --summary to see full details.'));
+    }
+    
+    console.log('');
 }
 
 // -----------------------------------------------------------------------------
