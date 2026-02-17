@@ -231,7 +231,9 @@ function isBrowserNotInstalledError(error) {
  * @param {Object} options - CLI options
  */
 function outputResults(violations, config, scanMode, options) {
-    if (options.output === 'json') {
+    if (options.jsonFile) {
+        outputJsonFile(violations, config, scanMode, options.jsonFile);
+    } else if (options.output === 'json') {
         outputJson(violations, config, scanMode);
     } else if (options.summary) {
         outputSummaryOnly(violations, scanMode);
@@ -251,12 +253,12 @@ function outputResults(violations, config, scanMode, options) {
 function outputSummaryOnly(violations, scanMode) {
     const summary = formatSummary(violations, scanMode);
     console.log(summary);
-    
+
     if (violations.length > 0) {
         console.log('');
         console.log(chalk.dim('Use without --summary to see full details.'));
     }
-    
+
     console.log('');
 }
 
@@ -345,4 +347,56 @@ function buildJsonReport(violations, config, scanMode) {
         byFile: groupByFile(violations),
         violations: violations.map(formatViolationForJson)
     };
+}
+
+// -----------------------------------------------------------------------------
+// JSON File Output
+// -----------------------------------------------------------------------------
+
+/**
+ * Generate timestamped filename for JSON report
+ * 
+ * @param {string|boolean} userFilename - User-provided filename or true for auto-generate
+ * @returns {string} - Complete filename with .json extension
+ * 
+ * @example
+ * generateJsonFilename(true)        // 'a11y-report-2025-02-17-143052.json'
+ * generateJsonFilename('my-report') // 'my-report.json'
+ */
+function generateJsonFilename(userFilename) {
+    if (typeof userFilename === 'string' && userFilename.length > 0) {
+        // User provided a name — ensure .json extension
+        return userFilename.endsWith('.json') ? userFilename : `${userFilename}.json`;
+    }
+
+    // Auto-generate with timestamp
+    const now = new Date();
+    const timestamp = now.toISOString()
+        .replace(/[T]/g, '-')
+        .replace(/[:.]/g, '')
+        .slice(0, 17);
+
+    return `a11y-report-${timestamp}.json`;
+}
+
+/**
+ * Write JSON report to file
+ * 
+ * @param {Array} violations - Scan violations
+ * @param {Object} config - User configuration
+ * @param {string} scanMode - Current scan mode
+ * @param {string|boolean} filenameOption - Filename or true for auto-generate
+ */
+function outputJsonFile(violations, config, scanMode, filenameOption) {
+    const filename = generateJsonFilename(filenameOption);
+    const report = buildJsonReport(violations, config, scanMode);
+
+    fs.writeFileSync(filename, JSON.stringify(report, null, 2));
+
+    p.log.success(chalk.green(`Report saved: ${chalk.bold(filename)}`));
+
+    // Also show summary in terminal
+    const summary = formatSummary(violations, scanMode);
+    console.log(summary);
+    console.log('');
 }
