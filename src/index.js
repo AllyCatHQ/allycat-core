@@ -1,31 +1,121 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
 import { scanCommand } from './commands/scan.js';
+import { helpCommand } from './commands/help.js';
 
 const program = new Command();
 
+// Program Configuration
+
 program
   .name('a11y-guard')
-  .description('Professional CLI for accessibility compliance')
-  .version('1.0.0');
+  .description(`
+${chalk.bold('A11y-Guard')} — Professional CLI for accessibility compliance testing.
 
-// --- INITIALIZATION COMMAND ---
+Supports ${chalk.cyan('WCAG 2.1 AA/AAA')} and ${chalk.cyan('Israeli Standard IS 5568')}.
+Fast scanning with precise error locations and clickable VS Code links.
+    `.trim())
+  .version('1.0.0', '-v, --version', 'Display version number')
+  .helpOption('-h, --help', 'Display help information')
+  .addHelpText('after', `
+${chalk.dim('─'.repeat(60))}
+
+${chalk.bold('Quick Start:')}
+  ${chalk.cyan('$')} a11y-guard init          ${chalk.dim('# Setup configuration')}
+  ${chalk.cyan('$')} a11y-guard scan          ${chalk.dim('# Scan your project')}
+
+${chalk.bold('Learn More:')}
+  ${chalk.cyan('$')} a11y-guard help examples ${chalk.dim('# See usage examples')}
+  ${chalk.cyan('$')} a11y-guard help faq      ${chalk.dim('# Common questions')}
+
+${chalk.bold('Documentation:')}
+  ${chalk.dim('https://github.com/dotcomico/A11yGuard-Core/blob/main/Readme.md')}
+`);
+
+// Init Command
+
 program
   .command('init')
-  .description('Set up the A11y-Guard configuration wizard')
+  .description('Setup configuration wizard for your project')
+  .addHelpText('after', `
+${chalk.bold('What it does:')}
+  Creates ${chalk.cyan('a11y-config.json')} in your project root with:
+  • Framework type (React, Vue, Angular, HTML)
+  • Accessibility standard (WCAG AA, AAA, Israeli)
+  • RTL support settings
+  • Default scan mode
+
+${chalk.bold('Example:')}
+  ${chalk.cyan('$')} a11y-guard init
+`)
   .action(initCommand);
 
-// --- SCAN COMMAND ---
+// -----------------------------------------------------------------------------
+// Scan Command
+// -----------------------------------------------------------------------------
+
 program
   .command('scan [target]')
-  .description('Audit files for accessibility issues')
+  .description('Scan files for accessibility violations')
+  .option('-q, --quick', 'Quick scan — fast, skips contrast check')
+  .option('-f, --full', 'Full scan — slower, includes contrast check')
+  .option('-s, --summary', 'Show only violation counts, no details')
   .option('-o, --output <format>', 'Output format: terminal, json', 'terminal')
-  .option('-q, --quick', 'Quick scan (fast, skips contrast check)')
-  .option('-f, --full', 'Full scan (slower, includes contrast check)')
-  .option('-s, --summary', 'Show only violation counts (no details)')
-  .option('--json-file [filename]', 'Save JSON report to file (auto-generates timestamp name if not specified)')
+  .option('--json-file [filename]', 'Save JSON report to file (auto-names if no filename)')
   .option('--group-by-file', 'Group violations by file (default)', true)
+  .addHelpText('after', `
+${chalk.bold('Arguments:')}
+  ${chalk.cyan('target')}    Optional file or folder path to scan
+            If omitted, scans entire project
+
+${chalk.bold('Scan Modes:')}
+  ${chalk.yellow('--quick')}   Uses JSDOM (fast ~1s, no contrast check)
+  ${chalk.green('--full')}    Uses Playwright browser (slower, full checks)
+
+${chalk.bold('Output Options:')}
+  ${chalk.dim('Terminal')}  Colored output with clickable file links (default)
+  ${chalk.dim('JSON')}      Structured data for CI/CD pipelines
+  ${chalk.dim('Summary')}   Just counts, minimal output
+
+${chalk.bold('Examples:')}
+  ${chalk.cyan('$')} a11y-guard scan                    ${chalk.dim('# Scan entire project')}
+  ${chalk.cyan('$')} a11y-guard scan ./src              ${chalk.dim('# Scan specific folder')}
+  ${chalk.cyan('$')} a11y-guard scan ./src/Button.tsx   ${chalk.dim('# Scan specific file')}
+  ${chalk.cyan('$')} a11y-guard scan --full             ${chalk.dim('# Full scan with contrast')}
+  ${chalk.cyan('$')} a11y-guard scan --summary          ${chalk.dim('# Quick count only')}
+  ${chalk.cyan('$')} a11y-guard scan -o json            ${chalk.dim('# JSON to terminal')}
+  ${chalk.cyan('$')} a11y-guard scan --json-file        ${chalk.dim('# Save to timestamped file')}
+  ${chalk.cyan('$')} a11y-guard scan --json-file report ${chalk.dim('# Save to report.json')}
+`)
   .action((target, options) => scanCommand(target, options));
 
+// Help Command (FAQ, Examples)
+
+program
+  .command('help [topic]')
+  .description('Show detailed help, FAQ, or examples')
+  .addHelpText('after', `
+${chalk.bold('Available Topics:')}
+  ${chalk.cyan('faq')}       Common questions and answers
+  ${chalk.cyan('examples')}  Real-world usage examples
+  ${chalk.cyan('ci')}        CI/CD integration guide
+  ${chalk.cyan('standards')} Accessibility standards explained
+
+${chalk.bold('Usage:')}
+  ${chalk.cyan('$')} a11y-guard help faq
+  ${chalk.cyan('$')} a11y-guard help examples
+`)
+  .action((topic) => helpCommand(topic));
+
+// -----------------------------------------------------------------------------
+// Parse Arguments
+// -----------------------------------------------------------------------------
+
 program.parse(process.argv);
+
+// Show help if no command provided
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+}
