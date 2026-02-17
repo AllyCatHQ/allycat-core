@@ -47,23 +47,54 @@ function normalizeHtml(html) {
 function findExactMatch(source, snippet) {
     const lines = source.split('\n');
     
+    // First: try single-line match
     for (let i = 0; i < lines.length; i++) {
         if (lines[i].includes(snippet)) {
             return i + 1; // 1-indexed
         }
     }
     
-    // Try normalized comparison
+    // Second: try normalized single-line match
     const normalizedSnippet = normalizeHtml(snippet);
     for (let i = 0; i < lines.length; i++) {
         if (normalizeHtml(lines[i]).includes(normalizedSnippet)) {
             return i + 1;
         }
     }
+
+    // Third: handle multi-line elements
+    // Find by unique attribute (href, id, class) in the snippet
+    const uniqueAttr = extractUniqueAttribute(snippet);
+    if (uniqueAttr) {
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(uniqueAttr)) {
+                return i + 1;
+            }
+        }
+    }
     
     return null;
 }
 
+/**
+ * Extract a unique attribute value from HTML snippet for matching
+ * Prioritizes: href, id, src, then first class
+ */
+function extractUniqueAttribute(html) {
+    // Try href first (very unique)
+    const hrefMatch = html.match(/href\s*=\s*["']([^"']+)["']/);
+    if (hrefMatch) return hrefMatch[1];
+
+    // Try id
+    const idMatch = html.match(/id\s*=\s*["']([^"']+)["']/);
+    if (idMatch) return idMatch[1];
+
+    // Try src
+    const srcMatch = html.match(/src\s*=\s*["']([^"']+)["']/);
+    if (srcMatch) return srcMatch[1];
+
+    return null;
+}
 /**
  * Find tag with matching attributes (more flexible matching)
  */
