@@ -27,6 +27,7 @@ import {
     createViolationFromNode
 } from '../utils/scannerUtils.js';
 import { findLineNumber } from '../utils/sourceMapper.js';
+import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -119,25 +120,14 @@ function enhanceWithContrastData(violation, axeViolation, node) {
  * @param {string} sourceContent - Original source code
  * @returns {Array} - Array of formatted violation results
  */
-function processFullScanViolations(filePath, violations, sourceContent) {
+function processFullScanViolations(filePath, violations, sourceContent, lineMap = null, transformedHtml = null) {
     const results = [];
     for (const violation of violations) {
         for (const node of violation.nodes) {
-            // Reuse shared violation creation logic
             const baseViolation = createViolationFromNode(
-                filePath,
-                violation,
-                node,
-                sourceContent
+                filePath, violation, node, sourceContent, lineMap, transformedHtml
             );
-
-            // Enhance with contrast data if applicable (full scan specific)
-            const enhancedViolation = enhanceWithContrastData(
-                baseViolation,
-                violation,
-                node
-            );
-
+            const enhancedViolation = enhanceWithContrastData(baseViolation, violation, node);
             results.push(enhancedViolation);
         }
     }
@@ -181,7 +171,7 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent) {
 
 /**
  * Scan a single file using Playwright
- * 
+ *
  * @param {Object} browser - Playwright browser instance
  * @param {string} filePath - File path to scan
  * @param {Object} config - User configuration
@@ -193,34 +183,30 @@ async function scanSingleFile(browser, filePath, config) {
     try {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
+        const { html: scanContent, lineMap } = isJsxFile(filePath)
+            ? transformJsxToHtml(sourceContent)
+            : { html: sourceContent, lineMap: null };
+
         const context = await browser.newContext();
         const page = await context.newPage();
 
-        await page.setContent(sourceContent, {
-            waitUntil: 'domcontentloaded'
-        });
+        await page.setContent(scanContent, { waitUntil: 'domcontentloaded' });
 
-        const axeBuilder = new AxeBuilder({ page })
-            .withTags(getAxeTags(config));
-
+        const axeBuilder = new AxeBuilder({ page }).withTags(getAxeTags(config));
         const axeResults = await axeBuilder.analyze();
 
         const axeViolations = processFullScanViolations(
             filePath,
             axeResults.violations,
-            sourceContent
+            sourceContent,
+            lineMap,
+            isJsxFile(filePath) ? scanContent : null
         );
         violations.push(...axeViolations);
 
         if (config.rules.rtl) {
-            const rtlViolation = await checkRtlCompliancePlaywright(
-                page,
-                filePath,
-                sourceContent
-            );
-            if (rtlViolation) {
-                violations.push(rtlViolation);
-            }
+            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent);
+            if (rtlViolation) violations.push(rtlViolation);
         }
 
         await context.close();
