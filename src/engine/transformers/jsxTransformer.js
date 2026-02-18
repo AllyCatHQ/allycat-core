@@ -438,6 +438,13 @@ function resolveExpressionValue(expression, attrName) {
 // -----------------------------------------------------------------------------
 
 /**
+ * Number of lines added before body content by wrapInDocument.
+ * Used by scannerUtils to correctly offset lineMap lookups.
+ * @type {number}
+ */
+export const HTML_WRAPPER_OFFSET = 4;
+
+/**
  * Wrap rendered HTML fragments in a full HTML document structure.
  * Required for JSDOM and Playwright to process correctly.
  *
