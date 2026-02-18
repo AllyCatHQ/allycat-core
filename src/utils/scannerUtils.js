@@ -170,18 +170,65 @@ export function checkIsraeliRtlCompliance(document, filePath, sourceContent, htm
 // -----------------------------------------------------------------------------
 
 /**
+ * Resolve the source line number for a violation.
+ *
+ * For JSX files: uses lineMap (Babel AST precision) + transformedHtml for snippet lookup.
+ * For HTML files: falls back to pattern matching in source content.
+ *
+ * @param {string} htmlSnippet - HTML snippet from axe-core
+ * @param {string} sourceContent - Original source code
+ * @param {Map<number, number>|null} lineMap - Optional JSX htmlLine→sourceLine map
+ * @param {string|null} transformedHtml - Optional transformed HTML (required when lineMap is set)
+ * @returns {number|null}
+ */
+function resolveLineNumber(htmlSnippet, sourceContent, lineMap, transformedHtml) {
+    if (lineMap && lineMap.size > 0 && transformedHtml) {
+        return resolveLineFromMap(htmlSnippet, lineMap, transformedHtml);
+    }
+    return findLineNumber(sourceContent, htmlSnippet);
+}
+
+/**
+ * Find the original JSX source line using the transformer's lineMap.
+ *
+ * Finds which line in the transformed HTML contains the axe snippet,
+ * then maps that HTML line back to its original JSX source line.
+ *
+ * @param {string} htmlSnippet - HTML snippet from axe (e.g. '<img src="dynamic">')
+ * @param {Map<number, number>} lineMap - htmlLine → jsxSourceLine
+ * @param {string} transformedHtml - Full HTML output from the transformer
+ * @returns {number|null}
+ */
+function resolveLineFromMap(htmlSnippet, lineMap, transformedHtml) {
+    const normalizedSnippet = htmlSnippet.replace(/\s+/g, ' ').trim();
+    const htmlLines = transformedHtml.split('\n');
+
+    for (let i = 0; i < htmlLines.length; i++) {
+        const normalizedLine = htmlLines[i].replace(/\s+/g, ' ').trim();
+        if (normalizedLine.includes(normalizedSnippet) || normalizedSnippet.includes(normalizedLine)) {
+            const sourceLine = lineMap.get(i + 1); // lineMap is 1-indexed
+            if (sourceLine) return sourceLine;
+        }
+    }
+
+    return null;
+}
+
+/**
  * Create a single violation result object from axe node data
- * 
+ *
  * @param {string} filePath - Source file path
  * @param {Object} violation - Axe violation object
  * @param {Object} node - Affected DOM node from axe
  * @param {string} sourceContent - Original source code for line lookup
+ * @param {Map<number, number>|null} lineMap - Optional JSX lineMap
+ * @param {string|null} transformedHtml - Optional transformed HTML for JSX line resolution
  * @returns {Object} - Formatted violation result
  */
-export function createViolationFromNode(filePath, violation, node, sourceContent) {
+export function createViolationFromNode(filePath, violation, node, sourceContent, lineMap = null, transformedHtml = null) {
     const htmlSnippet = node.html;
     const cssSelector = node.target?.[0] || '';
-    const lineNumber = findLineNumber(sourceContent, htmlSnippet);
+    const lineNumber = resolveLineNumber(htmlSnippet, sourceContent, lineMap, transformedHtml);
 
     return {
         file: filePath,
@@ -200,21 +247,26 @@ export function createViolationFromNode(filePath, violation, node, sourceContent
 
 /**
  * Process all axe violations into formatted result objects
- * 
+ *
  * @param {string} filePath - Source file path
  * @param {Array} violations - Array of axe violation objects
  * @param {string} sourceContent - Original source code
+ * @param {Map<number, number>|null} lineMap - Optional JSX lineMap
+ * @param {string|null} transformedHtml - Optional transformed HTML for JSX line resolution
  * @returns {Array} - Array of formatted violation results
  */
-export function processAxeViolations(filePath, violations, sourceContent) {
+export function processAxeViolations(filePath, violations, sourceContent, lineMap = null, transformedHtml = null) {
     const results = [];
 
     for (const violation of violations) {
         for (const node of violation.nodes) {
-            const violationResult = createViolationFromNode(filePath, violation, node, sourceContent);
+            const violationResult = createViolationFromNode(
+                filePath, violation, node, sourceContent, lineMap, transformedHtml
+            );
             results.push(violationResult);
         }
     }
 
     return results;
 }
+
