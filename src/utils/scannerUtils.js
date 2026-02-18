@@ -36,7 +36,7 @@ export async function resolveFiles(config, targetPath) {
     // Default: scan entire project
     // Use multiple patterns to ensure root-level files are included
     const patterns = extensions.map(ext => `**/*.${ext}`);
-    
+
     const files = await glob(patterns, {
         ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
         dot: false
@@ -187,54 +187,85 @@ function resolveLineNumber(htmlSnippet, sourceContent, lineMap, transformedHtml)
     }
     return findLineNumber(sourceContent, htmlSnippet);
 }
+
 /**
  * Find the original JSX source line using the transformer's lineMap.
  *
- * Strategy:
- *  - Extract tag name from the axe snippet (e.g. "img" from '<img src="dynamic">')
- *  - Walk lineMap entries (which are keyed to transformed HTML body lines)
- *  - Add HTML_WRAPPER_OFFSET to convert body-relative line → full document line
- *  - Find the transformed HTML line that contains a matching opening tag
- *  - Return the mapped JSX source line
+ * Matches by tag name + key attribute value extracted from the axe snippet.
+ * This gives a unique fingerprint per element, solving duplicate-tag ambiguity.
  *
- * @param {string} htmlSnippet - HTML snippet from axe (e.g. '<img src="dynamic">')
+ * @param {string} htmlSnippet - HTML snippet from axe (e.g. '<img src="photo.jpg">')
  * @param {Map<number, number>} lineMap - bodyLine → jsxSourceLine (1-indexed, body-relative)
  * @param {string} transformedHtml - Full HTML output from the transformer
  * @returns {number|null}
  */
 function resolveLineFromMap(htmlSnippet, lineMap, transformedHtml) {
-    const tagName = extractTagName(htmlSnippet);
-    if (!tagName) return null;
+    const fingerprint = extractFingerprint(htmlSnippet);
+    if (!fingerprint) return null;
 
     const htmlLines = transformedHtml.split('\n');
 
     for (const [bodyLine, sourceLine] of lineMap.entries()) {
-        // bodyLine is 1-indexed relative to body content
-        // add offset to get the actual line in the full document string
         const documentLine = bodyLine + HTML_WRAPPER_OFFSET;
-        const htmlLine = htmlLines[documentLine - 1]; // convert to 0-indexed
-
+        const htmlLine = htmlLines[documentLine - 1];
         if (!htmlLine) continue;
 
-        const lineTagName = extractTagName(htmlLine);
-        if (lineTagName === tagName) {
+        const lineFingerprint = extractFingerprint(htmlLine);
+        if (!lineFingerprint) continue;
+
+        if (fingerprintsMatch(fingerprint, lineFingerprint)) {
             return sourceLine;
         }
     }
-
     return null;
+}
+/**
+ * Extract a matching fingerprint from an HTML string.
+ * A fingerprint is { tag, attr, value } using the most unique attribute.
+ *
+ * Priority: src → href → id → for → type → tag only
+ *
+ * @param {string} html
+ * @returns {{ tag: string, attr: string|null, value: string|null }|null}
+ */
+function extractFingerprint(html) {
+    const tagMatch = html.match(/<(\w+)/);
+    if (!tagMatch) return null;
+
+    const tag = tagMatch[1].toLowerCase();
+
+    // Ordered by uniqueness — first match wins
+    const attrPriority = ['src', 'href', 'id', 'for', 'action', 'name', 'type', 'role'];
+
+    for (const attr of attrPriority) {
+        const attrRegex = new RegExp(`${attr}="([^"]*)"`);
+        const match = html.match(attrRegex);
+        if (match) {
+            return { tag, attr, value: match[1] };
+        }
+    }
+
+    // No key attribute found — match by tag only (last resort)
+    return { tag, attr: null, value: null };
 }
 
 /**
- * Extract the opening tag name from an HTML string.
- * Works on full elements, single lines, and axe snippets.
+ * Compare two fingerprints for a match.
  *
- * @param {string} html
- * @returns {string|null} - Lowercase tag name, or null if not found
+ * @param {{ tag: string, attr: string|null, value: string|null }} a
+ * @param {{ tag: string, attr: string|null, value: string|null }} b
+ * @returns {boolean}
  */
-function extractTagName(html) {
-    const match = html.match(/<(\w+)[\s>]/);
-    return match ? match[1].toLowerCase() : null;
+function fingerprintsMatch(a, b) {
+    if (a.tag !== b.tag) return false;
+
+    // Both have the same attribute with a value — must match on value
+    if (a.attr && b.attr && a.attr === b.attr) {
+        return a.value === b.value;
+    }
+
+    // One or both have no key attribute — fall back to tag-only match
+    return true;
 }
 
 /**
