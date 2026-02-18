@@ -13,7 +13,7 @@ import path from 'path';
 import * as p from '@clack/prompts';
 import { findLineNumber } from './sourceMapper.js';
 import { normalizeForGlob } from './pathUtils.js';
-
+import { HTML_WRAPPER_OFFSET } from '../engine/transformers/jsxTransformer.js';
 
 // -----------------------------------------------------------------------------
 // File Resolution
@@ -187,31 +187,54 @@ function resolveLineNumber(htmlSnippet, sourceContent, lineMap, transformedHtml)
     }
     return findLineNumber(sourceContent, htmlSnippet);
 }
-
 /**
  * Find the original JSX source line using the transformer's lineMap.
  *
- * Finds which line in the transformed HTML contains the axe snippet,
- * then maps that HTML line back to its original JSX source line.
+ * Strategy:
+ *  - Extract tag name from the axe snippet (e.g. "img" from '<img src="dynamic">')
+ *  - Walk lineMap entries (which are keyed to transformed HTML body lines)
+ *  - Add HTML_WRAPPER_OFFSET to convert body-relative line → full document line
+ *  - Find the transformed HTML line that contains a matching opening tag
+ *  - Return the mapped JSX source line
  *
  * @param {string} htmlSnippet - HTML snippet from axe (e.g. '<img src="dynamic">')
- * @param {Map<number, number>} lineMap - htmlLine → jsxSourceLine
+ * @param {Map<number, number>} lineMap - bodyLine → jsxSourceLine (1-indexed, body-relative)
  * @param {string} transformedHtml - Full HTML output from the transformer
  * @returns {number|null}
  */
 function resolveLineFromMap(htmlSnippet, lineMap, transformedHtml) {
-    const normalizedSnippet = htmlSnippet.replace(/\s+/g, ' ').trim();
+    const tagName = extractTagName(htmlSnippet);
+    if (!tagName) return null;
+
     const htmlLines = transformedHtml.split('\n');
 
-    for (let i = 0; i < htmlLines.length; i++) {
-        const normalizedLine = htmlLines[i].replace(/\s+/g, ' ').trim();
-        if (normalizedLine.includes(normalizedSnippet) || normalizedSnippet.includes(normalizedLine)) {
-            const sourceLine = lineMap.get(i + 1); // lineMap is 1-indexed
-            if (sourceLine) return sourceLine;
+    for (const [bodyLine, sourceLine] of lineMap.entries()) {
+        // bodyLine is 1-indexed relative to body content
+        // add offset to get the actual line in the full document string
+        const documentLine = bodyLine + HTML_WRAPPER_OFFSET;
+        const htmlLine = htmlLines[documentLine - 1]; // convert to 0-indexed
+
+        if (!htmlLine) continue;
+
+        const lineTagName = extractTagName(htmlLine);
+        if (lineTagName === tagName) {
+            return sourceLine;
         }
     }
 
     return null;
+}
+
+/**
+ * Extract the opening tag name from an HTML string.
+ * Works on full elements, single lines, and axe snippets.
+ *
+ * @param {string} html
+ * @returns {string|null} - Lowercase tag name, or null if not found
+ */
+function extractTagName(html) {
+    const match = html.match(/<(\w+)[\s>]/);
+    return match ? match[1].toLowerCase() : null;
 }
 
 /**
