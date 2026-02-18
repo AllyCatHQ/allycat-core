@@ -23,6 +23,7 @@ import {
     checkIsraeliRtlCompliance,
     processAxeViolations
 } from '../utils/scannerUtils.js';
+import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
@@ -69,8 +70,8 @@ export async function runQuickAudit(config, targetPath = null) {
  */
 function createSilentVirtualConsole() {
     const virtualConsole = new VirtualConsole();
-    virtualConsole.on('error', () => {});
-    virtualConsole.on('warn', () => {});
+    virtualConsole.on('error', () => { });
+    virtualConsole.on('warn', () => { });
     return virtualConsole;
 }
 
@@ -130,14 +131,14 @@ async function executeAxeAnalysis(window, config) {
  */
 function getHtmlOpenTag(document) {
     const htmlElement = document.documentElement;
-    return htmlElement 
-        ? htmlElement.outerHTML.split('>')[0] + '>' 
+    return htmlElement
+        ? htmlElement.outerHTML.split('>')[0] + '>'
         : '<html>';
 }
 
 /**
  * Scan a single file for accessibility issues
- * 
+ *
  * @param {string} filePath - File path to scan
  * @param {Object} config - User configuration
  * @returns {Promise<Array>} - Array of violation objects for this file
@@ -148,25 +149,32 @@ async function scanSingleFile(filePath, config) {
     try {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
-        const window = createJsdomWithAxe(sourceContent);
+        // JSX/TSX: transform first, preserve lineMap for precise line reporting
+        const { html: scanContent, lineMap } = isJsxFile(filePath)
+            ? transformJsxToHtml(sourceContent)
+            : { html: sourceContent, lineMap: null };
 
+        const window = createJsdomWithAxe(scanContent);
         const axeResults = await executeAxeAnalysis(window, config);
 
-        const axeViolations = processAxeViolations(filePath, axeResults.violations, sourceContent);
+        const axeViolations = processAxeViolations(
+            filePath,
+            axeResults.violations,
+            sourceContent,
+            lineMap,
+            isJsxFile(filePath) ? scanContent : null
+        );
         violations.push(...axeViolations);
 
-        // Check Israeli RTL compliance if enabled
         if (config.rules.rtl) {
             const htmlOpenTag = getHtmlOpenTag(window.document);
             const rtlViolation = checkIsraeliRtlCompliance(
-                window.document, 
-                filePath, 
-                sourceContent, 
+                window.document,
+                filePath,
+                sourceContent,
                 htmlOpenTag
             );
-            if (rtlViolation) {
-                violations.push(rtlViolation);
-            }
+            if (rtlViolation) violations.push(rtlViolation);
         }
 
         window.close();
