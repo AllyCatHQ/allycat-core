@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>דף נגישות - תקין</title>
+</head>
+<body>
+
+    <h1>עמוד תקין עם RTL</h1>
+
+    <nav aria-label="ניווט ראשי">
+        <a href="/">בית</a>
+        <a href="/about">אודות</a>
+        <a href="/contact">צור קשר</a>
+    </nav>
+
+    <main>
+        <section aria-labelledby="form-heading">
+            <h2 id="form-heading">טופס יצירת קשר</h2>
+            <div>
+                <label for="fullname">שם מלא</label>
+                <input id="fullname" type="text" name="fullname" />
+            </div>
+            <div>
+                <label for="email">דואר אלקטרוני</label>
+                <input id="email" type="email" name="email" />
+            </div>
+            <button type="submit">שלח</button>
+        </section>
+
+        <section>
+            <h2>תמונות</h2>
+            <img src="logo.png" alt="לוגו החברה" />
+        </section>
+    </main>
+
+</body>
+</html>

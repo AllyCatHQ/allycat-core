@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="he">
+<!--
+    RTL BAD TEST FILE
+    Expected violations with Israeli standard:
+    - Line 2:  <html> missing dir="rtl"     → israel-rtl (SERIOUS)
+    - Line 24: <img> missing alt            → image-alt (CRITICAL)
+    - Line 27: <input> missing label        → label (CRITICAL)
+    - Line 28: <input> missing label        → label (CRITICAL)
+    - Line 29: <button> empty               → button-name (CRITICAL)
+-->
+<head>
+    <meta charset="UTF-8">
+    <title>דף נגישות - בעייתי</title>
+</head>
+<body>
+
+    <h1>עמוד עם בעיות RTL ונגישות</h1>
+
+    <nav>
+        <a href="/">בית</a>
+        <a href="/about">אודות</a>
+    </nav>
+
+    <main>
+        <img src="banner.png" />
+
+        <section>
+            <h2>טופס בעייתי</h2>
+            <input type="text" name="fullname" placeholder="שם מלא" />
+            <input type="email" name="email" placeholder="אימייל" />
+            <button type="submit"></button>
+        </section>
+    </main>
+
+</body>
+</html>
