@@ -173,7 +173,29 @@ function processFullScanViolations(
  * @param {string} sourceContent - Original source code
  * @returns {Promise<Object|null>} - RTL violation object or null
  */
-async function checkRtlCompliancePlaywright(page, filePath, sourceContent) {
+// Add this new function in fullScanner.js:
+async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, ordinalIndex) {
+    if (isJsx) {
+        const hasRtl = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
+        if (hasRtl) return null;
+
+        const rootInfo = await page.evaluate(() => {
+            const root = document.body?.firstElementChild;
+            return root
+                ? { tag: root.tagName.toLowerCase(), html: root.outerHTML.split('>')[0] + '>' }
+                : { tag: 'div', html: '<div>' };
+        });
+
+        // Use ordinalIndex — not text search — to avoid matching comments
+        const sourceLines = ordinalIndex?.get(rootInfo.tag);
+        const lineNumber = (sourceLines && sourceLines.length > 0)
+            ? sourceLines[0]
+            : findLineNumber(sourceContent, `<${rootInfo.tag}`);
+
+        return createRtlViolation(filePath, rootInfo.html, lineNumber);
+    }
+
+    // HTML path — unchanged
     const hasRtl = await page.evaluate(
         () => document.documentElement.getAttribute('dir') === 'rtl'
     );
@@ -182,7 +204,6 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent) {
     const htmlOpenTag = await page.evaluate(
         () => document.documentElement.outerHTML.split('>')[0] + '>'
     );
-
     return createRtlViolation(filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
 }
 
@@ -227,7 +248,7 @@ async function scanSingleFile(browser, filePath, config) {
         ));
 
         if (config.rules.rtl) {
-            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent);
+            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx);
             if (rtlViolation) violations.push(rtlViolation);
         }
 

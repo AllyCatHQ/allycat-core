@@ -16,7 +16,8 @@ import {
     resolveFiles,
     getAxeTags,
     checkIsraeliRtlCompliance,
-    processAxeViolations
+    processAxeViolations,
+    checkJsxRtlCompliance
 } from '../utils/scannerUtils.js';
 import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
 
@@ -159,9 +160,9 @@ async function scanSingleFile(filePath, config) {
         violations.push(...axeViolations);
 
         if (config.rules.rtl) {
-            const rtlViolation = checkIsraeliRtlCompliance(
-                window.document, filePath, sourceContent, getHtmlOpenTag(window.document)
-            );
+            const rtlViolation = isJsx
+                ? checkJsxRtlCompliance(window.document, filePath, sourceContent, ordinalIndex)
+                : checkIsraeliRtlCompliance(window.document, filePath, sourceContent, getHtmlOpenTag(window.document));
             if (rtlViolation) violations.push(rtlViolation);
         }
 

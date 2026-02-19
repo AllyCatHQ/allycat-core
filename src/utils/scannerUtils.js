@@ -108,6 +108,52 @@ export function checkIsraeliRtlCompliance(document, filePath, sourceContent, htm
 }
 
 // -----------------------------------------------------------------------------
+// Israeli Standard Compliance — JSX/TSX Strategy
+// -----------------------------------------------------------------------------
+
+/**
+ * Check RTL compliance for JSX/TSX files.
+ * Uses ordinalIndex to resolve the root element's source line accurately —
+ * avoiding false matches inside comments or strings via plain text search.
+ *
+ * @param {Document} document - JSDOM document from transformed JSX
+ * @param {string} filePath
+ * @param {string} sourceContent - Original JSX source
+ * @param {Map<string, number[]>|null} ordinalIndex - tag → [sourceLine, ...] in document order
+ * @returns {Object|null}
+ */
+export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinalIndex) {
+    const anyRtlElement = document.querySelector('[dir="rtl"]');
+    if (anyRtlElement) return null;
+
+    const rootElement = document.body?.firstElementChild;
+    const rootTag = rootElement ? rootElement.tagName.toLowerCase() : 'div';
+    const rootHtml = rootElement
+        ? rootElement.outerHTML.split('>')[0] + '>'
+        : '<div>';
+
+    // Use ordinalIndex (AST-derived) for accurate line resolution.
+    // Falls back to text search only if ordinalIndex is unavailable.
+    const sourceLines = ordinalIndex?.get(rootTag);
+    const lineNumber = (sourceLines && sourceLines.length > 0)
+        ? sourceLines[0]
+        : findLineNumber(sourceContent, `<${rootTag}`);
+
+    return {
+        file: filePath,
+        id: 'israel-rtl',
+        impact: 'serious',
+        description: 'Israeli law requires RTL direction for Hebrew interfaces.',
+        help: `Add dir="rtl" to your root element or to the <html> tag in index.html.`,
+        helpUrl: 'https://www.gov.il/he/departments/policies/accessibility_standard',
+        wcagTags: ['israeli-standard'],
+        selector: rootTag,
+        html: rootHtml,
+        lineNumber,
+    };
+}
+
+// -----------------------------------------------------------------------------
 // JSX Line Resolution
 // -----------------------------------------------------------------------------
 /**
