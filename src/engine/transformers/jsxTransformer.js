@@ -362,7 +362,18 @@ function renderAttributes(attributes) {
             parts.push(`${htmlAttr}="${escapeAttr(attr.value.value)}"`);
             continue;
         }
+        // Style object: style={{ color: '#fff', backgroundColor: '#000' }}
+        // Must be handled before the generic expression resolver,
+        // because ObjectExpression → "dynamic" by default.
+        if (htmlAttr === 'style' && t.isJSXExpressionContainer(attr.value)) {
+            const cssString = resolveStyleObject(attr.value.expression);
+            if (cssString) {
+                parts.push(`style="${cssString}"`);
+            }
+            continue;
+        }
 
+        // Expression value: alt={getAlt()}, src={imgUrl}
         if (t.isJSXExpressionContainer(attr.value)) {
             const resolved = resolveExpressionValue(attr.value.expression, htmlAttr);
             if (resolved === null) continue;
@@ -421,6 +432,57 @@ function resolveExpressionValue(expression, attrName) {
     return 'dynamic';
 }
 
+/**
+ * Serialize a JSX style ObjectExpression to a valid CSS string.
+ *
+ * Handles:
+ *   style={{ color: '#fff' }}           → "color: #fff"
+ *   style={{ backgroundColor: '#000' }} → "background-color: #000"
+ *   style={{ fontSize: '16px' }}        → "font-size: 16px"
+ *
+ * Skips spread props and computed/dynamic values.
+ * Returns null if expression is not an ObjectExpression (e.g. a variable).
+ *
+ * @param {import('@babel/types').Expression} expression
+ * @returns {string|null}
+ */
+function resolveStyleObject(expression) {
+    if (!t.isObjectExpression(expression)) return null;
+
+    const declarations = [];
+
+    for (const prop of expression.properties) {
+        // Skip spread: { ...baseStyle }
+        if (t.isSpreadElement(prop) || t.isRestElement(prop)) continue;
+        // Skip computed keys: { [key]: value }
+        if (prop.computed) continue;
+
+        const key = t.isIdentifier(prop.key)
+            ? prop.key.name
+            : t.isStringLiteral(prop.key)
+                ? prop.key.value
+                : null;
+
+        if (!key) continue;
+
+        // Only serialize string and numeric literal values —
+        // variables and expressions are unknowable statically.
+        let value = null;
+        if (t.isStringLiteral(prop.value)) {
+            value = prop.value.value;
+        } else if (t.isNumericLiteral(prop.value)) {
+            value = String(prop.value.value);
+        }
+
+        if (!value) continue;
+
+        // camelCase → kebab-case: backgroundColor → background-color
+        const cssProperty = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+        declarations.push(`${cssProperty}: ${value}`);
+    }
+
+    return declarations.length > 0 ? declarations.join('; ') : null;
+}
 // -----------------------------------------------------------------------------
 // Document Wrapper
 // -----------------------------------------------------------------------------
