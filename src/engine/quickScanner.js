@@ -1,14 +1,9 @@
 /**
  * Quick Scanner - JSDOM-based accessibility auditing
- * 
+ *
  * Fast scanning using JSDOM + axe-core.
  * Does NOT check color contrast (requires real browser).
- * 
- * Enhanced with:
- * - Element selectors
- * - HTML snippets
- * - Approximate line numbers
- * 
+ *
  * Use for: Development, quick checks, CI fast-fail
  */
 
@@ -50,10 +45,8 @@ export async function runQuickAudit(config, targetPath = null) {
     p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
 
     const allViolations = [];
-
     for (const filePath of filesToScan) {
-        const fileViolations = await scanSingleFile(filePath, config);
-        allViolations.push(...fileViolations);
+        allViolations.push(...await scanSingleFile(filePath, config));
     }
 
     return allViolations;
@@ -88,12 +81,8 @@ function createJsdomWithAxe(htmlContent) {
         pretendToBeVisual: true,
         virtualConsole: createSilentVirtualConsole()
     });
-
     const { window } = dom;
-
-    // Inject axe-core into virtual browser
     window.eval(axeSource);
-
     return window;
 }
 
@@ -106,10 +95,7 @@ function createJsdomWithAxe(htmlContent) {
  */
 async function executeAxeAnalysis(window, config) {
     return await window.axe.run(window.document, {
-        runOnly: {
-            type: 'tag',
-            values: getAxeTags(config)
-        },
+        runOnly: { type: 'tag', values: getAxeTags(config) },
         rules: {
             // Contrast rules disabled - they don't work in JSDOM
             'color-contrast': { enabled: false },
@@ -131,9 +117,7 @@ async function executeAxeAnalysis(window, config) {
  */
 function getHtmlOpenTag(document) {
     const htmlElement = document.documentElement;
-    return htmlElement
-        ? htmlElement.outerHTML.split('>')[0] + '>'
-        : '<html>';
+    return htmlElement ? htmlElement.outerHTML.split('>')[0] + '>' : '<html>';
 }
 
 /**
@@ -149,30 +133,34 @@ async function scanSingleFile(filePath, config) {
     try {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
-        // JSX/TSX: transform first, preserve lineMap for precise line reporting
-        const { html: scanContent, lineMap } = isJsxFile(filePath)
+        const isJsx = isJsxFile(filePath);
+
+        // transformJsxToHtml now returns ordinalIndex alongside html and lineMap
+        const { html: scanContent, lineMap, ordinalIndex } = isJsx
             ? transformJsxToHtml(sourceContent)
-            : { html: sourceContent, lineMap: null };
+            : { html: sourceContent, lineMap: null, ordinalIndex: null };
 
         const window = createJsdomWithAxe(scanContent);
         const axeResults = await executeAxeAnalysis(window, config);
 
+        // Pass all four resolution artifacts:
+        //   lineMap      — for layer B (unique attribute search)
+        //   ordinalIndex — for layer A (primary, handles identical elements)
+        //   domDocument  — for layer A (querySelectorAll position lookup)
         const axeViolations = processAxeViolations(
             filePath,
             axeResults.violations,
             sourceContent,
-            lineMap,
-            isJsxFile(filePath) ? scanContent : null
+            isJsx ? lineMap : null,
+            isJsx ? scanContent : null,
+            isJsx ? ordinalIndex : null,
+            isJsx ? window.document : null
         );
         violations.push(...axeViolations);
 
         if (config.rules.rtl) {
-            const htmlOpenTag = getHtmlOpenTag(window.document);
             const rtlViolation = checkIsraeliRtlCompliance(
-                window.document,
-                filePath,
-                sourceContent,
-                htmlOpenTag
+                window.document, filePath, sourceContent, getHtmlOpenTag(window.document)
             );
             if (rtlViolation) violations.push(rtlViolation);
         }

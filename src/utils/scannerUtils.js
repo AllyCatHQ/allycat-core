@@ -1,9 +1,9 @@
 /**
  * Scanner Utilities
- * 
+ *
  * Shared utilities for both quick and full scanners.
  * Contains file resolution, axe-core configuration, and compliance checks.
- * 
+ *
  * @module utils/scannerUtils
  */
 
@@ -19,13 +19,6 @@ import { HTML_WRAPPER_OFFSET } from '../engine/transformers/jsxTransformer.js';
 // File Resolution
 // -----------------------------------------------------------------------------
 
-/**
- * Resolve which files to scan based on target path or config
- * 
- * @param {Object} config - User configuration
- * @param {string|null} targetPath - Optional target path
- * @returns {Promise<Array<string>>} - Array of file paths to scan
- */
 export async function resolveFiles(config, targetPath) {
     const extensions = getFrameworkExtensions(config.framework);
 
@@ -33,10 +26,7 @@ export async function resolveFiles(config, targetPath) {
         return await resolveTargetPath(targetPath, extensions);
     }
 
-    // Default: scan entire project
-    // Use multiple patterns to ensure root-level files are included
     const patterns = extensions.map(ext => `**/*.${ext}`);
-
     const files = await glob(patterns, {
         ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
         dot: false
@@ -45,12 +35,6 @@ export async function resolveFiles(config, targetPath) {
     return files;
 }
 
-/**
- * Get file extensions based on framework type
- * 
- * @param {string} framework - Framework identifier
- * @returns {Array<string>} - Array of file extensions without dots
- */
 export function getFrameworkExtensions(framework) {
     const extensionMap = {
         'react': ['jsx', 'tsx', 'html'],
@@ -58,17 +42,9 @@ export function getFrameworkExtensions(framework) {
         'angular': ['html', 'component.html'],
         'html': ['html']
     };
-
     return extensionMap[framework] || extensionMap['html'];
 }
 
-/**
- * Resolve a specific target path (file or directory)
- * 
- * @param {string} targetPath - Path to file or directory
- * @param {Array<string>} extensions - Valid file extensions
- * @returns {Promise<Array<string>>} - Array of resolved file paths
- */
 export async function resolveTargetPath(targetPath, extensions) {
     const stats = statSync(targetPath);
 
@@ -81,7 +57,6 @@ export async function resolveTargetPath(targetPath, extensions) {
     }
 
     if (stats.isDirectory()) {
-        // Normalize path separators for cross-platform glob compatibility
         const normalizedPath = normalizeForGlob(targetPath);
         const globPattern = `${normalizedPath}/**/*.{${extensions.join(',')}}`;
         return await glob(globPattern, {
@@ -96,38 +71,20 @@ export async function resolveTargetPath(targetPath, extensions) {
 // Axe-Core Configuration
 // -----------------------------------------------------------------------------
 
-/**
- * Get axe-core tags based on user's selected accessibility standard
- * 
- * @param {Object} config - User configuration
- * @returns {Array<string>} - Array of axe-core tag identifiers
- */
 export function getAxeTags(config) {
     const baseTags = ['best-practice'];
-
     const standardTagMap = {
         'israel': ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
         'wcag-aaa': ['wcag2a', 'wcag2aa', 'wcag2aaa', 'wcag21a', 'wcag21aa', 'wcag21aaa'],
         'wcag-aa': ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
     };
-
-    const standardTags = standardTagMap[config.selectedStandard] || standardTagMap['wcag-aa'];
-
-    return [...baseTags, ...standardTags];
+    return [...baseTags, ...(standardTagMap[config.selectedStandard] || standardTagMap['wcag-aa'])];
 }
 
 // -----------------------------------------------------------------------------
 // Israeli Standard Compliance
 // -----------------------------------------------------------------------------
 
-/**
- * Create an Israeli RTL compliance violation object
- * 
- * @param {string} filePath - Source file path
- * @param {string} htmlOpenTag - The HTML opening tag snippet
- * @param {number|null} lineNumber - Line number of the HTML tag
- * @returns {Object} - RTL violation object
- */
 export function createRtlViolation(filePath, htmlOpenTag, lineNumber) {
     return {
         file: filePath,
@@ -143,146 +100,211 @@ export function createRtlViolation(filePath, htmlOpenTag, lineNumber) {
     };
 }
 
-/**
- * Check RTL compliance for Israeli accessibility standard
- * 
- * @param {Object} document - DOM document object (JSDOM or Playwright)
- * @param {string} filePath - Source file path
- * @param {string} sourceContent - Original source code
- * @param {string} htmlOpenTag - The HTML opening tag snippet
- * @returns {Object|null} - RTL violation object or null if compliant
- */
 export function checkIsraeliRtlCompliance(document, filePath, sourceContent, htmlOpenTag) {
     const htmlElement = document.documentElement;
     const hasRtlDirection = htmlElement && htmlElement.getAttribute('dir') === 'rtl';
-
-    if (hasRtlDirection) {
-        return null;
-    }
-
-    const lineNumber = findLineNumber(sourceContent, '<html');
-
-    return createRtlViolation(filePath, htmlOpenTag, lineNumber);
+    if (hasRtlDirection) return null;
+    return createRtlViolation(filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
 }
 
 // -----------------------------------------------------------------------------
-// Violation Processing
+// JSX Line Resolution
+// -----------------------------------------------------------------------------
+/**
+ * Resolve JSX source line using the 3-layer strategy.
+ *
+ * @param {string} cssSelector     - axe node.target[0]
+ * @param {string} htmlSnippet     - axe node.html
+ * @param {string} sourceContent   - original JSX source
+ * @param {Map<number,number>} lineMap       - htmlLine → jsxSourceLine
+ * @param {string} transformedHtml           - full HTML from transformer
+ * @param {Map<string,number[]>} ordinalIndex - tag → [sourceLine, ...] in document order
+ * @param {Document|null} domDocument        - live JSDOM document (or null)
+ * @returns {number|null}
+ */
+function resolveJsxLineNumber(
+    cssSelector, htmlSnippet, sourceContent,
+    lineMap, transformedHtml, ordinalIndex, domDocument
+) {
+    // Layer A — ordinal index via DOM position
+    const layerA = resolveViaOrdinalIndex(cssSelector, domDocument, ordinalIndex);
+    if (layerA !== null) return layerA;
+
+    // Layer B — unique attribute search in transformed HTML
+    const layerB = resolveViaUniqueAttribute(htmlSnippet, lineMap, transformedHtml);
+    if (layerB !== null) return layerB;
+
+    // Layer C — sourceMapper on original JSX source
+    return findLineNumber(sourceContent, htmlSnippet);
+}
+
+// -----------------------------------------------------------------------------
+// Layer A — Ordinal Index via DOM Position
 // -----------------------------------------------------------------------------
 
 /**
- * Resolve the source line number for a violation.
+ * Find the violation's ordinal position among same-tag elements using the
+ * live DOM, then look up that position in the ordinalIndex.
  *
- * For JSX files: uses lineMap (Babel AST precision) + transformedHtml for snippet lookup.
- * For HTML files: falls back to pattern matching in source content.
- *
- * @param {string} htmlSnippet - HTML snippet from axe-core
- * @param {string} sourceContent - Original source code
- * @param {Map<number, number>|null} lineMap - Optional JSX htmlLine→sourceLine map
- * @param {string|null} transformedHtml - Optional transformed HTML (required when lineMap is set)
+ * @param {string} cssSelector
+ * @param {Document|null} domDocument
+ * @param {Map<string,number[]>} ordinalIndex
  * @returns {number|null}
  */
-function resolveLineNumber(htmlSnippet, sourceContent, lineMap, transformedHtml) {
-    if (lineMap && lineMap.size > 0 && transformedHtml) {
-        return resolveLineFromMap(htmlSnippet, lineMap, transformedHtml);
+function resolveViaOrdinalIndex(cssSelector, domDocument, ordinalIndex) {
+    if (!cssSelector || !domDocument || !ordinalIndex) return null;
+
+    try {
+        const element = domDocument.querySelector(cssSelector);
+        if (!element) return null;
+
+        const tag = element.tagName.toLowerCase();
+        const sourceLines = ordinalIndex.get(tag);
+        if (!sourceLines || sourceLines.length === 0) return null;
+
+        // Find this element's ordinal position among all same-tag elements
+        const allSameTag = Array.from(domDocument.querySelectorAll(tag));
+        const elementIndex = allSameTag.indexOf(element);
+        if (elementIndex === -1 || elementIndex >= sourceLines.length) return null;
+
+        return sourceLines[elementIndex];
+    } catch {
+        // querySelector can throw on malformed selectors
+        return null;
     }
+}
+
+// -----------------------------------------------------------------------------
+// Layer B — Unique Attribute Search in transformedHtml
+// -----------------------------------------------------------------------------
+
+/**
+ * Search the axe HTML snippet for a unique attribute value and find it
+ * in the transformed HTML lines to get a lineMap entry.
+ *
+ * This layer activates when domDocument is unavailable (Playwright path)
+ * but the element has a unique attribute that makes it findable by text.
+ *
+ * Excluded value 'dynamic' — this is the transformer's placeholder for
+ * runtime-computed expressions. It appears on many elements and would
+ * cause false matches.
+ *
+ * @param {string} htmlSnippet
+ * @param {Map<number,number>} lineMap
+ * @param {string} transformedHtml
+ * @returns {number|null}
+ */
+function resolveViaUniqueAttribute(htmlSnippet, lineMap, transformedHtml) {
+    if (!htmlSnippet || !lineMap || !transformedHtml) return null;
+
+    const token = extractUniqueAttributeToken(htmlSnippet.trim());
+    if (!token) return null;
+
+    const htmlLines = transformedHtml.split('\n');
+
+    for (const [htmlLineNumber, sourceLine] of lineMap.entries()) {
+        const lineIndex = htmlLineNumber + HTML_WRAPPER_OFFSET - 1;
+        const htmlLine = htmlLines[lineIndex];
+        if (htmlLine && htmlLine.includes(token)) {
+            return sourceLine;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Extract a unique attribute value from an HTML snippet for text-based search.
+ *
+ * Priority order (most → least unique):
+ *   src    — almost always file-unique (image paths, script sources)
+ *   href   — almost always file-unique (link targets)
+ *   id     — semantically required to be document-unique
+ *   name   — unique within a form context
+ *   for    — ties to a specific id
+ *   action — unique per form
+ *   role   — often repeated; useful only when above are absent
+ *
+ * @param {string} html - HTML snippet from axe
+ * @returns {string|null}
+ */
+function extractUniqueAttributeToken(html) {
+    const priority = ['src', 'href', 'id', 'name', 'for', 'action', 'role'];
+
+    for (const attr of priority) {
+        const match = html.match(new RegExp(`${attr}="([^"]+)"`));
+        if (match && match[1] && match[1] !== 'dynamic') {
+            return match[1];
+        }
+    }
+
+    return null;
+}
+
+// -----------------------------------------------------------------------------
+// Violation Processing — Public API
+// -----------------------------------------------------------------------------
+
+/**
+ * Route to the correct resolution strategy based on available context.
+ *
+ * @param {string} cssSelector
+ * @param {string} htmlSnippet
+ * @param {string} sourceContent
+ * @param {Map<number,number>|null} lineMap
+ * @param {string|null} transformedHtml
+ * @param {Map<string,number[]>|null} ordinalIndex
+ * @param {Document|null} domDocument
+ * @returns {number|null}
+ */
+function resolveLineNumber(
+    cssSelector, htmlSnippet, sourceContent,
+    lineMap, transformedHtml, ordinalIndex, domDocument
+) {
+    const isJsxContext = lineMap && lineMap.size > 0 && transformedHtml && ordinalIndex;
+
+    if (isJsxContext) {
+        return resolveJsxLineNumber(
+            cssSelector, htmlSnippet, sourceContent,
+            lineMap, transformedHtml, ordinalIndex, domDocument
+        );
+    }
+
+    // HTML file — use existing sourceMapper directly
     return findLineNumber(sourceContent, htmlSnippet);
 }
 
 /**
- * Find the original JSX source line using the transformer's lineMap.
+ * Create a single violation result object from axe node data.
  *
- * Matches by tag name + key attribute value extracted from the axe snippet.
- * This gives a unique fingerprint per element, solving duplicate-tag ambiguity.
- *
- * @param {string} htmlSnippet - HTML snippet from axe (e.g. '<img src="photo.jpg">')
- * @param {Map<number, number>} lineMap - bodyLine → jsxSourceLine (1-indexed, body-relative)
- * @param {string} transformedHtml - Full HTML output from the transformer
- * @returns {number|null}
+ * @param {string} filePath
+ * @param {Object} violation - axe violation object
+ * @param {Object} node - axe violation node
+ * @param {string} sourceContent
+ * @param {Map<number,number>|null} lineMap
+ * @param {string|null} transformedHtml
+ * @param {Map<string,number[]>|null} ordinalIndex
+ * @param {Document|null} domDocument
+ * @returns {Object}
  */
-function resolveLineFromMap(htmlSnippet, lineMap, transformedHtml) {
-    const fingerprint = extractFingerprint(htmlSnippet);
-    if (!fingerprint) return null;
-
-    const htmlLines = transformedHtml.split('\n');
-
-    for (const [bodyLine, sourceLine] of lineMap.entries()) {
-        const documentLine = bodyLine + HTML_WRAPPER_OFFSET;
-        const htmlLine = htmlLines[documentLine - 1];
-        if (!htmlLine) continue;
-
-        const lineFingerprint = extractFingerprint(htmlLine);
-        if (!lineFingerprint) continue;
-
-        if (fingerprintsMatch(fingerprint, lineFingerprint)) {
-            return sourceLine;
-        }
-    }
-    return null;
-}
-/**
- * Extract a matching fingerprint from an HTML string.
- * A fingerprint is { tag, attr, value } using the most unique attribute.
- *
- * Priority: src → href → id → for → type → tag only
- *
- * @param {string} html
- * @returns {{ tag: string, attr: string|null, value: string|null }|null}
- */
-function extractFingerprint(html) {
-    const tagMatch = html.match(/<(\w+)/);
-    if (!tagMatch) return null;
-
-    const tag = tagMatch[1].toLowerCase();
-
-    // Ordered by uniqueness — first match wins
-    const attrPriority = ['src', 'href', 'id', 'for', 'action', 'name', 'type', 'role'];
-
-    for (const attr of attrPriority) {
-        const attrRegex = new RegExp(`${attr}="([^"]*)"`);
-        const match = html.match(attrRegex);
-        if (match) {
-            return { tag, attr, value: match[1] };
-        }
-    }
-
-    // No key attribute found — match by tag only (last resort)
-    return { tag, attr: null, value: null };
-}
-
-/**
- * Compare two fingerprints for a match.
- *
- * @param {{ tag: string, attr: string|null, value: string|null }} a
- * @param {{ tag: string, attr: string|null, value: string|null }} b
- * @returns {boolean}
- */
-function fingerprintsMatch(a, b) {
-    if (a.tag !== b.tag) return false;
-
-    // Both have the same attribute with a value — must match on value
-    if (a.attr && b.attr && a.attr === b.attr) {
-        return a.value === b.value;
-    }
-
-    // One or both have no key attribute — fall back to tag-only match
-    return true;
-}
-
-/**
- * Create a single violation result object from axe node data
- *
- * @param {string} filePath - Source file path
- * @param {Object} violation - Axe violation object
- * @param {Object} node - Affected DOM node from axe
- * @param {string} sourceContent - Original source code for line lookup
- * @param {Map<number, number>|null} lineMap - Optional JSX lineMap
- * @param {string|null} transformedHtml - Optional transformed HTML for JSX line resolution
- * @returns {Object} - Formatted violation result
- */
-export function createViolationFromNode(filePath, violation, node, sourceContent, lineMap = null, transformedHtml = null) {
+export function createViolationFromNode(
+    filePath, violation, node, sourceContent,
+    lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null
+) {
     const htmlSnippet = node.html;
-    const cssSelector = node.target?.[0] || '';
-    const lineNumber = resolveLineNumber(htmlSnippet, sourceContent, lineMap, transformedHtml);
+
+    // axe node.target is always an array.
+    // We use [0] — the outermost selector — for DOM lookup.
+    // For iframes/shadow DOM it's the outer frame/host selector,
+    // which querySelector CAN resolve from the outer document.
+    const cssSelector = Array.isArray(node.target)
+        ? (node.target[0] || '')
+        : (node.target || '');
+
+    const lineNumber = resolveLineNumber(
+        cssSelector, htmlSnippet, sourceContent,
+        lineMap, transformedHtml, ordinalIndex, domDocument
+    );
 
     return {
         file: filePath,
@@ -300,27 +322,31 @@ export function createViolationFromNode(filePath, violation, node, sourceContent
 }
 
 /**
- * Process all axe violations into formatted result objects
+ * Process all axe violations into formatted result objects.
  *
- * @param {string} filePath - Source file path
- * @param {Array} violations - Array of axe violation objects
- * @param {string} sourceContent - Original source code
- * @param {Map<number, number>|null} lineMap - Optional JSX lineMap
- * @param {string|null} transformedHtml - Optional transformed HTML for JSX line resolution
- * @returns {Array} - Array of formatted violation results
+ * @param {string} filePath
+ * @param {Array} violations
+ * @param {string} sourceContent
+ * @param {Map<number,number>|null} lineMap
+ * @param {string|null} transformedHtml
+ * @param {Map<string,number[]>|null} ordinalIndex
+ * @param {Document|null} domDocument
+ * @returns {Array}
  */
-export function processAxeViolations(filePath, violations, sourceContent, lineMap = null, transformedHtml = null) {
+export function processAxeViolations(
+    filePath, violations, sourceContent,
+    lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null
+) {
     const results = [];
 
     for (const violation of violations) {
         for (const node of violation.nodes) {
-            const violationResult = createViolationFromNode(
-                filePath, violation, node, sourceContent, lineMap, transformedHtml
-            );
-            results.push(violationResult);
+            results.push(createViolationFromNode(
+                filePath, violation, node, sourceContent,
+                lineMap, transformedHtml, ordinalIndex, domDocument
+            ));
         }
     }
 
     return results;
 }
-

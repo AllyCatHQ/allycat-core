@@ -9,6 +9,7 @@
  *  - Walk AST and extract JSX elements
  *  - Transform JSX attributes to HTML attributes
  *  - Return HTML string + lineMap (htmlLine → jsxSourceLine)
+ *  - Return ordinalIndex (tag → [sourceLine, ...]) for position-based lookup
  *
  * @module engine/transformers/jsxTransformer
  */
@@ -23,25 +24,31 @@ import * as t from '@babel/types';
 // -----------------------------------------------------------------------------
 
 /**
- * Transform JSX/TSX source code into scannable HTML
+ * Transform JSX/TSX source code into scannable HTML.
+ *
+ * Returns three artifacts:
+ *   html         — valid HTML string for JSDOM/Playwright consumption
+ *   lineMap      — Map<htmlLineNumber, jsxSourceLine> (1-indexed)
+ *   ordinalIndex — Map<tagName, Array<jsxSourceLine>>
+ *                  The array is in document order. Index 0 = first occurrence,
+ *                  index 1 = second occurrence, etc.
+ *                  Used by scannerUtils to resolve violations for identical elements.
  *
  * @param {string} sourceCode - Raw JSX or TSX file contents
- * @returns {{ html: string, lineMap: Map<number, number> }}
- *   html    - Valid HTML string for JSDOM/Playwright consumption
- *   lineMap - Map of htmlLine (1-indexed) → original jsxSourceLine (1-indexed)
+ * @returns {{ html: string, lineMap: Map<number, number>, ordinalIndex: Map<string, number[]> }}
  */
 export function transformJsxToHtml(sourceCode) {
     const ast = parseJsx(sourceCode);
     const jsxNodes = collectJsxRoots(ast);
-    const { html, lineMap } = renderNodesToHtml(jsxNodes, sourceCode);
+    const { html, lineMap, ordinalIndex } = renderNodesToHtml(jsxNodes);
 
-    return { html: wrapInDocument(html), lineMap };
+    return { html: wrapInDocument(html), lineMap, ordinalIndex };
 }
 
 /**
  * Check whether a file path is a JSX or TSX file
  *
- * @param {string} filePath - File path to check
+ * @param {string} filePath
  * @returns {boolean}
  */
 export function isJsxFile(filePath) {
@@ -49,12 +56,32 @@ export function isJsxFile(filePath) {
 }
 
 // -----------------------------------------------------------------------------
+// Constants
+// -----------------------------------------------------------------------------
+
+/**
+ * Number of lines added before body content by wrapInDocument.
+ * Used by scannerUtils to correctly offset lineMap lookups.
+ *
+ * Matches the structure of wrapInDocument() below — count the lines
+ * before ${bodyContent} starts:
+ *   line 1: <!DOCTYPE html>
+ *   line 2: <html lang="en">
+ *   line 3: <head>...</head>
+ *   line 4: <body>
+ *   line 5: ${bodyContent} starts here → offset = 4
+ *
+ * @type {number}
+ */
+export const HTML_WRAPPER_OFFSET = 4;
+
+// -----------------------------------------------------------------------------
 // Parsing
 // -----------------------------------------------------------------------------
 
 /**
- * Parse source code into a Babel AST
- * Supports JSX, TypeScript, and modern JS syntax
+ * Parse source code into a Babel AST.
+ * Supports JSX, TypeScript, and modern JS syntax.
  *
  * @param {string} sourceCode
  * @returns {import('@babel/types').File}
@@ -69,7 +96,7 @@ function parseJsx(sourceCode) {
             'optionalChaining',
             'nullishCoalescingOperator',
         ],
-        errorRecovery: true, // Don't crash on partial/invalid JSX
+        errorRecovery: true,
     });
 }
 
@@ -79,10 +106,9 @@ function parseJsx(sourceCode) {
 
 /**
  * Walk the AST and collect all top-level JSX elements returned by components.
- * We target return statements and arrow function bodies.
  *
  * @param {import('@babel/types').File} ast
- * @returns {Array<{ node: import('@babel/types').JSXElement, sourceCode: string }>}
+ * @returns {Array<import('@babel/types').JSXElement|import('@babel/types').JSXFragment>}
  */
 function collectJsxRoots(ast) {
     const roots = [];
@@ -110,23 +136,45 @@ function collectJsxRoots(ast) {
 // -----------------------------------------------------------------------------
 
 /**
- * Render collected JSX nodes to an HTML string with line mapping
+ * Render collected JSX nodes to an HTML string with full position tracking.
  *
- * @param {Array} jsxNodes - Collected JSX root nodes
- * @param {string} sourceCode - Original source (used for line tracking)
- * @returns {{ html: string, lineMap: Map<number, number> }}
+ * Builds two indexes simultaneously during a single document-order traversal:
+ *
+ *   lineMap      — maps each rendered HTML line number back to the JSX source
+ *                  line that produced it. Used for direct line lookups.
+ *
+ *   ordinalIndex — for each tag name, records the JSX source line of every
+ *                  occurrence in document order.
+ *                  ordinalIndex.get('button') = [20, 21, 22]
+ *                  means the 1st button is at JSX line 20, 2nd at 21, etc.
+ *                  This enables O(1) lookup for any nth occurrence of any tag.
+ *
+ * @param {Array} jsxNodes
+ * @returns {{ html: string, lineMap: Map<number, number>, ordinalIndex: Map<string, number[]> }}
  */
-function renderNodesToHtml(jsxNodes, sourceCode) {
+function renderNodesToHtml(jsxNodes) {
     const htmlLines = [];
     const lineMap = new Map();
+    const ordinalIndex = new Map();
 
     for (const node of jsxNodes) {
         const rendered = renderNode(node);
-        for (const { htmlLine, sourceLine } of rendered) {
+
+        for (const { htmlLine, sourceLine, tag } of rendered) {
             const currentHtmlLineNumber = htmlLines.length + 1;
             htmlLines.push(htmlLine);
-            if (sourceLine) {
+
+            if (sourceLine !== null) {
+                // lineMap: html line → source line
                 lineMap.set(currentHtmlLineNumber, sourceLine);
+
+                // ordinalIndex: tag → [sourceLine in document order]
+                if (tag) {
+                    if (!ordinalIndex.has(tag)) {
+                        ordinalIndex.set(tag, []);
+                    }
+                    ordinalIndex.get(tag).push(sourceLine);
+                }
             }
         }
     }
@@ -134,42 +182,35 @@ function renderNodesToHtml(jsxNodes, sourceCode) {
     return {
         html: htmlLines.join('\n'),
         lineMap,
+        ordinalIndex,
     };
 }
 
 /**
- * Render a single JSX node (element, fragment, text, expression) to HTML lines
+ * Render a single JSX node to an array of output lines.
+ * Each line carries: { htmlLine, sourceLine, tag }
+ *   htmlLine   — the rendered HTML string for this line
+ *   sourceLine — original JSX source line (null for structural lines)
+ *   tag        — lowercase tag name (null for non-element lines)
  *
  * @param {import('@babel/types').Node} node
  * @param {number} depth - Indentation depth
- * @returns {Array<{ htmlLine: string, sourceLine: number|null }>}
+ * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
 function renderNode(node, depth = 0) {
-    if (t.isJSXFragment(node)) {
-        return renderChildren(node.children, depth);
-    }
-
-    if (t.isJSXElement(node)) {
-        return renderElement(node, depth);
-    }
-
-    if (t.isJSXText(node)) {
-        return renderText(node, depth);
-    }
-
-    if (t.isJSXExpressionContainer(node)) {
-        return renderExpression(node, depth);
-    }
-
+    if (t.isJSXFragment(node)) return renderChildren(node.children, depth);
+    if (t.isJSXElement(node)) return renderElement(node, depth);
+    if (t.isJSXText(node)) return renderText(node, depth);
+    if (t.isJSXExpressionContainer(node)) return renderExpression(node, depth);
     return [];
 }
 
 /**
- * Render a JSX element to HTML lines
+ * Render a JSX element to output lines.
  *
  * @param {import('@babel/types').JSXElement} node
  * @param {number} depth
- * @returns {Array<{ htmlLine: string, sourceLine: number|null }>}
+ * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
 function renderElement(node, depth) {
     const indent = '  '.repeat(depth);
@@ -178,39 +219,37 @@ function renderElement(node, depth) {
     const attributes = renderAttributes(node.openingElement.attributes);
     const isSelfClosing = node.openingElement.selfClosing;
 
-    // Self-closing element (e.g. <img />, <br />)
     if (isSelfClosing) {
         return [{
             htmlLine: `${indent}<${tagInfo.tag}${attributes}>`,
             sourceLine,
+            tag: tagInfo.tag,
         }];
     }
 
-    // Opening tag
     const lines = [{
         htmlLine: `${indent}<${tagInfo.tag}${attributes}>`,
         sourceLine,
+        tag: tagInfo.tag,
     }];
 
-    // Children
-    const childLines = renderChildren(node.children, depth + 1);
-    lines.push(...childLines);
+    lines.push(...renderChildren(node.children, depth + 1));
 
-    // Closing tag
     lines.push({
         htmlLine: `${indent}</${tagInfo.tag}>`,
         sourceLine: null,
+        tag: null,
     });
 
     return lines;
 }
 
 /**
- * Render JSX children recursively
+ * Render JSX children recursively.
  *
  * @param {Array} children
  * @param {number} depth
- * @returns {Array<{ htmlLine: string, sourceLine: number|null }>}
+ * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
 function renderChildren(children, depth) {
     const lines = [];
@@ -221,32 +260,30 @@ function renderChildren(children, depth) {
 }
 
 /**
- * Render JSX text node (trim, skip whitespace-only)
+ * Render a JSX text node.
  *
  * @param {import('@babel/types').JSXText} node
  * @param {number} depth
- * @returns {Array<{ htmlLine: string, sourceLine: number|null }>}
+ * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
 function renderText(node, depth) {
     const text = node.value.trim();
     if (!text) return [];
-
     const indent = '  '.repeat(depth);
-    return [{ htmlLine: `${indent}${text}`, sourceLine: null }];
+    return [{ htmlLine: `${indent}${text}`, sourceLine: null, tag: null }];
 }
 
 /**
- * Render JSX expression container {value} as placeholder text
- * Preserves the element structure for a11y scanning
+ * Render a JSX expression container.
+ * Handles logical expressions, ternaries, and plain expressions.
  *
  * @param {import('@babel/types').JSXExpressionContainer} node
  * @param {number} depth
- * @returns {Array<{ htmlLine: string, sourceLine: number|null }>}
+ * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
 function renderExpression(node, depth) {
     if (t.isJSXEmptyExpression(node.expression)) return [];
 
-    // Conditional: {condition && <Element>} → render the JSX branch
     if (t.isLogicalExpression(node.expression)) {
         const right = node.expression.right;
         if (t.isJSXElement(right) || t.isJSXFragment(right)) {
@@ -254,7 +291,6 @@ function renderExpression(node, depth) {
         }
     }
 
-    // Ternary: {cond ? <A /> : <B />} → render both branches
     if (t.isConditionalExpression(node.expression)) {
         const lines = [];
         const { consequent, alternate } = node.expression;
@@ -267,9 +303,8 @@ function renderExpression(node, depth) {
         return lines;
     }
 
-    // Plain expression {variable} → placeholder
     const indent = '  '.repeat(depth);
-    return [{ htmlLine: `${indent}placeholder`, sourceLine: null }];
+    return [{ htmlLine: `${indent}placeholder`, sourceLine: null, tag: null }];
 }
 
 // -----------------------------------------------------------------------------
@@ -286,18 +321,15 @@ function renderExpression(node, depth) {
 function resolveTag(openingElement) {
     const nameNode = openingElement.name;
 
-    // Standard HTML tag: <div>, <button>, <img>, etc.
     if (t.isJSXIdentifier(nameNode) && isHtmlTag(nameNode.name)) {
         return { tag: nameNode.name, isCustom: false };
     }
 
-    // Member expression: <Namespace.Component> → div
     if (t.isJSXMemberExpression(nameNode)) {
         const componentName = `${nameNode.object.name}.${nameNode.property.name}`;
         return { tag: 'div', isCustom: true, componentName };
     }
 
-    // Custom component: <Button>, <Icon>, etc. → div with data attribute
     const componentName = t.isJSXIdentifier(nameNode) ? nameNode.name : 'Unknown';
     return { tag: 'div', isCustom: true, componentName };
 }
@@ -305,43 +337,36 @@ function resolveTag(openingElement) {
 /**
  * Render JSX attributes to an HTML attribute string.
  * Handles: className→class, htmlFor→for, event handlers (removed),
- * boolean attributes, dynamic values (placeholder).
+ * boolean attributes, dynamic values.
  *
  * @param {Array} attributes - JSX attribute nodes
- * @returns {string} - HTML attribute string (e.g., ' class="btn" id="main"')
+ * @returns {string} - HTML attribute string
  */
 function renderAttributes(attributes) {
     const parts = [];
 
     for (const attr of attributes) {
-        // Spread attributes: {...props} → skip
         if (t.isJSXSpreadAttribute(attr)) continue;
 
         const name = attr.name.name;
         const htmlAttr = mapAttributeName(name);
 
-        // Drop event handlers (onClick, onFocus, etc.)
-        if (htmlAttr === null) continue;
+        if (isEventHandler(name)) continue;
 
-        // Boolean attribute: <input disabled />
         if (attr.value === null) {
             parts.push(htmlAttr);
             continue;
         }
 
-        // String literal value: className="btn"
         if (t.isStringLiteral(attr.value)) {
             parts.push(`${htmlAttr}="${escapeAttr(attr.value.value)}"`);
             continue;
         }
 
-        // Expression value: alt={getAlt()}, src={imgUrl}
         if (t.isJSXExpressionContainer(attr.value)) {
-            const value = resolveExpressionValue(attr.value.expression, htmlAttr);
-            if (value !== null) {
-                parts.push(`${htmlAttr}="${value}"`);
-            }
-            continue;
+            const resolved = resolveExpressionValue(attr.value.expression, htmlAttr);
+            if (resolved === null) continue;
+            parts.push(`${htmlAttr}="${resolved}"`);
         }
     }
 
@@ -349,104 +374,67 @@ function renderAttributes(attributes) {
 }
 
 /**
- * Map JSX attribute name to HTML attribute name.
- * Returns null for attributes that should be dropped.
+ * Map JSX attribute names to their HTML equivalents.
  *
- * @param {string} jsxAttr
- * @returns {string|null}
+ * @param {string} name - JSX attribute name
+ * @returns {string} - HTML attribute name
  */
-function mapAttributeName(jsxAttr) {
-    const DROP = null;
+function mapAttributeName(name) {
     const map = {
-        className:       'class',
-        htmlFor:         'for',
-        tabIndex:        'tabindex',
-        readOnly:        'readonly',
-        maxLength:       'maxlength',
-        colSpan:         'colspan',
-        rowSpan:         'rowspan',
-        crossOrigin:     'crossorigin',
-        autoComplete:    'autocomplete',
-        autoFocus:       'autofocus',
-        encType:         'enctype',
+        className: 'class',
+        htmlFor: 'for',
+        tabIndex: 'tabindex',
+        readOnly: 'readonly',
+        autoComplete: 'autocomplete',
+        autoFocus: 'autofocus',
+        crossOrigin: 'crossorigin',
+        encType: 'enctype',
+        noValidate: 'novalidate',
+        useMap: 'usemap',
         contentEditable: 'contenteditable',
-        spellCheck:      'spellcheck',
-        // Drop all event handlers
-        onClick:         DROP,
-        onChange:        DROP,
-        onSubmit:        DROP,
-        onFocus:         DROP,
-        onBlur:          DROP,
-        onKeyDown:       DROP,
-        onKeyUp:         DROP,
-        onKeyPress:      DROP,
-        onMouseEnter:    DROP,
-        onMouseLeave:    DROP,
-        onMouseOver:     DROP,
-        onMouseOut:      DROP,
-        onInput:         DROP,
-        onLoad:          DROP,
-        onError:         DROP,
     };
+    return map[name] || name;
+}
 
-    if (jsxAttr in map) return map[jsxAttr];
-
-    // Drop any remaining on* handlers not in the map above
-    if (jsxAttr.startsWith('on') && jsxAttr[2] === jsxAttr[2]?.toUpperCase()) {
-        return DROP;
-    }
-
-    return jsxAttr; // Pass through as-is (aria-*, data-*, role, etc.)
+/**
+ * Check if an attribute name is an event handler (onClick, onFocus, etc.)
+ *
+ * @param {string} name
+ * @returns {boolean}
+ */
+function isEventHandler(name) {
+    return name.startsWith('on') && name.length > 2 && name[2] === name[2].toUpperCase();
 }
 
 /**
  * Resolve a JSX expression value to a string for HTML output.
- * Dynamic expressions become "dynamic" — preserving the attribute for a11y scanning.
  *
  * @param {import('@babel/types').Expression} expression
- * @param {string} attrName - The HTML attribute name (context)
+ * @param {string} attrName
  * @returns {string|null}
  */
 function resolveExpressionValue(expression, attrName) {
-    // String literal inside expression: alt={"text"}
-    if (t.isStringLiteral(expression)) {
-        return escapeAttr(expression.value);
-    }
-
-    // Boolean false: hidden={false} → skip attribute
-    if (t.isBooleanLiteral(expression) && !expression.value) {
-        return null;
-    }
-
-    // Boolean true: hidden={true} → include as boolean
-    if (t.isBooleanLiteral(expression) && expression.value) {
-        return 'true';
-    }
-
-    // Numeric literal: tabIndex={0}
-    if (t.isNumericLiteral(expression)) {
-        return String(expression.value);
-    }
-
-    // Dynamic value: flag as "dynamic" — preserves the attribute on the element
-    // so axe-core can detect missing alt, aria-label etc.
+    if (t.isStringLiteral(expression)) return escapeAttr(expression.value);
+    if (t.isBooleanLiteral(expression) && !expression.value) return null;
+    if (t.isBooleanLiteral(expression) && expression.value) return 'true';
+    if (t.isNumericLiteral(expression)) return String(expression.value);
     return 'dynamic';
 }
 
 // -----------------------------------------------------------------------------
-// Helpers
+// Document Wrapper
 // -----------------------------------------------------------------------------
 
 /**
- * Number of lines added before body content by wrapInDocument.
- * Used by scannerUtils to correctly offset lineMap lookups.
- * @type {number}
- */
-export const HTML_WRAPPER_OFFSET = 4;
-
-/**
  * Wrap rendered HTML fragments in a full HTML document structure.
- * Required for JSDOM and Playwright to process correctly.
+ *
+ * IMPORTANT: HTML_WRAPPER_OFFSET must match the number of lines before
+ * ${bodyContent}. Count carefully if you change this template:
+ *   line 1: <!DOCTYPE html>
+ *   line 2: <html lang="en">
+ *   line 3: <head><meta charset="UTF-8"><title>A11y Scan</title></head>
+ *   line 4: <body>
+ *   line 5+: ${bodyContent}
  *
  * @param {string} bodyContent
  * @returns {string}
@@ -461,8 +449,12 @@ ${bodyContent}
 </html>`;
 }
 
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
 /**
- * Known HTML tags — used to distinguish native elements from custom components
+ * Known HTML tags — used to distinguish native elements from custom components.
  * @type {Set<string>}
  */
 const HTML_TAGS = new Set([
@@ -491,7 +483,7 @@ const HTML_TAGS = new Set([
 ]);
 
 /**
- * Check if a tag name is a native HTML element
+ * Check if a tag name is a native HTML element.
  *
  * @param {string} name
  * @returns {boolean}
@@ -501,13 +493,13 @@ function isHtmlTag(name) {
 }
 
 /**
- * Escape a string for safe use in an HTML attribute value
+ * Escape a string for safe use in an HTML attribute value.
  *
  * @param {string} value
  * @returns {string}
  */
 function escapeAttr(value) {
-    return value
+    return String(value)
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')

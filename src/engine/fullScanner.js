@@ -1,14 +1,9 @@
 /**
  * Full Scanner - Playwright-based accessibility auditing
- * 
+ *
  * Complete scanning using real Chromium browser + axe-core.
  * Includes color contrast checking (requires browser layout engine).
- * 
- * Enhanced with:
- * - Element selectors
- * - HTML snippets
- * - Approximate line numbers
- * 
+ *
  * Use for: Pre-commit checks, CI/CD pipelines, thorough audits
  * 
  * Requirements:
@@ -18,6 +13,7 @@
 
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
+import { JSDOM, VirtualConsole } from 'jsdom';
 import fs from 'fs/promises';
 import * as p from '@clack/prompts';
 import {
@@ -56,8 +52,7 @@ export async function runFullAudit(config, targetPath = null) {
 
     try {
         for (const filePath of filesToScan) {
-            const fileViolations = await scanSingleFile(browser, filePath, config);
-            allViolations.push(...fileViolations);
+            allViolations.push(...await scanSingleFile(browser, filePath, config));
         }
     } finally {
         await browser.close();
@@ -67,15 +62,35 @@ export async function runFullAudit(config, targetPath = null) {
 }
 
 // -----------------------------------------------------------------------------
-// Contrast Data Extraction
+// Query Document (Playwright path)
 // -----------------------------------------------------------------------------
 
 /**
- * Extract contrast-specific data from violation node
- * 
- * @param {Object} node - Axe violation node
- * @returns {Object} - Contrast data object
+ * Build a minimal JSDOM document from the transformed HTML.
+ *
+ * Playwright runs axe in a Chromium subprocess — its DOM is not accessible
+ * from Node.js. We parse the same transformedHtml in a lightweight JSDOM
+ * (no scripts, no axe) purely to enable querySelectorAll for ordinal lookup.
+ *
+ * The resulting DOM structure is identical to what Playwright rendered,
+ * so axe's CSS selectors resolve to the same elements and the same ordinal
+ * positions. This means Layer A works exactly as in the quick scanner.
+ *
+ * Cost: one tiny JSDOM parse per JSX file (no script execution, no resources).
+ *
+ * @param {string} transformedHtml
+ * @returns {Document}
  */
+function buildQueryDocument(transformedHtml) {
+    const virtualConsole = new VirtualConsole();
+    virtualConsole.on('error', () => { });
+    return new JSDOM(transformedHtml, { virtualConsole }).window.document;
+}
+
+// -----------------------------------------------------------------------------
+// Contrast Data
+// -----------------------------------------------------------------------------
+
 function extractContrastData(node) {
     const data = node.any?.[0]?.data || {};
     return {
@@ -98,10 +113,7 @@ function extractContrastData(node) {
  */
 function enhanceWithContrastData(violation, axeViolation, node) {
     if (axeViolation.id.includes('contrast')) {
-        return {
-            ...violation,
-            contrastData: extractContrastData(node)
-        };
+        return { ...violation, contrastData: extractContrastData(node) };
     }
     return violation;
 }
@@ -111,31 +123,46 @@ function enhanceWithContrastData(violation, axeViolation, node) {
 // -----------------------------------------------------------------------------
 
 /**
- * Process axe violations with contrast data support
- * 
- * Uses shared createViolationFromNode() and enhances with contrast data.
- * 
- * @param {string} filePath - Source file path
- * @param {Array} violations - Array of axe violation objects
- * @param {string} sourceContent - Original source code
- * @returns {Array} - Array of formatted violation results
+ * Process full-scan violations with ordinal-index resolution and contrast data.
+ *
+ * Builds the query document once per file — not once per violation.
+ * That document is then shared across all violation nodes for that file.
+ *
+ * @param {string} filePath
+ * @param {Array} violations
+ * @param {string} sourceContent
+ * @param {Map<number,number>|null} lineMap
+ * @param {string|null} transformedHtml
+ * @param {Map<string,number[]>|null} ordinalIndex
+ * @returns {Array}
  */
-function processFullScanViolations(filePath, violations, sourceContent, lineMap = null, transformedHtml = null) {
+function processFullScanViolations(
+    filePath, violations, sourceContent,
+    lineMap = null, transformedHtml = null, ordinalIndex = null
+) {
+    // Build query document once per file for Layer A resolution.
+    // null if not a JSX file — layers B and C still work without it.
+    const domDocument = (lineMap && transformedHtml)
+        ? buildQueryDocument(transformedHtml)
+        : null;
+
     const results = [];
+
     for (const violation of violations) {
         for (const node of violation.nodes) {
-            const baseViolation = createViolationFromNode(
-                filePath, violation, node, sourceContent, lineMap, transformedHtml
+            const base = createViolationFromNode(
+                filePath, violation, node, sourceContent,
+                lineMap, transformedHtml, ordinalIndex, domDocument
             );
-            const enhancedViolation = enhanceWithContrastData(baseViolation, violation, node);
-            results.push(enhancedViolation);
+            results.push(enhanceWithContrastData(base, violation, node));
         }
     }
+
     return results;
 }
 
 // -----------------------------------------------------------------------------
-// Israeli RTL Compliance (Playwright-specific)
+// RTL Compliance (Playwright path)
 // -----------------------------------------------------------------------------
 
 /**
@@ -147,22 +174,16 @@ function processFullScanViolations(filePath, violations, sourceContent, lineMap 
  * @returns {Promise<Object|null>} - RTL violation object or null
  */
 async function checkRtlCompliancePlaywright(page, filePath, sourceContent) {
-    const hasRtl = await page.evaluate(() => {
-        return document.documentElement.getAttribute('dir') === 'rtl';
-    });
+    const hasRtl = await page.evaluate(
+        () => document.documentElement.getAttribute('dir') === 'rtl'
+    );
+    if (hasRtl) return null;
 
-    if (hasRtl) {
-        return null;
-    }
+    const htmlOpenTag = await page.evaluate(
+        () => document.documentElement.outerHTML.split('>')[0] + '>'
+    );
 
-    const htmlOpenTag = await page.evaluate(() => {
-        const html = document.documentElement;
-        return html.outerHTML.split('>')[0] + '>';
-    });
-
-    const lineNumber = findLineNumber(sourceContent, '<html');
-
-    return createRtlViolation(filePath, htmlOpenTag, lineNumber);
+    return createRtlViolation(filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
 }
 
 // -----------------------------------------------------------------------------
@@ -183,26 +204,27 @@ async function scanSingleFile(browser, filePath, config) {
     try {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
-        const { html: scanContent, lineMap } = isJsxFile(filePath)
+        const isJsx = isJsxFile(filePath);
+        const { html: scanContent, lineMap, ordinalIndex } = isJsx
             ? transformJsxToHtml(sourceContent)
-            : { html: sourceContent, lineMap: null };
+            : { html: sourceContent, lineMap: null, ordinalIndex: null };
 
         const context = await browser.newContext();
         const page = await context.newPage();
-
         await page.setContent(scanContent, { waitUntil: 'domcontentloaded' });
 
-        const axeBuilder = new AxeBuilder({ page }).withTags(getAxeTags(config));
-        const axeResults = await axeBuilder.analyze();
+        const axeResults = await new AxeBuilder({ page })
+            .withTags(getAxeTags(config))
+            .analyze();
 
-        const axeViolations = processFullScanViolations(
+        violations.push(...processFullScanViolations(
             filePath,
             axeResults.violations,
             sourceContent,
-            lineMap,
-            isJsxFile(filePath) ? scanContent : null
-        );
-        violations.push(...axeViolations);
+            isJsx ? lineMap : null,
+            isJsx ? scanContent : null,
+            isJsx ? ordinalIndex : null
+        ));
 
         if (config.rules.rtl) {
             const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent);
