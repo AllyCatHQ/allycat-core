@@ -15,6 +15,17 @@ import { findLineNumber } from './sourceMapper.js';
 import { normalizeForGlob } from './pathUtils.js';
 import { HTML_WRAPPER_OFFSET } from '../engine/transformers/jsxTransformer.js';
 
+// Rules that require a complete HTML document context.
+// These are false positives when scanning JSX/TSX component fragments.
+export const DOCUMENT_LEVEL_RULES = new Set([
+    'landmark-one-main',
+    'page-has-heading-one',
+    'html-has-lang',
+    'document-title',
+    'meta-viewport',
+    'bypass',
+]);
+
 // -----------------------------------------------------------------------------
 // File Resolution
 // -----------------------------------------------------------------------------
@@ -371,7 +382,7 @@ export function createViolationFromNode(
  * Process all axe violations into formatted result objects.
  *
  * @param {string} filePath
- * @param {Array} violations
+ * @param {Array} violations - Raw axe violations array
  * @param {string} sourceContent
  * @param {Map<number,number>|null} lineMap
  * @param {string|null} transformedHtml
@@ -383,9 +394,14 @@ export function processAxeViolations(
     filePath, violations, sourceContent,
     lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null
 ) {
+    const isJsxContext = lineMap && lineMap.size > 0;
     const results = [];
 
     for (const violation of violations) {
+        // Skip document-level rules for JSX/TSX component files.
+        // A component is a fragment, not a full page — these rules don't apply.
+        if (isJsxContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
+
         for (const node of violation.nodes) {
             results.push(createViolationFromNode(
                 filePath, violation, node, sourceContent,

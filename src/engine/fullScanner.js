@@ -20,7 +20,8 @@ import {
     resolveFiles,
     getAxeTags,
     createRtlViolation,
-    createViolationFromNode
+    createViolationFromNode,
+    DOCUMENT_LEVEL_RULES
 } from '../utils/scannerUtils.js';
 import { findLineNumber } from '../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
@@ -140,15 +141,14 @@ function processFullScanViolations(
     filePath, violations, sourceContent,
     lineMap = null, transformedHtml = null, ordinalIndex = null
 ) {
-    // Build query document once per file for Layer A resolution.
-    // null if not a JSX file — layers B and C still work without it.
-    const domDocument = (lineMap && transformedHtml)
-        ? buildQueryDocument(transformedHtml)
-        : null;
-
+    const isJsxContext = lineMap && transformedHtml;
+    const domDocument = isJsxContext ? buildQueryDocument(transformedHtml) : null;
     const results = [];
 
     for (const violation of violations) {
+        // Skip document-level rules for JSX/TSX component files.
+        if (isJsxContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
+
         for (const node of violation.nodes) {
             const base = createViolationFromNode(
                 filePath, violation, node, sourceContent,
@@ -160,7 +160,6 @@ function processFullScanViolations(
 
     return results;
 }
-
 // -----------------------------------------------------------------------------
 // RTL Compliance (Playwright path)
 // -----------------------------------------------------------------------------
@@ -253,7 +252,7 @@ async function scanSingleFile(browser, filePath, config) {
         ));
 
         if (config.rules.rtl) {
-           const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, isJsx ? ordinalIndex : null);
+            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, isJsx ? ordinalIndex : null);
             if (rtlViolation) violations.push(rtlViolation);
         }
 
