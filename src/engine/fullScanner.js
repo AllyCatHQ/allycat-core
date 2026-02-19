@@ -173,7 +173,7 @@ function processFullScanViolations(
  * @param {string} sourceContent - Original source code
  * @returns {Promise<Object|null>} - RTL violation object or null
  */
-// Add this new function in fullScanner.js:
+
 async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, ordinalIndex) {
     if (isJsx) {
         const hasRtl = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
@@ -186,13 +186,18 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx
                 : { tag: 'div', html: '<div>' };
         });
 
-        // Use ordinalIndex — not text search — to avoid matching comments
         const sourceLines = ordinalIndex?.get(rootInfo.tag);
         const lineNumber = (sourceLines && sourceLines.length > 0)
             ? sourceLines[0]
             : findLineNumber(sourceContent, `<${rootInfo.tag}`);
 
-        return createRtlViolation(filePath, rootInfo.html, lineNumber);
+        return createRtlViolation(
+            filePath,
+            rootInfo.html,
+            lineNumber,
+            rootInfo.tag,
+            'Add dir="rtl" to your root element or to the <html> tag in index.html.'
+        );
     }
 
     // HTML path — unchanged
@@ -248,7 +253,7 @@ async function scanSingleFile(browser, filePath, config) {
         ));
 
         if (config.rules.rtl) {
-            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx);
+           const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, isJsx ? ordinalIndex : null);
             if (rtlViolation) violations.push(rtlViolation);
         }
 

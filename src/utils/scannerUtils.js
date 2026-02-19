@@ -85,16 +85,16 @@ export function getAxeTags(config) {
 // Israeli Standard Compliance
 // -----------------------------------------------------------------------------
 
-export function createRtlViolation(filePath, htmlOpenTag, lineNumber) {
+export function createRtlViolation(filePath, htmlOpenTag, lineNumber, selector = 'html', help = 'Add dir="rtl" to your <html> tag.') {
     return {
         file: filePath,
         id: 'israel-rtl',
         impact: 'serious',
         description: 'Israeli law requires RTL direction for Hebrew interfaces.',
-        help: 'Add dir="rtl" to your <html> tag.',
+        help,
         helpUrl: 'https://www.gov.il/he/departments/policies/accessibility_standard',
         wcagTags: ['israeli-standard'],
-        selector: 'html',
+        selector,
         html: htmlOpenTag,
         lineNumber,
     };
