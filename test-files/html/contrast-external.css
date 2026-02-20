@@ -1,0 +1,72 @@
+/**
+ * contrast-external.css
+ *
+ * External stylesheet for contrast-css-test.html
+ *
+ * PURPOSE:
+ *   Verify that the full scanner's CSS injection pipeline picks up
+ *   styles defined in an external file and passes them to Playwright
+ *   so axe-core can compute real contrast ratios.
+ *
+ * EXPECTED BEHAVIOR:
+ *   Quick scan  → NO contrast violations (JSDOM has no style engine)
+ *   Full scan   → contrast violations detected from these classes ✅
+ *
+ * CONTRAST REFERENCE:
+ *   WCAG AA  normal text → 4.5:1 minimum
+ *   WCAG AA  large text  → 3:1 minimum
+ *   WCAG AAA normal text → 7:1 minimum
+ */
+
+/* ── FAILING CLASSES (full scan must detect these) ──────────────────────── */
+
+/* ratio ~1.6:1 — fails AA normal text */
+.ext-fail-light-gray {
+    color: #cccccc;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~1.07:1 — fails AA (yellow on white, nearly invisible) */
+.ext-fail-yellow {
+    color: #ffff00;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~2.3:1 — fails AA normal text */
+.ext-fail-gray-on-gray {
+    color: #aaaaaa;
+    background-color: #bbbbbb;
+    font-size: 16px;
+}
+
+/* ratio ~4.48:1 — borderline, fails AA (needs 4.5:1) */
+.ext-fail-borderline {
+    color: #767777;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ── PASSING CLASSES (full scan must NOT flag these) ─────────────────────── */
+
+/* ratio 21:1 — passes AA and AAA */
+.ext-pass-black {
+    color: #000000;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~14.7:1 — passes AAA */
+.ext-pass-navy {
+    color: #003580;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~5.9:1 — passes AA, fails AAA */
+.ext-pass-aa-only {
+    color: #595959;
+    background-color: #ffffff;
+    font-size: 16px;
+}

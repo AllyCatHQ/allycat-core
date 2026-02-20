@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<!--
+    contrast-css-test.html
+
+    TEST PURPOSE:
+      Verify that the full scanner correctly detects color contrast violations
+      across all three style delivery methods:
+
+        1. Inline styles       — style="color: X; background-color: Y"
+        2. External CSS        — <link href="./contrast-external.css">
+        3. Embedded <style>    — <style> block inside <head>
+
+      Quick scan  → structural violations only (no contrast)
+      Full scan   → ALL contrast violations from all three style sources
+
+    SCAN COMMANDS:
+      Quick:  a11y-guard scan test-files/html/contrast-css-test.html
+      Full:   a11y-guard scan test-files/html/contrast-css-test.html --full
+
+    ─────────────────────────────────────────────────────────────────────────
+    EXPECTED VIOLATIONS — FULL SCAN (--full, wcag-aa):
+
+    SECTION 1 — Inline styles (scanner always supported these):
+      Line ~50: inline light gray on white   ~1.6:1  → color-contrast (CRITICAL)
+      Line ~51: inline yellow on white       ~1.07:1 → color-contrast (CRITICAL)
+      Line ~52: inline gray on gray          ~2.3:1  → color-contrast (CRITICAL)
+
+    SECTION 2 — External CSS via <link> (tests cssResolver injection):
+      .ext-fail-light-gray    ~1.6:1  → color-contrast (CRITICAL)
+      .ext-fail-yellow        ~1.07:1 → color-contrast (CRITICAL)
+      .ext-fail-gray-on-gray  ~2.3:1  → color-contrast (CRITICAL)
+      .ext-fail-borderline    ~4.48:1 → color-contrast (CRITICAL)
+
+    SECTION 3 — Embedded <style> block (browser handles natively):
+      .emb-fail-red-on-pink   ~2.1:1  → color-contrast (CRITICAL)
+      .emb-fail-white-on-lt   ~1.1:1  → color-contrast (CRITICAL)
+
+    EXPECTED CLEAN (no violations):
+      All .ext-pass-* and .emb-pass-* elements
+      All inline-pass-* elements
+
+    EXPECTED VIOLATIONS — QUICK SCAN:
+      None (contrast is not checked in quick mode)
+    ─────────────────────────────────────────────────────────────────────────
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrast CSS Test</title>
+
+    <!--
+        EXTERNAL CSS — loaded via <link> tag.
+        cssResolver must detect this path, read the file,
+        and inject its contents into a <style> block before
+        passing HTML to Playwright.
+    -->
+    <link rel="stylesheet" href="./contrast-external.css">
+
+    <!--
+        EMBEDDED STYLE — defined directly in this file.
+        Browser handles this natively. No cssResolver needed.
+        Included to verify embedded styles still work correctly
+        alongside the injected external CSS.
+    -->
+    <style>
+        /* ratio ~2.1:1 — fails AA */
+        .emb-fail-red-on-pink {
+            color: #ff4444;
+            background-color: #ffcccc;
+            font-size: 16px;
+        }
+
+        /* ratio ~1.1:1 — fails AA (white on very light gray) */
+        .emb-fail-white-on-lt {
+            color: #ffffff;
+            background-color: #f0f0f0;
+            font-size: 16px;
+        }
+
+        /* ratio 21:1 — passes AA and AAA */
+        .emb-pass-black {
+            color: #000000;
+            background-color: #ffffff;
+            font-size: 16px;
+        }
+
+        /* ratio ~8.6:1 — passes AAA */
+        .emb-pass-dark-blue {
+            color: #1a1a6e;
+            background-color: #ffffff;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Contrast CSS Test</h1>
+    <p>Tests contrast detection across inline, external, and embedded CSS styles.</p>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 1: INLINE STYLES                                          -->
+    <!-- Scanner has always supported these via style="" attribute.        -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+    <section>
+        <h2>Section 1 — Inline Styles</h2>
+        <p>These use style="" directly on the element.</p>
+
+        <!-- FAIL: ~1.6:1 ratio -->
+        <p style="color: #cccccc; background-color: #ffffff; font-size: 16px;">
+            Inline: light gray on white (~1.6:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- FAIL: ~1.07:1 ratio -->
+        <p style="color: #ffff00; background-color: #ffffff; font-size: 16px;">
+            Inline: yellow on white (~1.07:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- FAIL: ~2.3:1 ratio -->
+        <p style="color: #aaaaaa; background-color: #bbbbbb; font-size: 16px;">
+            Inline: gray on gray (~2.3:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- PASS: 21:1 ratio -->
+        <p style="color: #000000; background-color: #ffffff; font-size: 16px;">
+            Inline: black on white (21:1) — SHOULD PASS
+        </p>
+
+        <!-- PASS: ~14.7:1 ratio -->
+        <p style="color: #003580; background-color: #ffffff; font-size: 16px;">
+            Inline: navy on white (~14.7:1) — SHOULD PASS
+        </p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 2: EXTERNAL CSS (via <link> + cssResolver injection)      -->
+    <!-- These classes are defined in contrast-external.css.               -->
+    <!-- The full scanner must inject that file's contents into <style>    -->
+    <!-- so Playwright's browser can compute the contrast values.          -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+    <section>
+        <h2>Section 2 — External CSS (contrast-external.css)</h2>
+        <p>These use classes from an external stylesheet.</p>
+
+        <!-- FAIL: ~1.6:1 — defined in contrast-external.css -->
+        <p class="ext-fail-light-gray">
+            External: .ext-fail-light-gray (~1.6:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- FAIL: ~1.07:1 — defined in contrast-external.css -->
+        <p class="ext-fail-yellow">
+            External: .ext-fail-yellow (~1.07:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- FAIL: ~2.3:1 — defined in contrast-external.css -->
+        <p class="ext-fail-gray-on-gray">
+            External: .ext-fail-gray-on-gray (~2.3:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- FAIL: ~4.48:1 — borderline, just under 4.5:1 threshold -->
+        <p class="ext-fail-borderline">
+            External: .ext-fail-borderline (~4.48:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- PASS: 21:1 — defined in contrast-external.css -->
+        <p class="ext-pass-black">
+            External: .ext-pass-black (21:1) — SHOULD PASS
+        </p>
+
+        <!-- PASS: ~14.7:1 — defined in contrast-external.css -->
+        <p class="ext-pass-navy">
+            External: .ext-pass-navy (~14.7:1) — SHOULD PASS
+        </p>
+
+        <!-- PASS AA, FAIL AAA: ~5.9:1 -->
+        <p class="ext-pass-aa-only">
+            External: .ext-pass-aa-only (~5.9:1) — PASSES AA, FAILS AAA
+        </p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 3: EMBEDDED <style> BLOCK                                 -->
+    <!-- Defined in <head> above. Browser processes these natively —       -->
+    <!-- no cssResolver needed. Validates that embedded styles and         -->
+    <!-- injected external styles coexist correctly.                       -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+    <section>
+        <h2>Section 3 — Embedded Style Block</h2>
+        <p>These use classes from the &lt;style&gt; block in &lt;head&gt;.</p>
+
+        <!-- FAIL: ~2.1:1 — embedded style -->
+        <p class="emb-fail-red-on-pink">
+            Embedded: .emb-fail-red-on-pink (~2.1:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- FAIL: ~1.1:1 — embedded style -->
+        <p class="emb-fail-white-on-lt">
+            Embedded: .emb-fail-white-on-lt (~1.1:1) — SHOULD FAIL AA
+        </p>
+
+        <!-- PASS: 21:1 — embedded style -->
+        <p class="emb-pass-black">
+            Embedded: .emb-pass-black (21:1) — SHOULD PASS
+        </p>
+
+        <!-- PASS: ~8.6:1 — embedded style -->
+        <p class="emb-pass-dark-blue">
+            Embedded: .emb-pass-dark-blue (~8.6:1) — SHOULD PASS
+        </p>
+    </section>
+
+</body>
+</html>

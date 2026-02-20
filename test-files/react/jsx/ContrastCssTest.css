@@ -1,0 +1,74 @@
+/**
+ * ContrastCssTest.module.css  (or ContrastCssTest.css)
+ *
+ * External stylesheet for ContrastCssTest.jsx
+ *
+ * PURPOSE:
+ *   Verify that the full scanner's CSS injection pipeline resolves
+ *   relative CSS imports from JSX/TSX files and injects their contents
+ *   into the transformed HTML before passing to Playwright.
+ *
+ * Import in JSX:
+ *   import './ContrastCssTest.css'
+ *
+ * EXPECTED BEHAVIOR:
+ *   Quick scan  → NO contrast violations (JSDOM skips contrast)
+ *   Full scan   → violations from .jsx-fail-* classes detected ✅
+ *
+ * CONTRAST REFERENCE:
+ *   WCAG AA  normal text → 4.5:1 minimum
+ *   WCAG AAA normal text → 7:1 minimum
+ */
+
+/* ── FAILING CLASSES ─────────────────────────────────────────────────────── */
+
+/* ratio ~1.6:1 — fails AA */
+.jsx-fail-light-gray {
+    color: #cccccc;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~1.07:1 — fails AA */
+.jsx-fail-yellow {
+    color: #ffff00;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~2.3:1 — fails AA */
+.jsx-fail-gray-on-gray {
+    color: #aaaaaa;
+    background-color: #bbbbbb;
+    font-size: 16px;
+}
+
+/* ratio ~1:1 — fails AA (white on white, invisible) */
+.jsx-fail-invisible {
+    color: #ffffff;
+    background-color: #fefefe;
+    font-size: 16px;
+}
+
+/* ── PASSING CLASSES ─────────────────────────────────────────────────────── */
+
+/* ratio 21:1 — passes AA and AAA */
+.jsx-pass-black {
+    color: #000000;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~14.7:1 — passes AAA */
+.jsx-pass-navy {
+    color: #003580;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~5.9:1 — passes AA, fails AAA */
+.jsx-pass-aa-only {
+    color: #595959;
+    background-color: #ffffff;
+    font-size: 16px;
+}
