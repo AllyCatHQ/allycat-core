@@ -173,7 +173,7 @@ function processFullScanViolations(
  * @returns {Promise<Object|null>} - RTL violation object or null
  */
 
-async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, ordinalIndex) {
+async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, ordinalIndex, selectedStandard) {
     if (isJsx) {
         const hasRtl = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
         if (hasRtl) return null;
@@ -190,25 +190,23 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx
             ? sourceLines[0]
             : findLineNumber(sourceContent, `<${rootInfo.tag}`);
 
-        return createRtlViolation(
-            filePath,
-            rootInfo.html,
-            lineNumber,
-            rootInfo.tag,
-            'Add dir="rtl" to your root element or to the <html> tag in index.html.'
-        );
+        const help = selectedStandard === 'israel'
+            ? 'Add dir="rtl" to your root element or to the <html> tag in index.html.'
+            : 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
+
+        return createRtlViolation(selectedStandard, filePath, rootInfo.html, lineNumber, rootInfo.tag, help);
     }
 
-    // HTML path — unchanged
-    const hasRtl = await page.evaluate(
-        () => document.documentElement.getAttribute('dir') === 'rtl'
-    );
+    // HTML file path
+    const hasRtl = await page.evaluate(() => document.documentElement.getAttribute('dir') === 'rtl');
     if (hasRtl) return null;
 
-    const htmlOpenTag = await page.evaluate(
-        () => document.documentElement.outerHTML.split('>')[0] + '>'
+    return createRtlViolation(
+        selectedStandard,
+        filePath,
+        '<html>',
+        findLineNumber(sourceContent, '<html')
     );
-    return createRtlViolation(filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
 }
 
 // -----------------------------------------------------------------------------

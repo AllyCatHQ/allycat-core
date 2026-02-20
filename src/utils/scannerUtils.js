@@ -96,7 +96,15 @@ export function getAxeTags(config) {
 // Israeli Standard Compliance
 // -----------------------------------------------------------------------------
 
-export function createRtlViolation(filePath, htmlOpenTag, lineNumber, selector = 'html', help = 'Add dir="rtl" to your <html> tag.') {
+// -----------------------------------------------------------------------------
+// RTL Violation Factories
+// -----------------------------------------------------------------------------
+
+/**
+ * Create an RTL violation for Israeli Standard (IS 5568).
+ * Used only when selectedStandard === 'israel'.
+ */
+function createIsraeliRtlViolation(filePath, htmlOpenTag, lineNumber, selector = 'html', help = 'Add dir="rtl" to your <html> tag.') {
     return {
         file: filePath,
         id: 'israel-rtl',
@@ -111,11 +119,39 @@ export function createRtlViolation(filePath, htmlOpenTag, lineNumber, selector =
     };
 }
 
-export function checkIsraeliRtlCompliance(document, filePath, sourceContent, htmlOpenTag) {
+/**
+ * Create a generic RTL violation for non-Israeli standards.
+ * Used when RTL check is enabled but the standard is WCAG-AA or WCAG-AAA.
+ */
+function createGenericRtlViolation(filePath, htmlOpenTag, lineNumber, selector = 'html', help = 'Add dir="rtl" to the root element or <html> tag to support RTL languages (Hebrew, Arabic, Persian).') {
+    return {
+        file: filePath,
+        id: 'rtl-direction',
+        impact: 'serious',
+        description: 'RTL language content detected without a dir="rtl" attribute.',
+        help,
+        helpUrl: 'https://www.w3.org/International/questions/qa-html-dir',
+        wcagTags: ['wcag131', 'best-practice'],
+        selector,
+        html: htmlOpenTag,
+        lineNumber,
+    };
+}
+
+export function createRtlViolation(selectedStandard, filePath, htmlOpenTag, lineNumber, selector = 'html', help = undefined) {
+    if (selectedStandard === 'israel') {
+        return createIsraeliRtlViolation(filePath, htmlOpenTag, lineNumber, selector,
+            help ?? 'Add dir="rtl" to your <html> tag.');
+    }
+    return createGenericRtlViolation(filePath, htmlOpenTag, lineNumber, selector,
+        help ?? 'Add dir="rtl" to the root element to support RTL languages (Hebrew, Arabic, Persian).');
+}
+
+export function checkRtlCompliance(document, filePath, sourceContent, htmlOpenTag, selectedStandard) {
     const htmlElement = document.documentElement;
     const hasRtlDirection = htmlElement && htmlElement.getAttribute('dir') === 'rtl';
     if (hasRtlDirection) return null;
-    return createRtlViolation(filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
+    return createRtlViolation(selectedStandard, filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
 }
 
 // -----------------------------------------------------------------------------
@@ -133,7 +169,7 @@ export function checkIsraeliRtlCompliance(document, filePath, sourceContent, htm
  * @param {Map<string, number[]>|null} ordinalIndex - tag → [sourceLine, ...] in document order
  * @returns {Object|null}
  */
-export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinalIndex) {
+export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinalIndex, selectedStandard) {
     const anyRtlElement = document.querySelector('[dir="rtl"]');
     if (anyRtlElement) return null;
 
@@ -143,25 +179,16 @@ export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinal
         ? rootElement.outerHTML.split('>')[0] + '>'
         : '<div>';
 
-    // Use ordinalIndex (AST-derived) for accurate line resolution.
-    // Falls back to text search only if ordinalIndex is unavailable.
     const sourceLines = ordinalIndex?.get(rootTag);
     const lineNumber = (sourceLines && sourceLines.length > 0)
         ? sourceLines[0]
         : findLineNumber(sourceContent, `<${rootTag}`);
 
-    return {
-        file: filePath,
-        id: 'israel-rtl',
-        impact: 'serious',
-        description: 'Israeli law requires RTL direction for Hebrew interfaces.',
-        help: `Add dir="rtl" to your root element or to the <html> tag in index.html.`,
-        helpUrl: 'https://www.gov.il/he/departments/policies/accessibility_standard',
-        wcagTags: ['israeli-standard'],
-        selector: rootTag,
-        html: rootHtml,
-        lineNumber,
-    };
+    const help = selectedStandard === 'israel'
+        ? 'Add dir="rtl" to your root element or to the <html> tag in index.html.'
+        : 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
+
+    return createRtlViolation(selectedStandard, filePath, rootHtml, lineNumber, rootTag, help);
 }
 
 // -----------------------------------------------------------------------------

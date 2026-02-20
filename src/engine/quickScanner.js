@@ -15,7 +15,7 @@ import * as p from '@clack/prompts';
 import {
     resolveFiles,
     getAxeTags,
-    checkIsraeliRtlCompliance,
+    checkRtlCompliance,
     processAxeViolations,
     checkJsxRtlCompliance
 } from '../utils/scannerUtils.js';
@@ -161,8 +161,8 @@ async function scanSingleFile(filePath, config) {
 
         if (config.rules.rtl) {
             const rtlViolation = isJsx
-                ? checkJsxRtlCompliance(window.document, filePath, sourceContent, ordinalIndex)
-                : checkIsraeliRtlCompliance(window.document, filePath, sourceContent, getHtmlOpenTag(window.document));
+                ? checkJsxRtlCompliance(window.document, filePath, sourceContent, ordinalIndex, config.selectedStandard)
+                : checkRtlCompliance(window.document, filePath, sourceContent, getHtmlOpenTag(window.document), config.selectedStandard);
             if (rtlViolation) violations.push(rtlViolation);
         }
 
