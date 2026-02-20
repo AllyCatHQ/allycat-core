@@ -25,6 +25,8 @@ import {
 } from '../utils/scannerUtils.js';
 import { findLineNumber } from '../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
+import { resolvAndInjectCss } from '../utils/cssResolver.js';
+import path from 'path';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -51,9 +53,12 @@ export async function runFullAudit(config, targetPath = null) {
     const browser = await chromium.launch({ headless: true });
     const allViolations = [];
 
+    // Shared CSS cache for this scan run — each CSS file read from disk exactly once
+    const cssCache = new Map();
+
     try {
         for (const filePath of filesToScan) {
-            allViolations.push(...await scanSingleFile(browser, filePath, config));
+            allViolations.push(...await scanSingleFile(browser, filePath, config, cssCache));
         }
     } finally {
         await browser.close();
@@ -221,16 +226,24 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx
  * @param {Object} config - User configuration
  * @returns {Promise<Array>} - Array of violation objects
  */
-async function scanSingleFile(browser, filePath, config) {
+async function scanSingleFile(browser, filePath, config, cssCache) {
     const violations = [];
 
     try {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
         const isJsx = isJsxFile(filePath);
-        const { html: scanContent, lineMap, ordinalIndex } = isJsx
+        const { html: transformedHtml, lineMap, ordinalIndex } = isJsx
             ? transformJsxToHtml(sourceContent)
             : { html: sourceContent, lineMap: null, ordinalIndex: null };
+
+        // Inject imported CSS so Playwright can compute accurate contrast values
+        const scanContent = await resolvAndInjectCss(
+            transformedHtml,
+            sourceContent,
+            path.resolve(filePath),
+            cssCache
+        );
 
         const context = await browser.newContext();
         const page = await context.newPage();
