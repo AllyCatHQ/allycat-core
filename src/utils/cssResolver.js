@@ -45,6 +45,31 @@ const CSS_IMPORT_PATTERNS = [
 ];
 
 /**
+ * Extract CSS hrefs from HTML <link> tags.
+ * Handles: <link rel="stylesheet" href="./styles.css">
+ *
+ * Used for HTML files — ESM import pattern does not apply.
+ *
+ * @param {string} sourceContent - Raw HTML file content
+ * @returns {string[]} - Array of raw href values
+ */
+export function extractCssLinkHrefs(sourceContent) {
+    const found = new Set();
+    const pattern = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+\.css)["'][^>]*>/gi;
+    // Also match href-before-rel order
+    const patternAlt = /<link[^>]+href=["']([^"']+\.css)["'][^>]+rel=["']stylesheet["'][^>]*>/gi;
+
+    for (const regex of [pattern, patternAlt]) {
+        let match;
+        while ((match = regex.exec(sourceContent)) !== null) {
+            found.add(match[1]);
+        }
+    }
+
+    return Array.from(found);
+}
+
+/**
  * Known root alias prefixes.
  * These are resolved relative to the project root (process.cwd()).
  *
@@ -178,7 +203,13 @@ export function injectCssIntoHtml(html, cssContents) {
  * @returns {Promise<string>} - HTML with CSS injected
  */
 export async function resolvAndInjectCss(html, sourceContent, sourceFilePath, resolvedCache) {
-    const rawImports = extractCssImports(sourceContent);
+    const isHtml = sourceFilePath.endsWith('.html');
+
+    // HTML files use <link href=""> — JSX/TSX use import statements
+    const rawImports = isHtml
+        ? extractCssLinkHrefs(sourceContent)
+        : extractCssImports(sourceContent);
+
     if (rawImports.length === 0) return html;
 
     const absolutePaths = resolveCssPaths(rawImports, sourceFilePath);
