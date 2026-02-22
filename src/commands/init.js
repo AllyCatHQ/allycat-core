@@ -21,40 +21,23 @@ export async function initCommand() {
     // Configuration questionnaire
     const group = await p.group(
         {
-            framework: () => p.select({
-                message: 'Select your project framework:',
-                options: [
-                    { value: 'react', label: '⚛️  React (JSX/TSX)' },
-                    { value: 'vue', label: '🟢 Vue.js' },
-                    { value: 'angular', label: '🅰️  Angular' },
-                    { value: 'html', label: '🌐 Vanilla HTML/JS' },
-                ],
-            }),
             standard: () => p.select({
                 message: 'Which accessibility standard do you need?',
                 options: [
-                    { value: 'israel', label: '🇮🇱 Israeli Standard (IS 5568)', hint: 'AA + RTL Support' },
                     { value: 'wcag-aa', label: '🌍 Global Standard (WCAG 2.1 AA)', hint: 'Industry Standard' },
                     { value: 'wcag-aaa', label: '🏥 Strict Mode (WCAG 2.1 AAA)', hint: 'Government/Medical' },
+                    { value: 'israel', label: '🇮🇱 Israeli Standard (IS 5568)', hint: 'AA + RTL Support' },
                 ],
             }),
             checkRTL: ({ results }) => results.standard !== 'israel' ? p.confirm({
-                message: 'Check for RTL support? (Hebrew, Arabic, Persian)',
+                message: 'Check for RTL support? (For left to right lengusches ex Hebrew, Arabic, Persian)',
                 initialValue: false,
             }) : Promise.resolve(true),
             scanMode: () => p.select({
                 message: 'Default scan mode:',
                 options: [
-                    {
-                        value: 'quick',
-                        label: '⚡ Quick Scan',
-                        hint: 'Fast (~1s), skips contrast check'
-                    },
-                    {
-                        value: 'full',
-                        label: '🔍 Full Scan',
-                        hint: 'Slower (~5s), includes contrast check'
-                    },
+                    { value: 'quick', label: '⚡ Quick Scan', hint: 'Fast (~1s), no contrast' },
+                    { value: 'full', label: '🔍 Full Scan', hint: 'Slower (~5s), includes contrast check' },
                 ],
             }),
             useAI: () => p.confirm({
@@ -72,7 +55,6 @@ export async function initCommand() {
 
     // Build configuration object
     const config = {
-        framework: group.framework,
         selectedStandard: group.standard,
         rules: {
             rtl: group.standard === 'israel' || group.checkRTL === true,
@@ -95,7 +77,6 @@ export async function initCommand() {
     // Show summary
     p.note(
         `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
-        `Framework: ${chalk.bold(config.framework)}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Default Mode: ${chalk.bold(config.scan.defaultMode === 'full' ? 'Full (with contrast)' : 'Quick (fast)')}\n` +
         `AI Suggestions: ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}`,
@@ -107,5 +88,10 @@ export async function initCommand() {
         ? `\nTip: Use ${chalk.cyan('a11y-guard scan --full')} for contrast checking.`
         : '';
 
-    p.outro(`Done! Run ${chalk.cyan('a11y-guard scan')} to audit your code.${modeHint}`);
+    p.outro(
+    `Done! Run ${chalk.cyan('a11y-guard scan')} to audit your code.${modeHint}\n` +
+    chalk.dim(`  You can always change your configuration by running `) +
+    chalk.yellow('a11y-guard init') +
+    chalk.dim(' again.')
+);
 }

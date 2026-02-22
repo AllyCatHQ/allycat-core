@@ -1,6 +1,5 @@
 {
-  "framework": "react",
-  "selectedStandard": "israel",
+  "selectedStandard": "wcag-aa",
   "rules": {
     "rtl": true,
     "level": "AA"

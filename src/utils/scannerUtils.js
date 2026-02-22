@@ -30,30 +30,34 @@ export const DOCUMENT_LEVEL_RULES = new Set([
 // File Resolution
 // -----------------------------------------------------------------------------
 
-export async function resolveFiles(config, targetPath) {
-    const extensions = getFrameworkExtensions(config.framework);
+// AFTER:
 
+/**
+ * All file types the scanner supports.
+ * Scan method (HTML vs JSX path) is determined at runtime via isJsxFile().
+ * No framework configuration required.
+ */
+export const SUPPORTED_EXTENSIONS = ['html', 'jsx', 'tsx'];
+
+/**
+ * Resolve the list of files to scan.
+ *
+ * @param {Object} config - User configuration
+ * @param {string|null} targetPath - Optional specific file or directory
+ * @returns {Promise<string[]>} - Resolved file paths
+ */
+export async function resolveFiles(config, targetPath) {
     if (targetPath) {
-        return await resolveTargetPath(targetPath, extensions);
+        return await resolveTargetPath(targetPath, SUPPORTED_EXTENSIONS);
     }
 
-    const patterns = extensions.map(ext => `**/*.${ext}`);
+    const patterns = SUPPORTED_EXTENSIONS.map(ext => `**/*.${ext}`);
     const files = await glob(patterns, {
         ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
         dot: false
     });
 
     return files;
-}
-
-export function getFrameworkExtensions(framework) {
-    const extensionMap = {
-        'react': ['jsx', 'tsx', 'html'],
-        'vue': ['vue', 'html'],
-        'angular': ['html', 'component.html'],
-        'html': ['html']
-    };
-    return extensionMap[framework] || extensionMap['html'];
 }
 
 export async function resolveTargetPath(targetPath, extensions) {

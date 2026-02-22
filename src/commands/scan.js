@@ -9,7 +9,8 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import { loadConfig } from '../utils/configLoader.js';
+import { loadConfig, configExists } from '../utils/configLoader.js';
+import { initCommand } from './init.js';
 import { runQuickAudit } from '../engine/quickScanner.js';
 import { formatSummary, formatByFile, countByImpact, groupByFile, formatViolationForJson } from '../utils/violationFormatter.js';
 import { runFullAudit } from '../engine/fullScanner.js';
@@ -28,7 +29,7 @@ export async function scanCommand(target = null, options = {}) {
     console.log('');
     p.intro(`${chalk.bgMagenta.white(' A11y-Guard Scan ')}`);
 
-    const config = loadConfiguration();
+    const config = await loadConfiguration();
     if (!config) {
         return;
     }
@@ -54,21 +55,31 @@ export async function scanCommand(target = null, options = {}) {
 // Configuration
 // -----------------------------------------------------------------------------
 
-/**
- * Load and validate configuration file
- * 
- * @returns {Object|null} - Configuration object or null if not found
- */
-function loadConfiguration() {
-    const config = loadConfig();
+/** Sensible defaults used when no config file exists */
+const DEFAULT_CONFIG = {
+    selectedStandard: 'wcag-aa',
+    rules: { rtl: false, level: 'AA' },
+    scan: { defaultMode: 'quick' },
+};
 
-    if (!config) {
-        p.log.error(chalk.red('No configuration found.'));
-        p.outro(`Run ${chalk.yellow('a11y-guard init')} first.`);
-        return null;
+/**
+ * Load config, running first-time setup automatically if none exists.
+ *
+ * @returns {Promise<Object|null>} - Config object, or null if user cancelled init
+ */
+async function loadConfiguration() {
+    if (!configExists()) {
+        p.log.info(chalk.cyan('No configuration found — starting first-time setup...\n'));
+        await initCommand();
+
+        // User may have cancelled init
+        if (!configExists()) {
+            p.outro(chalk.yellow('Scan cancelled — no configuration available.'));
+            return null;
+        }
     }
 
-    return config;
+    return loadConfig();
 }
 
 /**
@@ -139,9 +150,9 @@ function displayScanConfiguration(config, scanMode, options, target) {
     p.note(
         `Mode: ${modeDisplay}\n` +
         `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
-        `Framework: ${chalk.bold(config.framework)}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
-        `Output: ${chalk.bold(options.output || 'terminal')}`,
+        `Output: ${chalk.bold(options.output || 'terminal')}\n` +
+        chalk.dim('File types: .html  .jsx  .tsx'),
         'Scan Configuration'
     );
 }
