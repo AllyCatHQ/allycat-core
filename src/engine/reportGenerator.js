@@ -284,65 +284,47 @@ function buildStyles() {
         line-height: 1.8;
     }
 
-    /* ── Theme Toggle (iOS-style switch) ────────────────────────── */
+    /* ── Theme Toggle (icon button) ──────────────────────────────── */
 
     .theme-toggle {
-        background: none;
-        border: none;
+        width: 34px;
+        height: 34px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: border-color 0.14s, background 0.14s;
         padding: 0;
-        flex-shrink: 0;
-    }
-
-    .toggle-label {
-        font-family: var(--mono);
-        font-size: 0.68rem;
         color: var(--text-dim);
-        user-select: none;
-        transition: color 0.2s;
     }
 
-    .toggle-track {
-        position: relative;
-        width: 40px;
-        height: 22px;
+    .theme-toggle:hover {
+        border-color: var(--accent);
         background: var(--accent-dim);
-        border-radius: 11px;
-        transition: background 0.22s ease;
-        flex-shrink: 0;
+        color: var(--accent);
     }
 
-    [data-theme="light"] .toggle-track {
-        background: var(--accent);
-    }
-
-    .toggle-thumb {
-        position: absolute;
-        top: 3px;
-        left: 3px;
+    .theme-toggle svg {
         width: 16px;
         height: 16px;
-        background: #ffffff;
-        border-radius: 50%;
-        transition: transform 0.22s ease;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-        line-height: 1;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: opacity 0.14s;
     }
 
-    [data-theme="light"] .toggle-thumb {
-        transform: translateX(18px);
-    }
+    /* Show moon in dark mode, sun in light mode */
+    .theme-toggle .icon-sun  { display: none; }
+    .theme-toggle .icon-moon { display: block; }
 
-    .theme-toggle:hover .toggle-track {
-        filter: brightness(1.15);
-    }
+    [data-theme="light"] .theme-toggle .icon-sun  { display: block; }
+    [data-theme="light"] .theme-toggle .icon-moon { display: none; }
 
     /* ── Layout ──────────────────────────────────────────────────── */
 
@@ -783,17 +765,15 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
         </div>
     </div>
     <div class="header-right">
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
         <div class="header-meta">
             <div>Standard: ${escapeHtml(standard)}</div>
             <div>Mode: ${scanMode === 'full' ? 'Full (contrast)' : 'Quick'}</div>
             <div>${escapeHtml(timestamp)}</div>
         </div>
-        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
-            <span class="toggle-label" id="theme-label">Light</span>
-            <div class="toggle-track">
-                <div class="toggle-thumb" id="theme-icon">🌙</div>
-            </div>
-        </button>
     </div>
 </div>`;
 }
@@ -1047,15 +1027,6 @@ function buildScript() {
     function applyTheme(theme) {
         document.documentElement.dataset.theme = theme;
         localStorage.setItem('a11y-theme', theme);
-        const icon  = document.getElementById('theme-icon');
-        const label = document.getElementById('theme-label');
-        if (theme === 'dark') {
-            if (icon)  icon.textContent  = '🌙';
-            if (label) label.textContent = 'Light';
-        } else {
-            if (icon)  icon.textContent  = '☀️';
-            if (label) label.textContent = 'Dark';
-        }
     }
 
     // ── Tab switching ──────────────────────────────────────────────
