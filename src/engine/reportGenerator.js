@@ -284,24 +284,65 @@ function buildStyles() {
         line-height: 1.8;
     }
 
-    /* ── Theme Toggle ────────────────────────────────────────────── */
+    /* ── Theme Toggle (iOS-style switch) ────────────────────────── */
 
     .theme-toggle {
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        color: var(--text-dim);
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-family: var(--mono);
-        font-size: 0.7rem;
+        background: none;
+        border: none;
         cursor: pointer;
-        display: flex; align-items: center; gap: 6px;
-        transition: all 0.14s ease;
-        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
         flex-shrink: 0;
     }
 
-    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .toggle-label {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        color: var(--text-dim);
+        user-select: none;
+        transition: color 0.2s;
+    }
+
+    .toggle-track {
+        position: relative;
+        width: 40px;
+        height: 22px;
+        background: var(--accent-dim);
+        border-radius: 11px;
+        transition: background 0.22s ease;
+        flex-shrink: 0;
+    }
+
+    [data-theme="light"] .toggle-track {
+        background: var(--accent);
+    }
+
+    .toggle-thumb {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        background: #ffffff;
+        border-radius: 50%;
+        transition: transform 0.22s ease;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        line-height: 1;
+    }
+
+    [data-theme="light"] .toggle-thumb {
+        transform: translateX(18px);
+    }
+
+    .theme-toggle:hover .toggle-track {
+        filter: brightness(1.15);
+    }
 
     /* ── Layout ──────────────────────────────────────────────────── */
 
@@ -748,8 +789,10 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
             <div>${escapeHtml(timestamp)}</div>
         </div>
         <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
-            <span id="theme-icon">☀️</span>
-            <span id="theme-label">Light</span>
+            <span class="toggle-label" id="theme-label">Light</span>
+            <div class="toggle-track">
+                <div class="toggle-thumb" id="theme-icon">🌙</div>
+            </div>
         </button>
     </div>
 </div>`;
@@ -820,8 +863,8 @@ function buildPanels(files, byFile, promptMap) {
                 </div>
                 ${headerActions}
             </div>
-            ${promptSection}
             ${buildFilterBar(counts, i, violations)}
+            ${promptSection}
             <div class="violations-wrap" id="violations-${i}">
                 ${cards}
             </div>
@@ -1007,11 +1050,11 @@ function buildScript() {
         const icon  = document.getElementById('theme-icon');
         const label = document.getElementById('theme-label');
         if (theme === 'dark') {
-            icon.textContent  = '☀️';
-            label.textContent = 'Light';
+            if (icon)  icon.textContent  = '🌙';
+            if (label) label.textContent = 'Light';
         } else {
-            icon.textContent  = '🌙';
-            label.textContent = 'Dark';
+            if (icon)  icon.textContent  = '☀️';
+            if (label) label.textContent = 'Dark';
         }
     }
 
