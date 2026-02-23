@@ -67,6 +67,27 @@ function countByImpact(violations) {
     };
 }
 
+/**
+ * Extract unique WCAG tags from a set of violations, sorted numerically.
+ * Returns array of { tag, count } objects for tags that appear on >1 violation
+ * OR on any violation if the file has fewer than 3 unique tags.
+ *
+ * @param {Array} violations
+ * @returns {Array<{tag: string, count: number}>}
+ */
+function extractWcagTags(violations) {
+    const tagCounts = {};
+    violations.forEach(v => {
+        (v.wcagTags || []).forEach(tag => {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+    });
+
+    return Object.entries(tagCounts)
+        .map(([tag, count]) => ({ tag, count }))
+        .sort((a, b) => a.tag.localeCompare(b.tag, undefined, { numeric: true }));
+}
+
 function impactColor(impact) {
     return {
         critical: '#ff4d4d',
@@ -421,8 +442,12 @@ function buildStyles() {
     /* ── Impact Filter Bar (per panel) ───────────────────────────── */
 
     .filter-bar {
-        display: flex; align-items: center; gap: 6px;
+        display: flex; flex-direction: column; gap: 8px;
         padding: 12px 0 0;
+    }
+
+    .filter-row {
+        display: flex; align-items: center; gap: 6px;
         flex-wrap: wrap;
     }
 
@@ -799,7 +824,7 @@ function buildPanels(files, byFile, promptMap) {
                 </div>
                 ${headerActions}
             </div>
-            ${buildFilterBar(counts, i)}
+            ${buildFilterBar(counts, i, violations)}
             ${promptSection}
             <div class="violations-wrap" id="violations-${i}">
                 ${cards}
@@ -810,10 +835,17 @@ function buildPanels(files, byFile, promptMap) {
 }
 
 /**
- * Build the impact filter bar for a single panel.
- * Only shows buttons for impact levels that actually exist in this file.
+ * Build the filter bar for a single panel.
+ * Row 1: impact-level buttons (All / Critical / Serious / Moderate / Minor)
+ * Row 2: WCAG tag buttons — one per unique tag found in this file's violations
+ *
+ * Only renders if there is meaningful variety to filter on.
+ *
+ * @param {Object} counts      - { critical, serious, moderate, minor }
+ * @param {number} panelIndex
+ * @param {Array}  violations  - raw violations for this file (for WCAG tag extraction)
  */
-function buildFilterBar(counts, panelIndex) {
+function buildFilterBar(counts, panelIndex, violations) {
     const levels = [
         { key: 'critical', label: 'Critical' },
         { key: 'serious',  label: 'Serious'  },
@@ -821,20 +853,44 @@ function buildFilterBar(counts, panelIndex) {
         { key: 'minor',    label: 'Minor'    },
     ].filter(l => counts[l.key] > 0);
 
-    if (levels.length <= 1) return ''; // single impact level — filter useless
+    const total    = Object.values(counts).reduce((a, b) => a + b, 0);
+    const wcagTags = extractWcagTags(violations);
 
-    const buttons = levels.map(l => `
-        <button class="filter-btn" data-filter="${l.key}" onclick="filterPanel(${panelIndex}, '${l.key}', this)">
-            ${l.label}<span class="filter-count">${counts[l.key]}</span>
-        </button>`).join('');
+    // Only show impact row when more than one impact level exists
+    const showImpact = levels.length > 1;
+    // Only show WCAG row when more than one unique tag exists
+    const showWcag   = wcagTags.length > 1;
+
+    if (!showImpact && !showWcag) return '';
+
+    const impactRow = showImpact ? `
+        <div class="filter-row">
+            <span class="filter-label">Severity:</span>
+            <button class="filter-btn active" data-filter="all" data-filter-type="impact" onclick="filterPanel(${panelIndex}, 'all', 'impact', this)">
+                All<span class="filter-count">${total}</span>
+            </button>
+            ${levels.map(l => `
+            <button class="filter-btn" data-filter="${l.key}" data-filter-type="impact" onclick="filterPanel(${panelIndex}, '${l.key}', 'impact', this)">
+                ${l.label}<span class="filter-count">${counts[l.key]}</span>
+            </button>`).join('')}
+        </div>` : '';
+
+    const wcagRow = showWcag ? `
+        <div class="filter-row">
+            <span class="filter-label">WCAG:</span>
+            <button class="filter-btn active" data-filter="all" data-filter-type="wcag" onclick="filterPanel(${panelIndex}, 'all', 'wcag', this)">
+                All<span class="filter-count">${total}</span>
+            </button>
+            ${wcagTags.map(({ tag, count }) => `
+            <button class="filter-btn" data-filter="${escapeHtml(tag)}" data-filter-type="wcag" onclick="filterPanel(${panelIndex}, '${escapeHtml(tag)}', 'wcag', this)">
+                ${escapeHtml(tag)}<span class="filter-count">${count}</span>
+            </button>`).join('')}
+        </div>` : '';
 
     return `
     <div class="filter-bar" id="filter-bar-${panelIndex}">
-        <span class="filter-label">Filter:</span>
-        <button class="filter-btn active" data-filter="all" onclick="filterPanel(${panelIndex}, 'all', this)">
-            All<span class="filter-count">${Object.values(counts).reduce((a, b) => a + b, 0)}</span>
-        </button>
-        ${buttons}
+        ${impactRow}
+        ${wcagRow}
     </div>`;
 }
 
@@ -862,8 +918,12 @@ function buildViolationCard(v) {
     const color      = impactColor(v.impact);
     const badgeStyle = `background:${color}22;color:${color};border:1px solid ${color}55;`;
 
+    const wcagAttr = v.wcagTags?.length
+        ? `data-wcag="${escapeHtml(v.wcagTags.join(' '))}"`
+        : '';
+
     return `
-    <div class="violation" data-impact="${escapeHtml(v.impact || 'unknown')}">
+    <div class="violation" data-impact="${escapeHtml(v.impact || 'unknown')}" ${wcagAttr}>
         <div class="violation-header">
             <span class="impact-badge" style="${badgeStyle}">${escapeHtml(v.impact || 'unknown')}</span>
             <span class="violation-desc">${escapeHtml(v.description)}</span>
@@ -924,9 +984,6 @@ function buildScript() {
     const rawPrompts    = {};
     const fileNames     = {};
 
-    // Per-panel active filter: panelIndex → 'all' | 'critical' | 'serious' | 'moderate' | 'minor'
-    const panelFilters  = {};
-
     document.querySelectorAll('.prompt-body').forEach(el => {
         rawPrompts[el.id.split('-')[1]] = el.textContent;
     });
@@ -934,7 +991,6 @@ function buildScript() {
     document.querySelectorAll('.panel').forEach(panel => {
         const fp = panel.querySelector('.panel-filepath');
         if (fp) fileNames[panel.dataset.index] = fp.textContent;
-        panelFilters[panel.dataset.index] = 'all';
     });
 
     // ── Theme ──────────────────────────────────────────────────────
@@ -992,32 +1048,43 @@ function buildScript() {
         if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
     }
 
-    // ── Impact filter (per panel) ──────────────────────────────────
+    // ── Impact + WCAG filter (per panel, two independent dimensions) ──
 
-    function filterPanel(panelIndex, impact, clickedBtn) {
-        panelFilters[String(panelIndex)] = impact;
+    // Per-panel filter state: { impact: 'all'|..., wcag: 'all'|'X.X.X' }
+    const panelFilterState = {};
 
-        // Update button active states
+    document.querySelectorAll('.panel').forEach(panel => {
+        panelFilterState[panel.dataset.index] = { impact: 'all', wcag: 'all' };
+    });
+
+    function filterPanel(panelIndex, value, type, clickedBtn) {
+        const idx   = String(panelIndex);
+        const state = panelFilterState[idx] || { impact: 'all', wcag: 'all' };
+        state[type] = value;
+        panelFilterState[idx] = state;
+
+        // Update active button state within this filter type's row only
         const bar = document.getElementById('filter-bar-' + panelIndex);
         if (bar) {
-            bar.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.filter === impact);
+            bar.querySelectorAll('.filter-btn[data-filter-type="' + type + '"]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === value);
             });
         }
 
-        // Show/hide violation cards
+        // Show/hide cards: card must pass BOTH active filters
         const wrap = document.getElementById('violations-' + panelIndex);
         if (!wrap) return;
 
         let visible = 0;
         wrap.querySelectorAll('.violation').forEach(card => {
-            const cardImpact = card.dataset.impact;
-            const show = impact === 'all' || cardImpact === impact;
+            const matchImpact = state.impact === 'all' || card.dataset.impact === state.impact;
+            const cardWcag    = card.dataset.wcag || '';
+            const matchWcag   = state.wcag === 'all' || cardWcag.split(' ').includes(state.wcag);
+            const show = matchImpact && matchWcag;
             card.classList.toggle('hidden', !show);
             if (show) visible++;
         });
 
-        // Show empty state if nothing visible
         const noResults = document.getElementById('no-results-' + panelIndex);
         if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
     }
