@@ -15,6 +15,8 @@ import { runQuickAudit } from '../engine/quickScanner.js';
 import { formatSummary, formatByFile, countByImpact, groupByFile, formatViolationForJson } from '../utils/violationFormatter.js';
 import { runFullAudit } from '../engine/fullScanner.js';
 import { generatePrompts } from '../engine/promptGenerator.js';
+import { generateReport } from '../engine/reportGenerator.js';
+import { openInBrowser } from '../utils/browserOpener.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -252,9 +254,12 @@ function outputResults(violations, config, scanMode, options) {
     } else {
         outputTerminal(violations, scanMode);
     }
-    // AI prompts: terminal mode only — not in json, json-file, or summary modes
+    // AI report: terminal mode only — not in json, json-file, or summary modes
     if (!options.jsonFile && options.output !== 'json' && !options.summary) {
         outputPrompts(violations, config);
+        if (config?.ai?.enabled && violations.length > 0) {
+            outputAiReport(violations, config, scanMode);
+        }
     }
 }
 
@@ -461,4 +466,24 @@ function outputPrompts(violations, config) {
     }
 
     console.log('');
+}
+
+/**
+ * Generate HTML report and open it in the browser.
+ *
+ * @param {Array} violations - All violations
+ * @param {Object} config    - User configuration
+ * @param {string} scanMode  - 'quick' or 'full'
+ */
+function outputAiReport(violations, config, scanMode) {
+    try {
+        const reportPath = generateReport(violations, config, scanMode);
+        openInBrowser(reportPath);
+        p.log.success(
+            chalk.green('AI report opened in browser: ') +
+            chalk.dim(reportPath)
+        );
+    } catch (error) {
+        p.log.warn(chalk.yellow(`Could not generate AI report: ${error.message}`));
+    }
 }
