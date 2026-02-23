@@ -13,6 +13,9 @@
  *  - Panel header always shows "Copy AI Prompt" pill — zero scrolling required
  *  - "Full View" pill + ⛶ button open a full-screen modal with large readable prompt
  *  - Escape key and overlay click close the modal
+ *  - Dark mode default, light mode toggle in header (persisted via localStorage)
+ *  - Per-panel impact filter bar (All / Critical / Serious / Moderate / Minor)
+ *  - Sidebar file search — filters file tabs by name in real-time
  *
  * @module engine/reportGenerator
  */
@@ -101,7 +104,7 @@ function buildHtml(byFile, prompts, config, scanMode) {
     const promptMap = Object.fromEntries(prompts.map(p => [p.file, p.prompt]));
 
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -133,15 +136,24 @@ function buildStyles() {
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-        --bg:         #0d0d0f;
-        --surface:    #141418;
-        --surface2:   #1c1c22;
-        --border:     #2a2a35;
-        --accent:     #7c6af7;
-        --accent-dim: #3d3570;
-        --text:       #e2e2e8;
-        --text-dim:   #6b6b7e;
+    /* ── Dark theme (default) ────────────────────────────────────── */
+    :root,
+    [data-theme="dark"] {
+        --bg:           #0d0d0f;
+        --surface:      #141418;
+        --surface2:     #1c1c22;
+        --border:       #2a2a35;
+        --accent:       #7c6af7;
+        --accent-dim:   #3d3570;
+        --text:         #e2e2e8;
+        --text-dim:     #6b6b7e;
+        --input-bg:     #1c1c22;
+        --input-border: #2a2a35;
+        --prompt-bg:    #0f0f14;
+        --modal-bg:     #0c0c10;
+        --filter-bg:    #1a1a20;
+        --filter-active-bg: #3d3570;
+        --filter-active-text: #b8aeff;
         --critical:   #ff4d4d;
         --serious:    #ff8c42;
         --moderate:   #ffd166;
@@ -150,7 +162,30 @@ function buildStyles() {
         --sans:       'Syne', sans-serif;
     }
 
-    html { font-size: 16px; }
+    /* ── Light theme ─────────────────────────────────────────────── */
+    [data-theme="light"] {
+        --bg:           #f4f4f7;
+        --surface:      #ffffff;
+        --surface2:     #eeeef3;
+        --border:       #d4d4de;
+        --accent:       #5b4de0;
+        --accent-dim:   #dddaf8;
+        --text:         #18181f;
+        --text-dim:     #7070888;
+        --input-bg:     #f0f0f5;
+        --input-border: #ccccd8;
+        --prompt-bg:    #f8f8fc;
+        --modal-bg:     #f2f2f7;
+        --filter-bg:    #ebebf3;
+        --filter-active-bg: #dddaf8;
+        --filter-active-text: #4a3dc0;
+        --critical:   #d42020;
+        --serious:    #c05a10;
+        --moderate:   #9a7000;
+        --minor:      #057a52;
+    }
+
+    html { font-size: 17px; }
 
     body {
         background: var(--bg);
@@ -158,6 +193,7 @@ function buildStyles() {
         font-family: var(--sans);
         min-height: 100vh;
         line-height: 1.6;
+        transition: background 0.2s ease, color 0.2s ease;
     }
 
     /* ── Header ──────────────────────────────────────────────────── */
@@ -175,23 +211,46 @@ function buildStyles() {
     .header-brand { display: flex; align-items: center; gap: 14px; }
 
     .brand-icon {
-        width: 40px; height: 40px;
+        width: 44px; height: 44px;
         background: var(--accent);
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 20px; flex-shrink: 0;
+        font-size: 22px; flex-shrink: 0;
     }
 
-    .brand-name { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
-    .brand-sub  { font-size: 0.72rem; color: var(--text-dim); font-family: var(--mono); margin-top: 2px; }
+    .brand-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-sub  { font-size: 0.75rem; color: var(--text-dim); font-family: var(--mono); margin-top: 2px; }
+
+    .header-right {
+        display: flex; align-items: center; gap: 16px;
+    }
 
     .header-meta {
         text-align: right;
         font-family: var(--mono);
-        font-size: 0.72rem;
+        font-size: 0.74rem;
         color: var(--text-dim);
         line-height: 1.9;
     }
+
+    /* ── Theme Toggle ────────────────────────────────────────────── */
+
+    .theme-toggle {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        padding: 7px 14px;
+        border-radius: 20px;
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        cursor: pointer;
+        display: flex; align-items: center; gap: 7px;
+        transition: all 0.14s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ── Stats Bar ───────────────────────────────────────────────── */
 
@@ -207,12 +266,12 @@ function buildStyles() {
     .stat { display: flex; flex-direction: column; gap: 2px; }
 
     .stat-value {
-        font-size: 1.45rem; font-weight: 800;
+        font-size: 1.5rem; font-weight: 800;
         font-family: var(--mono); line-height: 1;
     }
 
     .stat-label {
-        font-size: 0.65rem; color: var(--text-dim);
+        font-size: 0.67rem; color: var(--text-dim);
         text-transform: uppercase; letter-spacing: 0.08em;
     }
 
@@ -222,57 +281,93 @@ function buildStyles() {
     .stat-minor    { color: var(--minor);    }
     .stat-total    { color: var(--text);     }
 
-    .stat-divider { width: 1px; height: 32px; background: var(--border); }
+    .stat-divider { width: 1px; height: 34px; background: var(--border); }
 
     /* ── Layout ──────────────────────────────────────────────────── */
 
-    .layout { display: flex; height: calc(100vh - 138px); }
+    .layout { display: flex; height: calc(100vh - 142px); }
 
     /* ── Sidebar ─────────────────────────────────────────────────── */
 
     .sidebar {
-        width: 260px; flex-shrink: 0;
+        width: 275px; flex-shrink: 0;
         background: var(--surface);
         border-right: 1px solid var(--border);
-        overflow-y: auto; padding: 12px 0;
+        overflow-y: auto;
+        display: flex; flex-direction: column;
     }
+
+    /* File search input */
+    .sidebar-search-wrap {
+        padding: 12px 14px 8px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+
+    .sidebar-search {
+        width: 100%;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 7px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        padding: 7px 10px 7px 30px;
+        outline: none;
+        transition: border-color 0.14s;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6b7e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 10px center;
+    }
+
+    .sidebar-search:focus { border-color: var(--accent); }
+    .sidebar-search::placeholder { color: var(--text-dim); }
 
     .sidebar-label {
-        font-size: 0.62rem; text-transform: uppercase;
+        font-size: 0.64rem; text-transform: uppercase;
         letter-spacing: 0.1em; color: var(--text-dim);
-        padding: 4px 18px 10px;
+        padding: 10px 16px 6px;
+        flex-shrink: 0;
     }
 
+    .sidebar-files { flex: 1; overflow-y: auto; }
+
     .file-tab {
-        padding: 10px 18px; cursor: pointer;
+        padding: 11px 18px; cursor: pointer;
         border-left: 3px solid transparent;
         transition: all 0.12s ease; position: relative;
     }
 
     .file-tab:hover  { background: var(--surface2); }
     .file-tab.active { background: var(--surface2); border-left-color: var(--accent); }
+    .file-tab.hidden { display: none; }
 
     .file-tab-name {
-        font-family: var(--mono); font-size: 0.76rem; color: var(--text);
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 32px;
+        font-family: var(--mono); font-size: 0.78rem; color: var(--text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 36px;
     }
 
     .file-tab-path {
-        font-family: var(--mono); font-size: 0.64rem; color: var(--text-dim);
+        font-family: var(--mono); font-size: 0.67rem; color: var(--text-dim);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        margin-top: 2px; padding-right: 32px;
+        margin-top: 2px; padding-right: 36px;
     }
 
     .file-tab-badge {
         position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
         background: var(--accent-dim); color: var(--accent);
-        font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
-        padding: 2px 7px; border-radius: 20px;
+        font-family: var(--mono); font-size: 0.64rem; font-weight: 600;
+        padding: 2px 8px; border-radius: 20px;
+    }
+
+    .sidebar-empty {
+        padding: 16px; font-size: 0.75rem;
+        color: var(--text-dim); text-align: center; display: none;
     }
 
     /* ── Content ─────────────────────────────────────────────────── */
 
-    .content { flex: 1; overflow-y: auto; padding: 24px 32px; }
+    .content { flex: 1; overflow-y: auto; padding: 26px 34px; }
 
     .panel { display: none; }
     .panel.active { display: block; }
@@ -288,16 +383,15 @@ function buildStyles() {
     .panel-header-left { min-width: 0; flex: 1; }
 
     .panel-filepath {
-        font-family: var(--mono); font-size: 0.82rem; color: var(--accent);
+        font-family: var(--mono); font-size: 0.84rem; color: var(--accent);
         display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     .panel-count {
-        font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim);
+        font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim);
         margin-top: 2px; display: block;
     }
 
-    /* Prompt action pills — always in view, zero scrolling needed */
     .panel-header-right {
         display: flex; align-items: center; gap: 8px; flex-shrink: 0;
     }
@@ -305,8 +399,8 @@ function buildStyles() {
     .copy-pill {
         display: flex; align-items: center; gap: 6px;
         background: var(--accent-dim); color: var(--accent);
-        border: 1px solid var(--accent); padding: 6px 14px; border-radius: 20px;
-        font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+        border: 1px solid var(--accent); padding: 7px 15px; border-radius: 20px;
+        font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
         cursor: pointer; transition: all 0.14s ease; white-space: nowrap;
     }
 
@@ -317,17 +411,77 @@ function buildStyles() {
     .expand-pill {
         display: flex; align-items: center; gap: 6px;
         background: transparent; color: var(--text-dim);
-        border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px;
-        font-family: var(--mono); font-size: 0.68rem;
+        border: 1px solid var(--border); padding: 7px 13px; border-radius: 20px;
+        font-family: var(--mono); font-size: 0.7rem;
         cursor: pointer; transition: all 0.14s ease; white-space: nowrap;
     }
 
     .expand-pill:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ── Prompt Section — collapsed preview at top of panel ──────── */
+    /* ── Impact Filter Bar (per panel) ───────────────────────────── */
+
+    .filter-bar {
+        display: flex; align-items: center; gap: 6px;
+        padding: 12px 0 0;
+        flex-wrap: wrap;
+    }
+
+    .filter-label {
+        font-size: 0.67rem; color: var(--text-dim);
+        text-transform: uppercase; letter-spacing: 0.08em;
+        margin-right: 4px; white-space: nowrap;
+    }
+
+    .filter-btn {
+        background: var(--filter-bg);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.12s ease;
+        white-space: nowrap;
+    }
+
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .filter-btn.active {
+        background: var(--filter-active-bg);
+        color: var(--filter-active-text);
+        border-color: var(--accent);
+        font-weight: 600;
+    }
+
+    /* Impact-colored active states */
+    .filter-btn[data-filter="critical"].active { background: #ff4d4d22; color: var(--critical); border-color: var(--critical); }
+    .filter-btn[data-filter="serious"].active  { background: #ff8c4222; color: var(--serious);  border-color: var(--serious);  }
+    .filter-btn[data-filter="moderate"].active { background: #ffd16622; color: var(--moderate); border-color: var(--moderate); }
+    .filter-btn[data-filter="minor"].active    { background: #06d6a022; color: var(--minor);    border-color: var(--minor);    }
+
+    .filter-count {
+        display: inline-block;
+        background: var(--surface2);
+        color: var(--text-dim);
+        font-size: 0.62rem;
+        padding: 1px 6px;
+        border-radius: 10px;
+        margin-left: 3px;
+    }
+
+    .no-results {
+        padding: 32px 0;
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        display: none;
+    }
+
+    /* ── Prompt Section ───────────────────────────────────────────── */
 
     .prompt-section {
-        margin: 14px 0 20px;
+        margin: 16px 0 20px;
         border: 1px solid var(--accent-dim);
         border-radius: 10px; overflow: hidden;
         background: var(--surface);
@@ -335,22 +489,22 @@ function buildStyles() {
 
     .prompt-bar {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 10px 16px;
-        background: linear-gradient(90deg, #1a1730 0%, var(--surface) 100%);
+        padding: 11px 17px;
+        background: linear-gradient(90deg, var(--accent-dim) 0%, var(--surface) 100%);
         border-bottom: 1px solid var(--accent-dim); gap: 12px;
     }
 
     .prompt-bar-label {
         display: flex; align-items: center; gap: 8px;
-        font-size: 0.76rem; font-weight: 600; color: var(--accent);
+        font-size: 0.78rem; font-weight: 600; color: var(--accent);
     }
 
     .prompt-bar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
     .copy-btn {
         background: var(--accent); color: #fff; border: none;
-        padding: 5px 14px; border-radius: 6px;
-        font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+        padding: 6px 15px; border-radius: 6px;
+        font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
         cursor: pointer; transition: all 0.14s ease; white-space: nowrap;
     }
 
@@ -360,81 +514,84 @@ function buildStyles() {
 
     .expand-btn {
         background: transparent; border: 1px solid var(--border); color: var(--text-dim);
-        padding: 5px 9px; border-radius: 6px; font-size: 0.8rem;
+        padding: 5px 10px; border-radius: 6px; font-size: 0.82rem;
         cursor: pointer; transition: all 0.14s ease; line-height: 1;
     }
 
     .expand-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* Faded 4-line preview */
     .prompt-preview-wrap {
-        position: relative; max-height: 80px; overflow: hidden;
+        position: relative; max-height: 82px; overflow: hidden;
     }
 
     .prompt-preview-wrap::after {
         content: '';
         position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
-        background: linear-gradient(transparent, #0f0f14);
+        background: linear-gradient(transparent, var(--prompt-bg));
         pointer-events: none;
     }
 
     .prompt-body {
-        padding: 12px 16px;
-        font-family: var(--mono); font-size: 0.74rem;
-        line-height: 1.75; color: #c8c8d8;
+        padding: 13px 17px;
+        font-family: var(--mono); font-size: 0.76rem;
+        line-height: 1.75; color: var(--text);
         white-space: pre-wrap; word-break: break-word;
-        background: #0f0f14;
+        background: var(--prompt-bg);
+        opacity: 0.85;
     }
 
     /* ── Violation Cards ─────────────────────────────────────────── */
 
+    .violations-wrap { margin-top: 14px; }
+
     .violation {
         background: var(--surface); border: 1px solid var(--border);
-        border-radius: 8px; margin-bottom: 10px; overflow: hidden;
+        border-radius: 9px; margin-bottom: 11px; overflow: hidden;
         transition: border-color 0.14s;
     }
 
     .violation:hover { border-color: var(--accent-dim); }
+    .violation.hidden { display: none; }
 
     .violation-header {
         display: flex; align-items: center; gap: 12px;
-        padding: 11px 15px; border-bottom: 1px solid var(--border);
+        padding: 12px 16px; border-bottom: 1px solid var(--border);
     }
 
     .impact-badge {
-        font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
-        padding: 3px 8px; border-radius: 4px;
+        font-family: var(--mono); font-size: 0.64rem; font-weight: 600;
+        padding: 4px 9px; border-radius: 5px;
         text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0;
     }
 
-    .violation-desc { font-size: 0.92rem; font-weight: 600; color: var(--text); flex: 1; }
+    .violation-desc { font-size: 0.95rem; font-weight: 600; color: var(--text); flex: 1; }
 
-    .violation-line { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); flex-shrink: 0; }
+    .violation-line { font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); flex-shrink: 0; }
 
     .violation-body {
-        padding: 12px 15px;
-        display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px;
+        padding: 13px 16px;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 11px 22px;
     }
 
     .vfield-label {
-        font-size: 0.62rem; text-transform: uppercase;
+        font-size: 0.64rem; text-transform: uppercase;
         letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 3px;
     }
 
-    .vfield-value { font-family: var(--mono); font-size: 0.75rem; color: var(--text); word-break: break-all; }
+    .vfield-value { font-family: var(--mono); font-size: 0.77rem; color: var(--text); word-break: break-all; }
 
     .vfield-value.code {
-        background: var(--surface2); padding: 6px 10px;
+        background: var(--surface2); padding: 6px 11px;
         border-radius: 5px; border: 1px solid var(--border);
         display: block; white-space: pre-wrap; word-break: break-word;
     }
 
     .vfield-full { grid-column: 1 / -1; }
 
-    .help-link { color: var(--accent); text-decoration: none; font-size: 0.72rem; }
+    .help-link { color: var(--accent); text-decoration: none; font-size: 0.74rem; }
     .help-link:hover { text-decoration: underline; }
 
-    /* ── Full-screen Modal ───────────────────────────────────────── */
+    /* ── Modal ───────────────────────────────────────────────────── */
 
     .modal-overlay {
         display: none; position: fixed; inset: 0;
@@ -448,9 +605,9 @@ function buildStyles() {
     .modal {
         background: var(--surface);
         border: 1px solid var(--accent-dim);
-        border-radius: 14px; width: 100%; max-width: 880px; max-height: 88vh;
+        border-radius: 14px; width: 100%; max-width: 900px; max-height: 88vh;
         display: flex; flex-direction: column; overflow: hidden;
-        box-shadow: 0 32px 80px rgba(0,0,0,0.65);
+        box-shadow: 0 32px 80px rgba(0,0,0,0.55);
         animation: modalIn 0.16s ease;
     }
 
@@ -461,19 +618,19 @@ function buildStyles() {
 
     .modal-header {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 16px 22px;
-        background: linear-gradient(90deg, #1a1730 0%, var(--surface) 100%);
+        padding: 17px 24px;
+        background: linear-gradient(90deg, var(--accent-dim) 0%, var(--surface) 100%);
         border-bottom: 1px solid var(--accent-dim);
         flex-shrink: 0; gap: 16px;
     }
 
     .modal-title {
         display: flex; align-items: center; gap: 10px;
-        font-weight: 700; font-size: 0.9rem; color: var(--accent);
+        font-weight: 700; font-size: 0.92rem; color: var(--accent);
     }
 
     .modal-filepath {
-        font-family: var(--mono); font-size: 0.7rem;
+        font-family: var(--mono); font-size: 0.72rem;
         color: var(--text-dim); margin-top: 3px;
     }
 
@@ -481,8 +638,8 @@ function buildStyles() {
 
     .modal-copy-btn {
         background: var(--accent); color: #fff; border: none;
-        padding: 8px 20px; border-radius: 8px;
-        font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+        padding: 9px 22px; border-radius: 8px;
+        font-family: var(--mono); font-size: 0.74rem; font-weight: 600;
         cursor: pointer; transition: all 0.14s ease;
     }
 
@@ -491,7 +648,7 @@ function buildStyles() {
 
     .modal-close {
         background: transparent; border: 1px solid var(--border); color: var(--text-dim);
-        width: 34px; height: 34px; border-radius: 8px; font-size: 1rem;
+        width: 36px; height: 36px; border-radius: 8px; font-size: 1rem;
         cursor: pointer; display: flex; align-items: center; justify-content: center;
         transition: all 0.14s; line-height: 1;
     }
@@ -499,11 +656,11 @@ function buildStyles() {
     .modal-close:hover { border-color: var(--critical); color: var(--critical); }
 
     .modal-body {
-        overflow-y: auto; flex: 1; padding: 24px 28px;
-        font-family: var(--mono); font-size: 0.82rem;
-        line-height: 1.82; color: #d0d0de;
+        overflow-y: auto; flex: 1; padding: 26px 30px;
+        font-family: var(--mono); font-size: 0.84rem;
+        line-height: 1.82; color: var(--text);
         white-space: pre-wrap; word-break: break-word;
-        background: #0c0c10;
+        background: var(--modal-bg);
     }
 
     /* ── Scrollbars ──────────────────────────────────────────────── */
@@ -528,10 +685,16 @@ function buildHeader(standard, scanMode, timestamp) {
             <div class="brand-sub">Accessibility Scan Report</div>
         </div>
     </div>
-    <div class="header-meta">
-        <div>Standard: ${escapeHtml(standard)}</div>
-        <div>Mode: ${scanMode === 'full' ? 'Full (contrast enabled)' : 'Quick'}</div>
-        <div>Generated: ${escapeHtml(timestamp)}</div>
+    <div class="header-right">
+        <div class="header-meta">
+            <div>Standard: ${escapeHtml(standard)}</div>
+            <div>Mode: ${scanMode === 'full' ? 'Full (contrast enabled)' : 'Quick'}</div>
+            <div>Generated: ${escapeHtml(timestamp)}</div>
+        </div>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+            <span id="theme-icon">☀️</span>
+            <span id="theme-label">Light</span>
+        </button>
     </div>
 </div>`;
 }
@@ -577,7 +740,7 @@ function buildSidebar(files, byFile) {
         const name  = path.basename(file);
         const dir   = path.dirname(file);
         return `
-        <div class="file-tab ${i === 0 ? 'active' : ''}" onclick="switchTab(${i})" data-index="${i}">
+        <div class="file-tab ${i === 0 ? 'active' : ''}" onclick="switchTab(${i})" data-index="${i}" data-filename="${escapeHtml(name.toLowerCase())}">
             <div class="file-tab-name">${escapeHtml(name)}</div>
             <div class="file-tab-path">${escapeHtml(dir)}</div>
             <span class="file-tab-badge">${count}</span>
@@ -586,8 +749,22 @@ function buildSidebar(files, byFile) {
 
     return `
     <div class="sidebar">
+        <div class="sidebar-search-wrap">
+            <input
+                class="sidebar-search"
+                id="sidebar-search"
+                type="text"
+                placeholder="Filter files…"
+                oninput="filterSidebar(this.value)"
+                autocomplete="off"
+                spellcheck="false"
+            />
+        </div>
         <div class="sidebar-label">Files</div>
-        ${tabs}
+        <div class="sidebar-files" id="sidebar-files">
+            ${tabs}
+        </div>
+        <div class="sidebar-empty" id="sidebar-empty">No files match</div>
     </div>`;
 }
 
@@ -596,13 +773,14 @@ function buildPanels(files, byFile, promptMap) {
         const violations = byFile[file];
         const prompt     = promptMap[file] || null;
 
-        const cards = violations
-            .sort((a, b) => {
-                const order = { critical: 0, serious: 1, moderate: 2, minor: 3 };
-                return (order[a.impact] ?? 4) - (order[b.impact] ?? 4);
-            })
-            .map(v => buildViolationCard(v))
-            .join('');
+        // Sort by severity, then line number
+        const sorted = [...violations].sort((a, b) => {
+            const order = { critical: 0, serious: 1, moderate: 2, minor: 3 };
+            return (order[a.impact] ?? 4) - (order[b.impact] ?? 4);
+        });
+
+        const counts   = countByImpact(violations);
+        const cards    = sorted.map(v => buildViolationCard(v)).join('');
 
         const headerActions = prompt ? `
                 <div class="panel-header-right">
@@ -621,10 +799,43 @@ function buildPanels(files, byFile, promptMap) {
                 </div>
                 ${headerActions}
             </div>
+            ${buildFilterBar(counts, i)}
             ${promptSection}
-            ${cards}
+            <div class="violations-wrap" id="violations-${i}">
+                ${cards}
+            </div>
+            <div class="no-results" id="no-results-${i}">No violations match this filter</div>
         </div>`;
     }).join('');
+}
+
+/**
+ * Build the impact filter bar for a single panel.
+ * Only shows buttons for impact levels that actually exist in this file.
+ */
+function buildFilterBar(counts, panelIndex) {
+    const levels = [
+        { key: 'critical', label: 'Critical' },
+        { key: 'serious',  label: 'Serious'  },
+        { key: 'moderate', label: 'Moderate' },
+        { key: 'minor',    label: 'Minor'    },
+    ].filter(l => counts[l.key] > 0);
+
+    if (levels.length <= 1) return ''; // single impact level — filter useless
+
+    const buttons = levels.map(l => `
+        <button class="filter-btn" data-filter="${l.key}" onclick="filterPanel(${panelIndex}, '${l.key}', this)">
+            ${l.label}<span class="filter-count">${counts[l.key]}</span>
+        </button>`).join('');
+
+    return `
+    <div class="filter-bar" id="filter-bar-${panelIndex}">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-btn active" data-filter="all" onclick="filterPanel(${panelIndex}, 'all', this)">
+            All<span class="filter-count">${Object.values(counts).reduce((a, b) => a + b, 0)}</span>
+        </button>
+        ${buttons}
+    </div>`;
 }
 
 function buildPromptSection(prompt, index) {
@@ -652,7 +863,7 @@ function buildViolationCard(v) {
     const badgeStyle = `background:${color}22;color:${color};border:1px solid ${color}55;`;
 
     return `
-    <div class="violation">
+    <div class="violation" data-impact="${escapeHtml(v.impact || 'unknown')}">
         <div class="violation-header">
             <span class="impact-badge" style="${badgeStyle}">${escapeHtml(v.impact || 'unknown')}</span>
             <span class="violation-desc">${escapeHtml(v.description)}</span>
@@ -708,9 +919,13 @@ function buildModal() {
 
 function buildScript() {
     return `
-    // Store raw prompt text and file names keyed by panel index
-    const rawPrompts = {};
-    const fileNames  = {};
+    // ── State ──────────────────────────────────────────────────────
+
+    const rawPrompts    = {};
+    const fileNames     = {};
+
+    // Per-panel active filter: panelIndex → 'all' | 'critical' | 'serious' | 'moderate' | 'minor'
+    const panelFilters  = {};
 
     document.querySelectorAll('.prompt-body').forEach(el => {
         rawPrompts[el.id.split('-')[1]] = el.textContent;
@@ -719,21 +934,98 @@ function buildScript() {
     document.querySelectorAll('.panel').forEach(panel => {
         const fp = panel.querySelector('.panel-filepath');
         if (fp) fileNames[panel.dataset.index] = fp.textContent;
+        panelFilters[panel.dataset.index] = 'all';
     });
+
+    // ── Theme ──────────────────────────────────────────────────────
+
+    (function initTheme() {
+        const saved = localStorage.getItem('a11y-theme') || 'dark';
+        applyTheme(saved);
+    })();
+
+    function toggleTheme() {
+        const current = document.documentElement.dataset.theme;
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('a11y-theme', theme);
+        const icon  = document.getElementById('theme-icon');
+        const label = document.getElementById('theme-label');
+        if (theme === 'dark') {
+            icon.textContent  = '☀️';
+            label.textContent = 'Light';
+        } else {
+            icon.textContent  = '🌙';
+            label.textContent = 'Dark';
+        }
+    }
 
     // ── Tab switching ──────────────────────────────────────────────
 
     function switchTab(index) {
         document.querySelectorAll('.file-tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.querySelector('.file-tab[data-index="' + index + '"]').classList.add('active');
-        document.querySelector('.panel[data-index="' + index + '"]').classList.add('active');
+        const tab = document.querySelector('.file-tab[data-index="' + index + '"]');
+        const panel = document.querySelector('.panel[data-index="' + index + '"]');
+        if (tab)   tab.classList.add('active');
+        if (panel) panel.classList.add('active');
+    }
+
+    // ── Sidebar file search ────────────────────────────────────────
+
+    function filterSidebar(query) {
+        const q     = query.toLowerCase().trim();
+        const tabs  = document.querySelectorAll('.file-tab');
+        let visible = 0;
+
+        tabs.forEach(tab => {
+            const name = tab.dataset.filename || '';
+            const match = !q || name.includes(q);
+            tab.classList.toggle('hidden', !match);
+            if (match) visible++;
+        });
+
+        const empty = document.getElementById('sidebar-empty');
+        if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    // ── Impact filter (per panel) ──────────────────────────────────
+
+    function filterPanel(panelIndex, impact, clickedBtn) {
+        panelFilters[String(panelIndex)] = impact;
+
+        // Update button active states
+        const bar = document.getElementById('filter-bar-' + panelIndex);
+        if (bar) {
+            bar.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === impact);
+            });
+        }
+
+        // Show/hide violation cards
+        const wrap = document.getElementById('violations-' + panelIndex);
+        if (!wrap) return;
+
+        let visible = 0;
+        wrap.querySelectorAll('.violation').forEach(card => {
+            const cardImpact = card.dataset.impact;
+            const show = impact === 'all' || cardImpact === impact;
+            card.classList.toggle('hidden', !show);
+            if (show) visible++;
+        });
+
+        // Show empty state if nothing visible
+        const noResults = document.getElementById('no-results-' + panelIndex);
+        if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
     }
 
     // ── Copy helper ────────────────────────────────────────────────
 
     function doCopy(text, btn, originalLabel) {
-        const restore = () => { btn.textContent = originalLabel; btn.classList.remove('copied'); };
+        const restore   = () => { btn.textContent = originalLabel; btn.classList.remove('copied'); };
         const onSuccess = () => {
             btn.textContent = '✓ Copied!';
             btn.classList.add('copied');
