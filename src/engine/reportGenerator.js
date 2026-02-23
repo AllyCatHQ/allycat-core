@@ -133,8 +133,7 @@ function buildHtml(byFile, prompts, config, scanMode) {
 <style>${buildStyles()}</style>
 </head>
 <body>
-${buildHeader(standard, scanMode, timestamp)}
-${buildStatsBar(byFile)}
+${buildHeader(byFile, standard, scanMode, timestamp)}
 <div class="layout">
 ${buildSidebar(files, byFile)}
 <div class="content" id="content">
@@ -217,82 +216,51 @@ function buildStyles() {
         transition: background 0.2s ease, color 0.2s ease;
     }
 
-    /* ── Header ──────────────────────────────────────────────────── */
+    /* ── Combined Header (brand + stats + meta in one row) ──────── */
 
     .header {
         background: var(--surface);
         border-bottom: 1px solid var(--border);
-        padding: 20px 36px;
+        padding: 12px 36px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 24px;
+        gap: 20px;
     }
 
-    .header-brand { display: flex; align-items: center; gap: 14px; }
+    .header-brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
     .brand-icon {
-        width: 44px; height: 44px;
+        width: 36px; height: 36px;
         background: var(--accent);
-        border-radius: 10px;
+        border-radius: 8px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 22px; flex-shrink: 0;
+        font-size: 18px; flex-shrink: 0;
     }
 
-    .brand-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
-    .brand-sub  { font-size: 0.75rem; color: var(--text-dim); font-family: var(--mono); margin-top: 2px; }
+    .brand-name { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-sub  { font-size: 0.68rem; color: var(--text-dim); font-family: var(--mono); margin-top: 1px; }
 
-    .header-right {
-        display: flex; align-items: center; gap: 16px;
-    }
-
-    .header-meta {
-        text-align: right;
-        font-family: var(--mono);
-        font-size: 0.74rem;
-        color: var(--text-dim);
-        line-height: 1.9;
-    }
-
-    /* ── Theme Toggle ────────────────────────────────────────────── */
-
-    .theme-toggle {
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        color: var(--text-dim);
-        padding: 7px 14px;
-        border-radius: 20px;
-        font-family: var(--mono);
-        font-size: 0.74rem;
-        cursor: pointer;
-        display: flex; align-items: center; gap: 7px;
-        transition: all 0.14s ease;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* ── Stats Bar ───────────────────────────────────────────────── */
-
-    .stats-bar {
-        background: var(--surface2);
-        border-bottom: 1px solid var(--border);
-        padding: 14px 36px;
+    /* Stats sit inline between brand and right section */
+    .header-stats {
         display: flex;
-        gap: 28px;
         align-items: center;
+        gap: 20px;
+        flex: 1;
+        padding: 0 24px;
+        border-left: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+        margin: 0 4px;
     }
 
-    .stat { display: flex; flex-direction: column; gap: 2px; }
+    .stat { display: flex; flex-direction: column; gap: 1px; }
 
     .stat-value {
-        font-size: 1.5rem; font-weight: 800;
+        font-size: 1.2rem; font-weight: 800;
         font-family: var(--mono); line-height: 1;
     }
 
     .stat-label {
-        font-size: 0.67rem; color: var(--text-dim);
+        font-size: 0.6rem; color: var(--text-dim);
         text-transform: uppercase; letter-spacing: 0.08em;
     }
 
@@ -302,11 +270,42 @@ function buildStyles() {
     .stat-minor    { color: var(--minor);    }
     .stat-total    { color: var(--text);     }
 
-    .stat-divider { width: 1px; height: 34px; background: var(--border); }
+    .stat-divider { width: 1px; height: 28px; background: var(--border); }
+
+    .header-right {
+        display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+    }
+
+    .header-meta {
+        text-align: right;
+        font-family: var(--mono);
+        font-size: 0.67rem;
+        color: var(--text-dim);
+        line-height: 1.8;
+    }
+
+    /* ── Theme Toggle ────────────────────────────────────────────── */
+
+    .theme-toggle {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        cursor: pointer;
+        display: flex; align-items: center; gap: 6px;
+        transition: all 0.14s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ── Layout ──────────────────────────────────────────────────── */
 
-    .layout { display: flex; height: calc(100vh - 142px); }
+    .layout { display: flex; height: calc(100vh - 62px); }
 
     /* ── Sidebar ─────────────────────────────────────────────────── */
 
@@ -700,7 +699,11 @@ function buildStyles() {
 // HTML Builders
 // -----------------------------------------------------------------------------
 
-function buildHeader(standard, scanMode, timestamp) {
+function buildHeader(byFile, standard, scanMode, timestamp) {
+    const all    = Object.values(byFile).flat();
+    const counts = countByImpact(all);
+    const files  = Object.keys(byFile).length;
+
     return `
 <div class="header">
     <div class="header-brand">
@@ -710,51 +713,44 @@ function buildHeader(standard, scanMode, timestamp) {
             <div class="brand-sub">Accessibility Scan Report</div>
         </div>
     </div>
+    <div class="header-stats">
+        <div class="stat">
+            <div class="stat-value stat-total">${all.length}</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <div class="stat-value stat-critical">${counts.critical}</div>
+            <div class="stat-label">Critical</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value stat-serious">${counts.serious}</div>
+            <div class="stat-label">Serious</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value stat-moderate">${counts.moderate}</div>
+            <div class="stat-label">Moderate</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value stat-minor">${counts.minor}</div>
+            <div class="stat-label">Minor</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <div class="stat-value stat-total">${files}</div>
+            <div class="stat-label">Files</div>
+        </div>
+    </div>
     <div class="header-right">
         <div class="header-meta">
             <div>Standard: ${escapeHtml(standard)}</div>
-            <div>Mode: ${scanMode === 'full' ? 'Full (contrast enabled)' : 'Quick'}</div>
-            <div>Generated: ${escapeHtml(timestamp)}</div>
+            <div>Mode: ${scanMode === 'full' ? 'Full (contrast)' : 'Quick'}</div>
+            <div>${escapeHtml(timestamp)}</div>
         </div>
         <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
             <span id="theme-icon">☀️</span>
             <span id="theme-label">Light</span>
         </button>
-    </div>
-</div>`;
-}
-
-function buildStatsBar(byFile) {
-    const all    = Object.values(byFile).flat();
-    const counts = countByImpact(all);
-
-    return `
-<div class="stats-bar">
-    <div class="stat">
-        <div class="stat-value stat-total">${all.length}</div>
-        <div class="stat-label">Total Issues</div>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat">
-        <div class="stat-value stat-critical">${counts.critical}</div>
-        <div class="stat-label">Critical</div>
-    </div>
-    <div class="stat">
-        <div class="stat-value stat-serious">${counts.serious}</div>
-        <div class="stat-label">Serious</div>
-    </div>
-    <div class="stat">
-        <div class="stat-value stat-moderate">${counts.moderate}</div>
-        <div class="stat-label">Moderate</div>
-    </div>
-    <div class="stat">
-        <div class="stat-value stat-minor">${counts.minor}</div>
-        <div class="stat-label">Minor</div>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat">
-        <div class="stat-value stat-total">${Object.keys(byFile).length}</div>
-        <div class="stat-label">Files</div>
     </div>
 </div>`;
 }
@@ -824,8 +820,8 @@ function buildPanels(files, byFile, promptMap) {
                 </div>
                 ${headerActions}
             </div>
-            ${buildFilterBar(counts, i, violations)}
             ${promptSection}
+            ${buildFilterBar(counts, i, violations)}
             <div class="violations-wrap" id="violations-${i}">
                 ${cards}
             </div>
