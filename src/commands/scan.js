@@ -14,6 +14,7 @@ import { initCommand } from './init.js';
 import { runQuickAudit } from '../engine/quickScanner.js';
 import { formatSummary, formatByFile, countByImpact, groupByFile, formatViolationForJson } from '../utils/violationFormatter.js';
 import { runFullAudit } from '../engine/fullScanner.js';
+import { generatePrompts } from '../engine/promptGenerator.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -251,6 +252,10 @@ function outputResults(violations, config, scanMode, options) {
     } else {
         outputTerminal(violations, scanMode);
     }
+    // AI prompts: terminal mode only — not in json, json-file, or summary modes
+    if (!options.jsonFile && options.output !== 'json' && !options.summary) {
+        outputPrompts(violations, config);
+    }
 }
 
 /**
@@ -409,5 +414,51 @@ function outputJsonFile(violations, config, scanMode, filenameOption) {
     // Also show summary in terminal
     const summary = formatSummary(violations, scanMode);
     console.log(summary);
+    console.log('');
+}
+
+// -----------------------------------------------------------------------------
+// AI Prompt Output
+// -----------------------------------------------------------------------------
+
+/**
+ * Display AI fix prompts grouped by file.
+ *
+ * Only shown when:
+ *  - config.ai.enabled is true
+ *  - violations exist
+ *  - output mode is terminal (not json, not summary)
+ *
+ * @param {Array} violations - All violations from the scan
+ * @param {Object} config    - User configuration
+ */
+function outputPrompts(violations, config) {
+    if (!config?.ai?.enabled) return;
+    if (violations.length === 0) return;
+
+    const prompts = generatePrompts(violations, config);
+    if (prompts.length === 0) return;
+
+    console.log('');
+    console.log(chalk.dim('─'.repeat(60)));
+    console.log(chalk.bold.magenta('  ✦ AI Fix Prompts'));
+    console.log(chalk.dim('  Copy the prompt for each file and paste into your AI agent.'));
+    console.log(chalk.dim('─'.repeat(60)));
+
+    for (const { file, prompt } of prompts) {
+        console.log('');
+        console.log(chalk.bold.cyan(`  ▸ ${file}`));
+        console.log('');
+        console.log(chalk.dim('  ┌─ Copy everything between the lines ──────────────────'));
+        console.log('');
+
+        prompt.split('\n').forEach(line => {
+            console.log(`  ${line}`);
+        });
+
+        console.log('');
+        console.log(chalk.dim('  └──────────────────────────────────────────────────────'));
+    }
+
     console.log('');
 }
