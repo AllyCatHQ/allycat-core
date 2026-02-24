@@ -1,7 +1,7 @@
 {
   "selectedStandard": "wcag-aa",
   "rules": {
-    "rtl": true,
+    "rtl": false,
     "level": "AA"
   },
   "scan": {
@@ -9,5 +9,8 @@
   },
   "ai": {
     "enabled": true
+  },
+  "performance": {
+    "concurrency": 5
   }
 }

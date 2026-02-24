@@ -65,6 +65,9 @@ export async function initCommand() {
         },
         ai: {
             enabled: group.useAI
+        },
+        performance: {
+            concurrency: 5
         }
     };
 
@@ -79,7 +82,8 @@ export async function initCommand() {
         `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Default Mode: ${chalk.bold(config.scan.defaultMode === 'full' ? 'Full (with contrast)' : 'Quick (fast)')}\n` +
-        `AI Suggestions: ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}`,
+        `AI Suggestions: ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
+        `Concurrency: ${chalk.bold(config.performance.concurrency)} files in parallel`,
         'Configuration Summary'
     );
 
@@ -89,9 +93,9 @@ export async function initCommand() {
         : '';
 
     p.outro(
-    `Done! Run ${chalk.cyan('a11y-guard scan')} to audit your code.${modeHint}\n` +
-    chalk.dim(`  You can always change your configuration by running `) +
-    chalk.yellow('a11y-guard init') +
-    chalk.dim(' again.')
-);
+        `Done! Run ${chalk.cyan('a11y-guard scan')} to audit your code.${modeHint}\n` +
+        chalk.dim(`  You can always change your configuration by running `) +
+        chalk.yellow('a11y-guard init') +
+        chalk.dim(' again.')
+    );
 }
