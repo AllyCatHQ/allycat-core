@@ -8,6 +8,7 @@
  */
 
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { CONFIG_FILE_NAME } from '../constants.js';
 
@@ -15,62 +16,88 @@ import { CONFIG_FILE_NAME } from '../constants.js';
 // Config Sanitization
 // -----------------------------------------------------------------------------
 
-/** Safe boundaries for numeric config values */
-const CONFIG_BOUNDS = {
-    performance: {
-        concurrency: { min: 1, max: 20, default: 5 }
-    }
+const MEMORY_PER_SLOT = {
+    quick: 150 * 1024 * 1024,  // ~150MB per JSDOM instance
+    full:  500 * 1024 * 1024   // ~500MB per Playwright/Chromium instance
 };
 
+const SAFE_RAM_RATIO = 0.6; // Never use more than 60% of system RAM
+const ABSOLUTE_MAX   = 50;  // Hard ceiling regardless of RAM
+const ABSOLUTE_MIN   = 1;
+
 /**
- * Clamp a numeric value within safe boundaries.
- * Returns the default if the value is missing, non-numeric, or out of range.
+ * Compute a safe concurrency ceiling based on available system RAM.
+ * 
+ * Uses 60% of total RAM divided by memory cost per slot for the given mode.
+ * Result is clamped between 1 and 50 regardless of machine size.
  *
- * @param {*} value - Raw value from config
- * @param {Object} bounds - { min, max, default }
+ * @param {'quick'|'full'} scanMode
  * @returns {number}
  */
-function clampNumber(value, bounds) {
-    const num = parseInt(value, 10);
-    if (isNaN(num)) return bounds.default;
-    return Math.min(Math.max(num, bounds.min), bounds.max);
+export function getSafeConcurrencyCeiling(scanMode = 'quick') {
+    const totalRam   = os.totalmem();
+    const usableRam  = totalRam * SAFE_RAM_RATIO;
+    const memPerSlot = MEMORY_PER_SLOT[scanMode] ?? MEMORY_PER_SLOT.quick;
+    const computed   = Math.floor(usableRam / memPerSlot);
+    return Math.min(Math.max(computed, ABSOLUTE_MIN), ABSOLUTE_MAX);
+}
+
+/**
+ * Clamp a raw concurrency value to a safe range for the given scan mode.
+ * Falls back to a safe default if the value is missing or non-numeric.
+ *
+ * @param {*} raw - Raw value from config (may be undefined, string, number)
+ * @param {'quick'|'full'} scanMode
+ * @returns {number}
+ */
+function clampConcurrency(raw, scanMode) {
+    const ceiling  = getSafeConcurrencyCeiling(scanMode);
+    const defaults = { quick: 5, full: 3 };
+    const fallback = defaults[scanMode] ?? 5;
+    const parsed   = parseInt(raw, 10);
+    const valid    = !isNaN(parsed) && parsed >= ABSOLUTE_MIN;
+    const clamped  = valid ? Math.min(parsed, ceiling) : fallback;
+
+    if (valid && parsed > ceiling) {
+        console.warn(
+            `[a11y-guard] performance.concurrency "${parsed}" exceeds safe limit ` +
+            `for your system in ${scanMode} mode. Clamped to ${clamped}.`
+        );
+    }
+
+    return clamped;
 }
 
 /**
  * Sanitize raw config loaded from disk.
- * Clamps all numeric values to safe ranges and fills missing keys with defaults.
+ * Clamps concurrency to a RAM-aware safe ceiling and fills missing keys with defaults.
  *
- * @param {Object} raw - Raw parsed JSON config
- * @returns {Object} - Safe, validated config object
+ * @param {Object} raw      - Raw parsed JSON config
+ * @param {'quick'|'full'} scanMode
+ * @returns {Object}
  */
-function sanitizeConfig(raw) {
-    const bounds = CONFIG_BOUNDS.performance.concurrency;
-
-    const rawConcurrency = raw?.performance?.concurrency;
-    const sanitizedConcurrency = clampNumber(rawConcurrency, bounds);
-
-    if (rawConcurrency !== undefined && rawConcurrency !== sanitizedConcurrency) {
-        console.warn(
-            `[a11y-guard] performance.concurrency value "${rawConcurrency}" is out of range. ` +
-            `Clamped to ${sanitizedConcurrency} (allowed: ${bounds.min}–${bounds.max}).`
-        );
-    }
-
+function sanitizeConfig(raw, scanMode) {
     return {
         ...raw,
         performance: {
             ...raw?.performance,
-            concurrency: sanitizedConcurrency
+            concurrency: clampConcurrency(raw?.performance?.concurrency, scanMode)
         }
     };
 }
 
+// -----------------------------------------------------------------------------
+// Public API
+// -----------------------------------------------------------------------------
+
 /**
- * Load configuration from the project root
- * 
+ * Load configuration from the project root.
+ * Sanitizes and clamps all numeric values before returning.
+ *
+ * @param {'quick'|'full'} scanMode - Used to compute safe concurrency ceiling
  * @returns {Object|null} - Configuration object or null if not found
  */
-export function loadConfig() {
+export function loadConfig(scanMode = 'quick') {
     const configPath = getConfigPath();
 
     if (!fs.existsSync(configPath)) {
@@ -78,7 +105,7 @@ export function loadConfig() {
     }
 
     const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    return sanitizeConfig(raw);
+    return sanitizeConfig(raw, scanMode);
 }
 
 /**
