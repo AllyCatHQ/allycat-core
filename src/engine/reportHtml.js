@@ -93,9 +93,9 @@ export function buildHtml(byFile, prompts, config, scanMode) {
 ${buildHeader(byFile, standard, scanMode, timestamp)}
 <div class="layout">
 ${buildSidebar(files, byFile)}
-<div class="content" id="content">
+<main class="content" id="content">
 ${buildPanels(files, byFile, promptMap)}
-</div>
+</main>
 </div>
 ${buildModal()}
 <script>${buildScript()}</script>
@@ -113,7 +113,7 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
     const files  = Object.keys(byFile).length;
 
     return `
-<div class="header">
+<header class="header">
     <div class="header-brand">
         <div class="brand-icon">♿</div>
         <div>
@@ -160,7 +160,7 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
             <div>${escapeHtml(timestamp)}</div>
         </div>
     </div>
-</div>`;
+</header>`;
 }
 
 function buildSidebar(files, byFile) {
@@ -177,7 +177,7 @@ function buildSidebar(files, byFile) {
     }).join('');
 
     return `
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="File navigation">
         <div class="sidebar-search-wrap">
             <input
                 class="sidebar-search"
@@ -194,7 +194,7 @@ function buildSidebar(files, byFile) {
             ${tabs}
         </div>
         <div class="sidebar-empty" id="sidebar-empty">No files match</div>
-    </div>`;
+    </nav>`;
 }
 
 function buildPanels(files, byFile, promptMap) {
@@ -361,10 +361,10 @@ function buildViolationCard(v) {
 function buildModal() {
     return `
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-header">
             <div>
-                <div class="modal-title"><span>✦</span> AI Fix Prompt</div>
+                <div class="modal-title" id="modal-title"><span>✦</span> AI Fix Prompt</div>
                 <div class="modal-filepath" id="modal-filepath"></div>
             </div>
             <div class="modal-actions">
