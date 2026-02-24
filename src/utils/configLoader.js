@@ -11,6 +11,60 @@ import fs from 'fs';
 import path from 'path';
 import { CONFIG_FILE_NAME } from '../constants.js';
 
+// -----------------------------------------------------------------------------
+// Config Sanitization
+// -----------------------------------------------------------------------------
+
+/** Safe boundaries for numeric config values */
+const CONFIG_BOUNDS = {
+    performance: {
+        concurrency: { min: 1, max: 20, default: 5 }
+    }
+};
+
+/**
+ * Clamp a numeric value within safe boundaries.
+ * Returns the default if the value is missing, non-numeric, or out of range.
+ *
+ * @param {*} value - Raw value from config
+ * @param {Object} bounds - { min, max, default }
+ * @returns {number}
+ */
+function clampNumber(value, bounds) {
+    const num = parseInt(value, 10);
+    if (isNaN(num)) return bounds.default;
+    return Math.min(Math.max(num, bounds.min), bounds.max);
+}
+
+/**
+ * Sanitize raw config loaded from disk.
+ * Clamps all numeric values to safe ranges and fills missing keys with defaults.
+ *
+ * @param {Object} raw - Raw parsed JSON config
+ * @returns {Object} - Safe, validated config object
+ */
+function sanitizeConfig(raw) {
+    const bounds = CONFIG_BOUNDS.performance.concurrency;
+
+    const rawConcurrency = raw?.performance?.concurrency;
+    const sanitizedConcurrency = clampNumber(rawConcurrency, bounds);
+
+    if (rawConcurrency !== undefined && rawConcurrency !== sanitizedConcurrency) {
+        console.warn(
+            `[a11y-guard] performance.concurrency value "${rawConcurrency}" is out of range. ` +
+            `Clamped to ${sanitizedConcurrency} (allowed: ${bounds.min}–${bounds.max}).`
+        );
+    }
+
+    return {
+        ...raw,
+        performance: {
+            ...raw?.performance,
+            concurrency: sanitizedConcurrency
+        }
+    };
+}
+
 /**
  * Load configuration from the project root
  * 
@@ -23,7 +77,8 @@ export function loadConfig() {
         return null;
     }
 
-    return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    return sanitizeConfig(raw);
 }
 
 /**
