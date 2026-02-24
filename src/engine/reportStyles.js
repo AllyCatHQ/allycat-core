@@ -24,7 +24,7 @@ export function buildStyles() {
         --accent:       #7c6af7;
         --accent-dim:   #3d3570;
         --text:         #e2e2e8;
-        --text-dim:     #6b6b7e;
+        --text-dim:     #9090a8;
         --input-bg:     #1c1c22;
         --input-border: #2a2a35;
         --prompt-bg:    #0f0f14;
@@ -299,7 +299,7 @@ export function buildStyles() {
 
     .copy-pill {
         display: flex; align-items: center; gap: 6px;
-        background: var(--accent-dim); color: var(--accent);
+        background: transparent; color: var(--accent);
         border: 1px solid var(--accent); padding: 7px 15px; border-radius: 20px;
         font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
         cursor: pointer; transition: all 0.14s ease; white-space: nowrap;
@@ -407,7 +407,7 @@ export function buildStyles() {
     .prompt-bar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
     .copy-btn {
-        background: var(--accent); color: #fff; border: none;
+        background: #5b4de8; color: #fff; border: none;
         padding: 6px 15px; border-radius: 6px;
         font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
         cursor: pointer; transition: all 0.14s ease; white-space: nowrap;
@@ -542,7 +542,7 @@ export function buildStyles() {
     .modal-actions { display: flex; align-items: center; gap: 10px; }
 
     .modal-copy-btn {
-        background: var(--accent); color: #fff; border: none;
+        background: #5b4de8; color: #fff; border: none;
         padding: 9px 22px; border-radius: 8px;
         font-family: var(--mono); font-size: 0.74rem; font-weight: 600;
         cursor: pointer; transition: all 0.14s ease;

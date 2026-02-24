@@ -117,7 +117,7 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
     <div class="header-brand">
         <div class="brand-icon">♿</div>
         <div>
-            <div class="brand-name">A11y-Guard</div>
+            <h1 class="brand-name">A11y-Guard</h1>
             <div class="brand-sub">Accessibility Scan Report</div>
         </div>
     </div>
