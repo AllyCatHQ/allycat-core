@@ -32,12 +32,17 @@ export async function scanCommand(target = null, options = {}) {
     console.log('');
     p.intro(`${chalk.bgMagenta.white(' A11y-Guard Scan ')}`);
 
-    const config = await loadConfiguration();
-    if (!config) {
+    // Pass 1: Load with preliminary mode to read defaultMode from config
+    const preliminaryConfig = await loadConfiguration('quick');
+    if (!preliminaryConfig) {
         return;
     }
 
-    const scanMode = determineScanMode(options, config);
+    // Resolve the actual scan mode (CLI flags override config default)
+    const scanMode = determineScanMode(options, preliminaryConfig);
+
+    // Pass 2: Reload with correct mode so concurrency ceiling is accurate
+    const config = loadConfig(scanMode);
 
     const resolvedTarget = validateAndResolveTarget(target);
     if (target && resolvedTarget === null) {
@@ -68,9 +73,10 @@ const DEFAULT_CONFIG = {
 /**
  * Load config, running first-time setup automatically if none exists.
  *
+ * @param {'quick'|'full'} scanMode - Used to compute safe concurrency ceiling
  * @returns {Promise<Object|null>} - Config object, or null if user cancelled init
  */
-async function loadConfiguration() {
+async function loadConfiguration(scanMode = 'quick') {
     if (!configExists()) {
         p.log.info(chalk.cyan('No configuration found — starting first-time setup...\n'));
         await initCommand();
@@ -82,7 +88,7 @@ async function loadConfiguration() {
         }
     }
 
-    return loadConfig();
+    return loadConfig(scanMode);
 }
 
 /**
