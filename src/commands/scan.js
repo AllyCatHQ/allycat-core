@@ -256,7 +256,7 @@ function outputResults(violations, config, scanMode, options) {
     }
     // AI report: terminal mode only — not in json, json-file, or summary modes
     if (!options.jsonFile && options.output !== 'json' && !options.summary) {
-        outputPrompts(violations, config);
+        // outputPrompts(violations, config);
         if (config?.ai?.enabled && violations.length > 0) {
             outputAiReport(violations, config, scanMode);
         }
