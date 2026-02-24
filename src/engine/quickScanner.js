@@ -4,10 +4,10 @@
  * Fast scanning using JSDOM + axe-core.
  * Does NOT check color contrast (requires real browser).
  *
- * Use for: Development, quick checks, CI fast-fail
- * 
  * Concurrency is controlled via config.performance.concurrency (default: 5).
  * Each file scan is isolated — failures are caught and logged without stopping others.
+ *
+ * Use for: Development, quick checks, CI fast-fail
  */
 
 import fs from 'fs/promises';
@@ -15,6 +15,7 @@ import { readFileSync } from 'fs';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { createRequire } from 'module';
 import * as p from '@clack/prompts';
+import pLimit from 'p-limit';
 import {
     resolveFiles,
     getAxeTags,
@@ -23,7 +24,6 @@ import {
     checkJsxRtlCompliance
 } from '../utils/scannerUtils.js';
 import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
-import pLimit from 'p-limit';
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
