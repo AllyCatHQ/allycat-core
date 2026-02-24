@@ -9,6 +9,9 @@
  * Requirements:
  *   npm install playwright @axe-core/playwright
  *   npx playwright install chromium
+ * 
+ ** Concurrency is capped at 3 for full scan mode due to Playwright memory overhead.
+ * Per-file failures are caught and logged — other files continue scanning.
  */
 
 import { chromium } from 'playwright';
@@ -27,6 +30,7 @@ import { findLineNumber } from '../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
 import { resolvAndInjectCss } from '../utils/cssResolver.js';
 import path from 'path';
+import pLimit from 'p-limit';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -56,15 +60,28 @@ export async function runFullAudit(config, targetPath = null) {
     // Shared CSS cache for this scan run — each CSS file read from disk exactly once
     const cssCache = new Map();
 
+    const rawConcurrency = config?.performance?.concurrency ?? 5;
+    const concurrency = Math.min(rawConcurrency, 3); // Hard cap: Playwright memory overhead
+    const limit = pLimit(concurrency);
+
     try {
-        for (const filePath of filesToScan) {
-            allViolations.push(...await scanSingleFile(browser, filePath, config, cssCache));
-        }
+        const results = await Promise.all(
+            filesToScan.map(filePath =>
+                limit(async () => {
+                    try {
+                        return await scanSingleFile(browser, filePath, config, cssCache);
+                    } catch (err) {
+                        p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
+                        return [];
+                    }
+                })
+            )
+        );
+
+        return results.flat();
     } finally {
         await browser.close();
     }
-
-    return allViolations;
 }
 
 // -----------------------------------------------------------------------------

@@ -5,6 +5,9 @@
  * Does NOT check color contrast (requires real browser).
  *
  * Use for: Development, quick checks, CI fast-fail
+ * 
+ * Concurrency is controlled via config.performance.concurrency (default: 5).
+ * Each file scan is isolated — failures are caught and logged without stopping others.
  */
 
 import fs from 'fs/promises';
@@ -20,6 +23,7 @@ import {
     checkJsxRtlCompliance
 } from '../utils/scannerUtils.js';
 import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
+import pLimit from 'p-limit';
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
@@ -45,12 +49,23 @@ export async function runQuickAudit(config, targetPath = null) {
 
     p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
 
-    const allViolations = [];
-    for (const filePath of filesToScan) {
-        allViolations.push(...await scanSingleFile(filePath, config));
-    }
+    const concurrency = config?.performance?.concurrency ?? 5;
+    const limit = pLimit(concurrency);
 
-    return allViolations;
+    const results = await Promise.all(
+        filesToScan.map(filePath =>
+            limit(async () => {
+                try {
+                    return await scanSingleFile(filePath, config);
+                } catch (err) {
+                    p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
+                    return [];
+                }
+            })
+        )
+    );
+
+    return results.flat();
 }
 
 // -----------------------------------------------------------------------------
