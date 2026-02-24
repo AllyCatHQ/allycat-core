@@ -19,13 +19,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import fs from 'fs/promises';
 import * as p from '@clack/prompts';
-import {
-    resolveFiles,
-    getAxeTags,
-    createRtlViolation,
-    createViolationFromNode,
-    DOCUMENT_LEVEL_RULES
-} from '../utils/scannerUtils.js';
+import { resolveFiles } from '../utils/fileResolver.js';
+import { getAxeTags } from '../utils/axeConfig.js';
+import { createRtlViolation } from '../utils/rtlValidator.js';
+import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../utils/violationProcessor.js';
 import { findLineNumber } from '../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
 import { resolvAndInjectCss } from '../utils/cssResolver.js';

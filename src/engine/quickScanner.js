@@ -16,13 +16,10 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 import { createRequire } from 'module';
 import * as p from '@clack/prompts';
 import pLimit from 'p-limit';
-import {
-    resolveFiles,
-    getAxeTags,
-    checkRtlCompliance,
-    processAxeViolations,
-    checkJsxRtlCompliance
-} from '../utils/scannerUtils.js';
+import { resolveFiles } from '../utils/fileResolver.js';
+import { getAxeTags } from '../utils/axeConfig.js';
+import { checkRtlCompliance, checkJsxRtlCompliance } from '../utils/rtlValidator.js';
+import { processAxeViolations } from '../utils/violationProcessor.js';
 import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
 
 const require = createRequire(import.meta.url);
