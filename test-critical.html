@@ -1,0 +1,20 @@
+<!-- test with -->
+ <!-- 
+node src/index.js scan tests/test-critical.html --fail-on-critical
+echo $?
+
+should return false / 1
+
+**** AND ****
+
+node src/index.js scan tests/test-critical.html
+echo $?
+
+should reuturn true / 0
+ -->
+
+<!-- validation critical -->
+<img src="photo.jpg">
+<!-- good elements -->
+<h1>Title</h1>
+<h3>Skipped h2</h3>
