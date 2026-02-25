@@ -66,6 +66,7 @@ program
   .option('--json-file [filename]', 'Save JSON report to file (auto-names if no filename)')
   .option('--group-by-file', 'Group violations by file (default)', true)
   .option('--fail-on-critical', 'Exit with code 1 if any critical violations are found')
+  .option('--changed', 'Scan only files changed since the last commit (requires git)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan
@@ -90,6 +91,8 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} a11y-guard scan --json-file        ${chalk.dim('# Save to timestamped file')}
   ${chalk.cyan('$')} a11y-guard scan --json-file report ${chalk.dim('# Save to report.json')}
   ${chalk.cyan('$')} a11y-guard scan --fail-on-critical ${chalk.dim('# Exit 1 if critical violations found')}
+  ${chalk.cyan('$')} a11y-guard scan --changed          ${chalk.dim('# Scan only git-changed files')}
+  ${chalk.cyan('$')} a11y-guard scan --changed ./src    ${chalk.dim('# Changed files scoped to ./src')}
 `)
   .action((target, options) => scanCommand(target, options));
 

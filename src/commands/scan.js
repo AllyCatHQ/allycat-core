@@ -9,11 +9,13 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { loadConfig, configExists } from '../utils/configLoader.js';
 import { initCommand } from './init.js';
 import { runQuickAudit } from '../engine/quickScanner.js';
 import { runFullAudit } from '../engine/fullScanner.js';
 import { outputResults } from './scanOutputters.js';
+import { SUPPORTED_EXTENSIONS } from '../utils/fileResolver.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -41,9 +43,23 @@ export async function scanCommand(target = null, options = {}) {
     // Pass 2: Reload with correct mode so concurrency ceiling is accurate
     const config = loadConfig(scanMode);
 
-    const resolvedTarget = validateAndResolveTarget(target);
-    if (target && resolvedTarget === null) {
-        return;
+    let resolvedTarget;
+    if (options.changed) {
+        resolvedTarget = await resolveChangedFiles(target);
+        if (resolvedTarget === null) {
+            return;
+        }
+        if (resolvedTarget.length === 0) {
+            p.log.info('No changed scannable files found. Nothing to scan.');
+            p.outro(chalk.dim('Done.'));
+            return;
+        }
+        p.log.info(`${chalk.cyan(resolvedTarget.length)} changed file${resolvedTarget.length > 1 ? 's' : ''} found.`);
+    } else {
+        resolvedTarget = validateAndResolveTarget(target);
+        if (target && resolvedTarget === null) {
+            return;
+        }
     }
 
     displayScanConfiguration(config, scanMode, options, target);
@@ -154,11 +170,16 @@ function displayScanConfiguration(config, scanMode, options, target) {
         ? chalk.green('Full (with contrast)')
         : chalk.yellow('Quick (no contrast)');
 
+    const scopeLine = options.changed
+        ? `Scope:     ${chalk.cyan('Changed files only')}${target ? chalk.dim(` (${target})`) : ''}\n`
+        : '';
+
     p.note(
-        `Mode: ${modeDisplay}\n` +
-        `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
+        `Mode:      ${modeDisplay}\n` +
+        scopeLine +
+        `Standard:  ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
-        `Output: ${chalk.bold(options.output || 'terminal')}\n` +
+        `Output:    ${chalk.bold(options.output || 'terminal')}\n` +
         chalk.dim('File types: .html  .jsx  .tsx'),
         'Scan Configuration'
     );
@@ -234,6 +255,53 @@ function isPlaywrightNotInstalledError(error) {
 function isBrowserNotInstalledError(error) {
     return error.message.includes("Executable doesn't exist") ||
         error.message.includes('browserType.launch');
+}
+
+// -----------------------------------------------------------------------------
+// Changed-Files Resolver
+// -----------------------------------------------------------------------------
+
+/**
+ * Resolve files changed since the previous commit via git diff.
+ * Filters to scannable extensions, skips deleted files, and scopes
+ * to an optional target path.
+ *
+ * @param {string|null} target - Optional path scope from CLI
+ * @returns {Promise<string[]|null>} - File list, or null on git error
+ */
+async function resolveChangedFiles(target) {
+    let output;
+    try {
+        output = execSync('git diff --name-only HEAD~1', {
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+        });
+    } catch (error) {
+        const msg = error.stderr || error.message || '';
+        if (msg.includes('not a git repository')) {
+            p.log.error(chalk.red('Not a git repository — --changed requires git.'));
+            p.outro(chalk.yellow('Run from inside a git repository.'));
+        } else if (msg.includes('unknown revision') || msg.includes('bad revision')) {
+            p.log.error(chalk.red('No previous commit to compare against.'));
+            p.outro(chalk.yellow('--changed requires at least two commits.'));
+        } else {
+            p.log.error(chalk.red(`git error: ${msg.trim()}`));
+        }
+        return null;
+    }
+
+    const files = output
+        .trim()
+        .split('\n')
+        .filter(f => f && SUPPORTED_EXTENSIONS.some(ext => f.endsWith(`.${ext}`)))
+        .filter(f => fs.existsSync(f));
+
+    if (!target) {
+        return files;
+    }
+
+    const scope = target.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/$/, '');
+    return files.filter(f => f === scope || f.startsWith(scope + '/'));
 }
 
 // -----------------------------------------------------------------------------
