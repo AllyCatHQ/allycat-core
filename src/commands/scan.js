@@ -54,6 +54,7 @@ export async function scanCommand(target = null, options = {}) {
     }
 
     outputResults(violations, config, scanMode, options);
+    exitIfCritical(violations, options);
 }
 
 // -----------------------------------------------------------------------------
@@ -233,4 +234,25 @@ function isPlaywrightNotInstalledError(error) {
 function isBrowserNotInstalledError(error) {
     return error.message.includes("Executable doesn't exist") ||
         error.message.includes('browserType.launch');
+}
+
+// -----------------------------------------------------------------------------
+// CI Exit Code
+// -----------------------------------------------------------------------------
+
+/**
+ * Exit with code 1 if --fail-on-critical is set and critical violations exist.
+ *
+ * @param {Array} violations - All violations from the scan
+ * @param {Object} options - CLI options
+ */
+function exitIfCritical(violations, options) {
+    if (!options.failOnCritical) {
+        return;
+    }
+
+    const hasCritical = violations.some(v => v.impact === 'critical');
+    if (hasCritical) {
+        process.exit(1);
+    }
 }

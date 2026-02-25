@@ -50,6 +50,18 @@ export const FAQ_ITEMS = [
    ${chalk.yellow('a11y-guard scan .\\src')}`
     },
     {
+        q: 'How do I block a CI pipeline on accessibility failures?',
+        a: `Use ${chalk.cyan('--fail-on-critical')} to exit with code 1 when critical violations are found:
+   ${chalk.yellow('a11y-guard scan --fail-on-critical')}
+
+   Exit codes:
+   ${chalk.green('0')} — clean scan, or only non-critical violations → pipeline continues
+   ${chalk.red('1')} — critical violations found → pipeline blocks
+
+   Combine with ${chalk.cyan('--json-file')} to block ${chalk.bold('and')} save a report:
+   ${chalk.yellow('a11y-guard scan --fail-on-critical --json-file a11y-report')}`
+    },
+    {
         q: 'How do I save the report to a file?',
         a: `Two options:
 
@@ -110,6 +122,8 @@ export const EXAMPLE_SECTIONS = [
     {
         title: 'CI/CD Integration',
         examples: [
+            { cmd: 'a11y-guard scan --fail-on-critical', desc: 'Block pipeline on critical violations (exit 1)' },
+            { cmd: 'a11y-guard scan --full --fail-on-critical', desc: 'Full scan — block on critical' },
             { cmd: 'a11y-guard scan --json-file ci-report', desc: 'Generate report artifact' },
             { cmd: 'a11y-guard scan -o json > report.json', desc: 'Redirect to file' },
             { cmd: 'a11y-guard scan --summary --full', desc: 'Quick CI check with contrast' }
@@ -152,7 +166,7 @@ export const GITHUB_ACTIONS_SNIPPET =
           run: npm install -g a11y-guard
 
         - name: Run accessibility scan
-          run: a11y-guard scan --json-file a11y-report
+          run: a11y-guard scan --fail-on-critical --json-file a11y-report
 
         - name: Upload report
           uses: actions/upload-artifact@v4
@@ -166,7 +180,7 @@ export const GITLAB_CI_SNIPPET =
     script:
       - npm ci
       - npm install -g a11y-guard
-      - a11y-guard scan --json-file a11y-report
+      - a11y-guard scan --fail-on-critical --json-file a11y-report
     artifacts:
       paths:
         - a11y-report.json`;
@@ -175,7 +189,7 @@ export const JENKINS_SNIPPET =
 `  stage('Accessibility') {
       steps {
         sh 'npm install -g a11y-guard'
-        sh 'a11y-guard scan --json-file a11y-report'
+        sh 'a11y-guard scan --fail-on-critical --json-file a11y-report'
         archiveArtifacts artifacts: 'a11y-report.json'
       }
     }`;
