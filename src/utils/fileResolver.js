@@ -28,10 +28,6 @@ export const SUPPORTED_EXTENSIONS = ['html', 'jsx', 'tsx'];
  * @returns {Promise<string[]>} - Resolved file paths
  */
 export async function resolveFiles(config, targetPath) {
-    if (Array.isArray(targetPath)) {
-        return targetPath;
-    }
-
     if (targetPath) {
         return await resolveTargetPath(targetPath, SUPPORTED_EXTENSIONS);
     }

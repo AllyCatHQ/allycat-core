@@ -43,28 +43,30 @@ export async function scanCommand(target = null, options = {}) {
     // Pass 2: Reload with correct mode so concurrency ceiling is accurate
     const config = loadConfig(scanMode);
 
-    let resolvedTarget;
+    let targetPath = null;
+    let preResolvedFiles = null;
+
     if (options.changed) {
-        resolvedTarget = await resolveChangedFiles(target);
-        if (resolvedTarget === null) {
+        preResolvedFiles = await resolveChangedFiles(target);
+        if (preResolvedFiles === null) {
             return;
         }
-        if (resolvedTarget.length === 0) {
+        if (preResolvedFiles.length === 0) {
             p.log.info('No changed scannable files found. Nothing to scan.');
             p.outro(chalk.dim('Done.'));
             return;
         }
-        p.log.info(`${chalk.cyan(resolvedTarget.length)} changed file${resolvedTarget.length > 1 ? 's' : ''} found.`);
+        p.log.info(`${chalk.cyan(preResolvedFiles.length)} changed file${preResolvedFiles.length > 1 ? 's' : ''} found.`);
     } else {
-        resolvedTarget = validateAndResolveTarget(target);
-        if (target && resolvedTarget === null) {
+        targetPath = validateAndResolveTarget(target);
+        if (target && targetPath === null) {
             return;
         }
     }
 
     displayScanConfiguration(config, scanMode, options, target);
 
-    const violations = await executeScan(config, scanMode, resolvedTarget);
+    const violations = await executeScan(config, scanMode, targetPath, preResolvedFiles);
     if (violations === null) {
         return;
     }
@@ -197,7 +199,7 @@ function displayScanConfiguration(config, scanMode, options, target) {
  * @param {string|null} resolvedTarget - Target path to scan
  * @returns {Promise<Array|null>} - Violations array or null on error
  */
-async function executeScan(config, scanMode, resolvedTarget) {
+async function executeScan(config, scanMode, targetPath, files = null) {
     const spinner = p.spinner();
     spinner.start('Analyzing source files...');
 
@@ -205,9 +207,9 @@ async function executeScan(config, scanMode, resolvedTarget) {
         let violations;
 
         if (scanMode === 'full') {
-            violations = await runFullAudit(config, resolvedTarget);
+            violations = await runFullAudit(config, targetPath, files);
         } else {
-            violations = await runQuickAudit(config, resolvedTarget);
+            violations = await runQuickAudit(config, targetPath, files);
         }
 
         spinner.stop(chalk.green('Analysis Complete.'));

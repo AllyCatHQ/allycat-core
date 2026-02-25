@@ -40,8 +40,8 @@ import pLimit from 'p-limit';
  * @param {string|null} targetPath - Optional specific file/folder to scan
  * @returns {Promise<Array>} - Array of violation objects
  */
-export async function runFullAudit(config, targetPath = null) {
-    const filesToScan = await resolveFiles(config, targetPath);
+export async function runFullAudit(config, targetPath = null, files = null) {
+    const filesToScan = files ?? await resolveFiles(config, targetPath);
 
     if (filesToScan.length === 0) {
         p.log.warn('No matching files found to scan.');
