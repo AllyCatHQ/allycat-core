@@ -20,6 +20,7 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 import fs from 'fs/promises';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../utils/fileResolver.js';
+import { MESSAGES, STANDARDS } from '../constants.js';
 import { getAxeTags } from '../utils/axeConfig.js';
 import { createRtlViolation } from '../utils/rtlValidator.js';
 import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../utils/violationProcessor.js';
@@ -44,7 +45,7 @@ export async function runFullAudit(config, targetPath = null, files = null) {
     const filesToScan = files ?? await resolveFiles(config, targetPath);
 
     if (filesToScan.length === 0) {
-        p.log.warn('No matching files found to scan.');
+        p.log.warn(MESSAGES.NO_FILES_FOUND);
         return [];
     }
 
@@ -209,7 +210,7 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx
             ? sourceLines[0]
             : findLineNumber(sourceContent, `<${rootInfo.tag}`);
 
-        const help = selectedStandard === 'israel'
+        const help = selectedStandard === STANDARDS.ISRAEL
             ? 'Add dir="rtl" to your root element or to the <html> tag in index.html.'
             : 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
 

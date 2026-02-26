@@ -57,7 +57,21 @@ export const MESSAGES = {
     ANALYSIS_COMPLETE:   'Analysis Complete.',
     ANALYSIS_FAILED:     'Analysis failed.',
     VALID_PATH_REQUIRED: 'Please provide a valid file or directory path.',
+    NO_FILES_FOUND:      'No matching files found to scan.',
 };
+
+// ─── Standard Display Labels ──────────────────────────────────────────────────
+// Human-readable labels used in prompts and reports. Keyed by STANDARDS values.
+
+export const STANDARD_LABELS = {
+    [STANDARDS.WCAG_AA]:  'WCAG 2.1 AA',
+    [STANDARDS.WCAG_AAA]: 'WCAG 2.1 AAA',
+    [STANDARDS.ISRAEL]:   'Israeli Standard IS 5568 (WCAG 2.1 AA + RTL)',
+};
+
+// ─── Report File Names ────────────────────────────────────────────────────────
+
+export const DEFAULT_HTML_REPORT = 'a11y-report.html';
 
 // ─── App Links ────────────────────────────────────────────────────────────────
 

@@ -24,6 +24,7 @@ import fs   from 'fs';
 import path from 'path';
 import { generatePrompts } from './promptGenerator.js';
 import { buildHtml } from './reportHtml.js';
+import { DEFAULT_HTML_REPORT } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -42,7 +43,7 @@ export function generateReport(violations, config, scanMode) {
     const byFile  = groupViolationsByFile(violations);
     const html    = buildHtml(byFile, prompts, config, scanMode);
 
-    const outputPath = path.resolve(process.cwd(), 'a11y-report.html');
+    const outputPath = path.resolve(process.cwd(), DEFAULT_HTML_REPORT);
     fs.writeFileSync(outputPath, html, 'utf8');
     return outputPath;
 }

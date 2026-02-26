@@ -17,6 +17,7 @@ import { createRequire } from 'module';
 import * as p from '@clack/prompts';
 import pLimit from 'p-limit';
 import { resolveFiles } from '../utils/fileResolver.js';
+import { MESSAGES } from '../constants.js';
 import { getAxeTags } from '../utils/axeConfig.js';
 import { checkRtlCompliance, checkJsxRtlCompliance } from '../utils/rtlValidator.js';
 import { processAxeViolations } from '../utils/violationProcessor.js';
@@ -40,7 +41,7 @@ export async function runQuickAudit(config, targetPath = null, files = null) {
     const filesToScan = files ?? await resolveFiles(config, targetPath);
 
     if (filesToScan.length === 0) {
-        p.log.warn('No matching files found to scan.');
+        p.log.warn(MESSAGES.NO_FILES_FOUND);
         return [];
     }
 

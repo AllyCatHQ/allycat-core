@@ -10,6 +10,7 @@
  */
 
 import { findLineNumber } from './sourceMapper.js';
+import { STANDARDS } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // RTL Violation Factories
@@ -17,7 +18,7 @@ import { findLineNumber } from './sourceMapper.js';
 
 /**
  * Create an RTL violation for Israeli Standard (IS 5568).
- * Used only when selectedStandard === 'israel'.
+ * Used only when selectedStandard === STANDARDS.ISRAEL.
  */
 function createIsraeliRtlViolation(filePath, htmlOpenTag, lineNumber, selector = 'html', help = 'Add dir="rtl" to your <html> tag.') {
     return {
@@ -54,7 +55,7 @@ function createGenericRtlViolation(filePath, htmlOpenTag, lineNumber, selector =
 }
 
 export function createRtlViolation(selectedStandard, filePath, htmlOpenTag, lineNumber, selector = 'html', help = undefined) {
-    if (selectedStandard === 'israel') {
+    if (selectedStandard === STANDARDS.ISRAEL) {
         return createIsraeliRtlViolation(filePath, htmlOpenTag, lineNumber, selector,
             help ?? 'Add dir="rtl" to your <html> tag.');
     }
@@ -103,7 +104,7 @@ export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinal
         ? sourceLines[0]
         : findLineNumber(sourceContent, `<${rootTag}`);
 
-    const help = selectedStandard === 'israel'
+    const help = selectedStandard === STANDARDS.ISRAEL
         ? 'Add dir="rtl" to your root element or to the <html> tag in index.html.'
         : 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
 

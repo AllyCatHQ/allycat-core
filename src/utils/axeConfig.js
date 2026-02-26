@@ -6,6 +6,8 @@
  * @module utils/axeConfig
  */
 
+import { STANDARDS } from '../constants.js';
+
 /**
  * Return the axe-core rule tags for the given config.
  *
@@ -16,9 +18,9 @@
 export function getAxeTags(config) {
     const baseTags = ['best-practice'];
     const standardTagMap = {
-        'israel': ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
-        'wcag-aaa': ['wcag2a', 'wcag2aa', 'wcag2aaa', 'wcag21a', 'wcag21aa', 'wcag21aaa'],
-        'wcag-aa': ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+        [STANDARDS.ISRAEL]:   ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
+        [STANDARDS.WCAG_AAA]: ['wcag2a', 'wcag2aa', 'wcag2aaa', 'wcag21a', 'wcag21aa', 'wcag21aaa'],
+        [STANDARDS.WCAG_AA]:  ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
     };
-    return [...baseTags, ...(standardTagMap[config.selectedStandard] || standardTagMap['wcag-aa'])];
+    return [...baseTags, ...(standardTagMap[config.selectedStandard] || standardTagMap[STANDARDS.WCAG_AA])];
 }

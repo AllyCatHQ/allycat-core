@@ -13,6 +13,8 @@
  * @module engine/promptGenerator
  */
 
+import { STANDARDS, STANDARD_LABELS } from '../constants.js';
+
 // -----------------------------------------------------------------------------
 // Constants
 // -----------------------------------------------------------------------------
@@ -151,12 +153,7 @@ function resolveAgentKey(agentValue) {
 }
 
 function resolveStandardLabel(standard) {
-    const labels = {
-        'wcag-aa':  'WCAG 2.1 AA',
-        'wcag-aaa': 'WCAG 2.1 AAA',
-        'israel':   'Israeli Standard IS 5568 (WCAG 2.1 AA + RTL)',
-    };
-    return labels[standard] || 'WCAG 2.1 AA';
+    return STANDARD_LABELS[standard] || STANDARD_LABELS[STANDARDS.WCAG_AA];
 }
 
 function truncateSnippet(html, maxLength = 120) {

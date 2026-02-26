@@ -11,11 +11,12 @@
  */
 
 import chalk from 'chalk';
-import { 
-    findLineNumber, 
-    generateFileLink, 
-    simplifySelector, 
-    truncateSnippet 
+import { SCAN_MODES } from '../constants.js';
+import {
+    findLineNumber,
+    generateFileLink,
+    simplifySelector,
+    truncateSnippet
 } from './sourceMapper.js';
 
 /**
@@ -225,7 +226,7 @@ export function formatSummary(violations, scanMode) {
     }
     
     // Mode hint
-    if (scanMode === 'quick') {
+    if (scanMode === SCAN_MODES.QUICK) {
         summary += chalk.dim('\n   (use --full for contrast checking)');
     }
     

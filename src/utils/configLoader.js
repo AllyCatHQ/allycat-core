@@ -10,15 +10,15 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { CONFIG_FILE_NAME } from '../constants.js';
+import { CONFIG_FILE_NAME, SCAN_MODES } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Config Sanitization
 // -----------------------------------------------------------------------------
 
 const MEMORY_PER_SLOT = {
-    quick: 150 * 1024 * 1024,  // ~150MB per JSDOM instance
-    full:  500 * 1024 * 1024   // ~500MB per Playwright/Chromium instance
+    [SCAN_MODES.QUICK]: 150 * 1024 * 1024,  // ~150MB per JSDOM instance
+    [SCAN_MODES.FULL]:  500 * 1024 * 1024   // ~500MB per Playwright/Chromium instance
 };
 
 const SAFE_RAM_RATIO = 0.6; // Never use more than 60% of system RAM
@@ -34,10 +34,10 @@ const ABSOLUTE_MIN   = 1;
  * @param {'quick'|'full'} scanMode
  * @returns {number}
  */
-export function getSafeConcurrencyCeiling(scanMode = 'quick') {
+export function getSafeConcurrencyCeiling(scanMode = SCAN_MODES.QUICK) {
     const totalRam   = os.totalmem();
     const usableRam  = totalRam * SAFE_RAM_RATIO;
-    const memPerSlot = MEMORY_PER_SLOT[scanMode] ?? MEMORY_PER_SLOT.quick;
+    const memPerSlot = MEMORY_PER_SLOT[scanMode] ?? MEMORY_PER_SLOT[SCAN_MODES.QUICK];
     const computed   = Math.floor(usableRam / memPerSlot);
     return Math.min(Math.max(computed, ABSOLUTE_MIN), ABSOLUTE_MAX);
 }
@@ -52,7 +52,7 @@ export function getSafeConcurrencyCeiling(scanMode = 'quick') {
  */
 function clampConcurrency(raw, scanMode) {
     const ceiling  = getSafeConcurrencyCeiling(scanMode);
-    const defaults = { quick: 5, full: 3 };
+    const defaults = { [SCAN_MODES.QUICK]: 5, [SCAN_MODES.FULL]: 3 };
     const fallback = defaults[scanMode] ?? 5;
     const parsed   = parseInt(raw, 10);
     const valid    = !isNaN(parsed) && parsed >= ABSOLUTE_MIN;
@@ -97,7 +97,7 @@ function sanitizeConfig(raw, scanMode) {
  * @param {'quick'|'full'} scanMode - Used to compute safe concurrency ceiling
  * @returns {Object|null} - Configuration object or null if not found
  */
-export function loadConfig(scanMode = 'quick') {
+export function loadConfig(scanMode = SCAN_MODES.QUICK) {
     const configPath = getConfigPath();
 
     if (!fs.existsSync(configPath)) {
