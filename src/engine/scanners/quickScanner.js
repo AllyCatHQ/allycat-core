@@ -16,12 +16,12 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 import { createRequire } from 'module';
 import * as p from '@clack/prompts';
 import pLimit from 'p-limit';
-import { resolveFiles } from '../utils/fileResolver.js';
-import { MESSAGES } from '../constants.js';
-import { getAxeTags } from '../utils/axeConfig.js';
-import { checkRtlCompliance, checkJsxRtlCompliance } from '../utils/rtlValidator.js';
-import { processAxeViolations } from '../utils/violationProcessor.js';
-import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
+import { resolveFiles } from '../../utils/fileResolver.js';
+import { MESSAGES } from '../../constants.js';
+import { getAxeTags } from '../../utils/axeConfig.js';
+import { checkRtlCompliance, checkJsxRtlCompliance } from '../../utils/rtlValidator.js';
+import { processAxeViolations } from '../../utils/violationProcessor.js';
+import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
@@ -32,7 +32,7 @@ const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
 
 /**
  * Main quick audit entry point
- * 
+ *
  * @param {Object} config - User configuration from a11y-config.json
  * @param {string|null} targetPath - Optional specific file/folder to scan
  * @returns {Promise<Array>} - Array of violation objects
@@ -72,7 +72,7 @@ export async function runQuickAudit(config, targetPath = null, files = null) {
 
 /**
  * Create a quiet virtual console that suppresses JSDOM warnings
- * 
+ *
  * @returns {VirtualConsole} - Configured virtual console
  */
 function createSilentVirtualConsole() {
@@ -84,7 +84,7 @@ function createSilentVirtualConsole() {
 
 /**
  * Create JSDOM instance with axe-core injected
- * 
+ *
  * @param {string} htmlContent - HTML content to parse
  * @returns {Object} - JSDOM window object with axe-core available
  */
@@ -102,7 +102,7 @@ function createJsdomWithAxe(htmlContent) {
 
 /**
  * Run axe-core analysis on document (quick mode - no contrast)
- * 
+ *
  * @param {Object} window - JSDOM window object
  * @param {Object} config - User configuration
  * @returns {Promise<Object>} - Axe analysis results
@@ -125,7 +125,7 @@ async function executeAxeAnalysis(window, config) {
 
 /**
  * Extract HTML opening tag from document
- * 
+ *
  * @param {Object} document - JSDOM document object
  * @returns {string} - HTML opening tag snippet
  */

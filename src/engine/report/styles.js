@@ -5,7 +5,7 @@
  * Includes dark/light theme variables, layout, sidebar, panels,
  * violation cards, modal, and scrollbar styling.
  *
- * @module engine/reportStyles
+ * @module engine/report/styles
  */
 
 export function buildStyles() {

@@ -2,14 +2,14 @@
  * Report HTML Builders
  *
  * Assembles the full HTML document and all its sections for the A11y-Guard report.
- * Consumes CSS from reportStyles and client-side JS from reportScript.
+ * Consumes CSS from styles and client-side JS from script.
  *
- * @module engine/reportHtml
+ * @module engine/report/html
  */
 
 import path from 'path';
-import { buildStyles } from './reportStyles.js';
-import { buildScript } from './reportScript.js';
+import { buildStyles } from './styles.js';
+import { buildScript } from './script.js';
 
 // -----------------------------------------------------------------------------
 // Data Helpers

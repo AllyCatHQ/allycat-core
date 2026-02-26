@@ -13,8 +13,8 @@ import chalk from 'chalk';
 import fs from 'fs';
 import { UI, SCAN_MODES, DEFAULT_REPORT_NAME } from '../constants.js';
 import { formatSummary, formatByFile, countByImpact, groupByFile, formatViolationForJson } from '../utils/violationFormatter.js';
-import { generatePrompts } from '../engine/promptGenerator.js';
-import { generateReport } from '../engine/reportGenerator.js';
+import { generatePrompts } from '../engine/report/promptGenerator.js';
+import { generateReport } from '../engine/report/generator.js';
 import { openInBrowser } from '../utils/browserOpener.js';
 
 // -----------------------------------------------------------------------------

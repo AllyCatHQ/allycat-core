@@ -5,7 +5,7 @@
  * Handles: theme toggle, tab switching, sidebar file search,
  * impact + WCAG filtering (per panel), copy-to-clipboard, and modal logic.
  *
- * @module engine/reportScript
+ * @module engine/report/script
  */
 
 export function buildScript() {

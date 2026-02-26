@@ -5,11 +5,11 @@
  * Includes color contrast checking (requires browser layout engine).
  *
  * Use for: Pre-commit checks, CI/CD pipelines, thorough audits
- * 
+ *
  * Requirements:
  *   npm install playwright @axe-core/playwright
  *   npx playwright install chromium
- * 
+ *
  ** Concurrency is capped at 3 for full scan mode due to Playwright memory overhead.
  * Per-file failures are caught and logged — other files continue scanning.
  */
@@ -19,14 +19,14 @@ import AxeBuilder from '@axe-core/playwright';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import fs from 'fs/promises';
 import * as p from '@clack/prompts';
-import { resolveFiles } from '../utils/fileResolver.js';
-import { MESSAGES, STANDARDS } from '../constants.js';
-import { getAxeTags } from '../utils/axeConfig.js';
-import { createRtlViolation } from '../utils/rtlValidator.js';
-import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../utils/violationProcessor.js';
-import { findLineNumber } from '../utils/sourceMapper.js';
-import { transformJsxToHtml, isJsxFile } from './transformers/jsxTransformer.js';
-import { resolvAndInjectCss } from '../utils/cssResolver.js';
+import { resolveFiles } from '../../utils/fileResolver.js';
+import { MESSAGES, STANDARDS } from '../../constants.js';
+import { getAxeTags } from '../../utils/axeConfig.js';
+import { createRtlViolation } from '../../utils/rtlValidator.js';
+import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/violationProcessor.js';
+import { findLineNumber } from '../../utils/sourceMapper.js';
+import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
+import { resolvAndInjectCss } from '../../utils/cssResolver.js';
 import path from 'path';
 import pLimit from 'p-limit';
 
@@ -36,7 +36,7 @@ import pLimit from 'p-limit';
 
 /**
  * Main full audit entry point
- * 
+ *
  * @param {Object} config - User configuration
  * @param {string|null} targetPath - Optional specific file/folder to scan
  * @returns {Promise<Array>} - Array of violation objects
@@ -53,7 +53,6 @@ export async function runFullAudit(config, targetPath = null, files = null) {
     p.log.info('Using Playwright for full accessibility audit (including contrast)...');
 
     const browser = await chromium.launch({ headless: true });
-    const allViolations = [];
 
     // Shared CSS cache for this scan run — each CSS file read from disk exactly once
     const cssCache = new Map();
@@ -126,7 +125,7 @@ function extractContrastData(node) {
 
 /**
  * Enhance violation with contrast data if applicable
- * 
+ *
  * @param {Object} violation - Base violation object
  * @param {Object} axeViolation - Original axe violation
  * @param {Object} node - Axe node data
@@ -186,7 +185,7 @@ function processFullScanViolations(
 
 /**
  * Check RTL compliance using Playwright page
- * 
+ *
  * @param {Object} page - Playwright page object
  * @param {string} filePath - Source file path
  * @param {string} sourceContent - Original source code

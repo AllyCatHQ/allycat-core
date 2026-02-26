@@ -1,5 +1,5 @@
 /**
- * test-fail-on-thresholds.js
+ * thresholds.test.js
  *
  * End-to-end tests for --fail-on-critical, --fail-on-serious, --fail-on-any.
  * Spawns the CLI as a child process and checks the exit code.
@@ -9,7 +9,7 @@
  *   fail-on-clean.html     — fully accessible, no violations
  *
  * Usage:
- *   node tests/test-fail-on-thresholds.js
+ *   node tests/e2e/thresholds.test.js
  *
  * Prerequisites:
  *   a11y-config.json must exist in the project root (run "a11y-guard init" first).
@@ -21,9 +21,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const CLI      = path.join(__dirname, '..', 'src', 'index.js');
-const CRITICAL = path.join(__dirname, 'fixtures', 'fail-on-critical.html');
-const CLEAN    = path.join(__dirname, 'fixtures', 'fail-on-clean.html');
+const CLI      = path.join(__dirname, '../..', 'src', 'index.js');
+const CRITICAL = path.join(__dirname, '../fixtures', 'fail-on-critical.html');
+const CLEAN    = path.join(__dirname, '../fixtures', 'fail-on-clean.html');
 
 // -----------------------------------------------------------------------------
 // Runner
@@ -32,7 +32,7 @@ const CLEAN    = path.join(__dirname, 'fixtures', 'fail-on-clean.html');
 function run(args) {
     const result = spawnSync('node', [CLI, 'scan', ...args], {
         encoding: 'utf8',
-        cwd: path.join(__dirname, '..'),   // project root — needed for config lookup
+        cwd: path.join(__dirname, '../..'),   // project root — needed for config lookup
     });
     return result.status;
 }

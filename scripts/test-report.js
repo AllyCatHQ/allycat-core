@@ -5,12 +5,12 @@
  * the report UI without running a real scan.
  *
  * Usage:
- *   node test-report.js
+ *   node scripts/test-report.js
  *
  * Output: a11y-report.html in the project root (same as a real scan).
  */
 
-import { generateReport } from './src/engine/reportGenerator.js';
+import { generateReport } from '../src/engine/report/generator.js';
 
 // ---------------------------------------------------------------------------
 // Demo violations — 3 files, one violation each

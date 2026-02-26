@@ -1,4 +1,4 @@
-import { getSafeConcurrencyCeiling } from '../src/utils/configLoader.js';
+import { getSafeConcurrencyCeiling } from '../../src/utils/configLoader.js';
 import os from 'os';
 
 const totalGb = (os.totalmem() / 1024 / 1024 / 1024).toFixed(1);

@@ -17,14 +17,14 @@
  *  - Per-panel impact filter bar (All / Critical / Serious / Moderate / Minor)
  *  - Sidebar file search — filters file tabs by name in real-time
  *
- * @module engine/reportGenerator
+ * @module engine/report/generator
  */
 
 import fs   from 'fs';
 import path from 'path';
 import { generatePrompts } from './promptGenerator.js';
-import { buildHtml } from './reportHtml.js';
-import { DEFAULT_HTML_REPORT } from '../constants.js';
+import { buildHtml } from './html.js';
+import { DEFAULT_HTML_REPORT } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // Public API

@@ -10,10 +10,10 @@
  *  - Agent-aware tail — optional, read from config.ai.agent
  *  - Pure functions — no side effects, fully testable
  *
- * @module engine/promptGenerator
+ * @module engine/report/promptGenerator
  */
 
-import { STANDARDS, STANDARD_LABELS } from '../constants.js';
+import { STANDARDS, STANDARD_LABELS } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // Constants
