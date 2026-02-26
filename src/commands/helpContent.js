@@ -51,15 +51,18 @@ export const FAQ_ITEMS = [
     },
     {
         q: 'How do I block a CI pipeline on accessibility failures?',
-        a: `Use ${chalk.cyan('--fail-on-critical')} to exit with code 1 when critical violations are found:
-   ${chalk.yellow('a11y-guard scan --fail-on-critical')}
+        a: `Choose a threshold flag — all exit with code 1 on failure:
+
+   ${chalk.cyan('--fail-on-critical')}  ${chalk.dim('# critical violations only (loosest gate)')}
+   ${chalk.cyan('--fail-on-serious')}   ${chalk.dim('# serious or critical')}
+   ${chalk.cyan('--fail-on-any')}       ${chalk.dim('# any violation (strictest gate)')}
 
    Exit codes:
-   ${chalk.green('0')} — clean scan, or only non-critical violations → pipeline continues
-   ${chalk.red('1')} — critical violations found → pipeline blocks
+   ${chalk.green('0')} — threshold not met → pipeline continues
+   ${chalk.red('1')} — threshold met     → pipeline blocks
 
    Combine with ${chalk.cyan('--json-file')} to block ${chalk.bold('and')} save a report:
-   ${chalk.yellow('a11y-guard scan --fail-on-critical --json-file a11y-report')}`
+   ${chalk.yellow('a11y-guard scan --fail-on-serious --json-file a11y-report')}`
     },
     {
         q: 'How do I save the report to a file?',
@@ -122,11 +125,11 @@ export const EXAMPLE_SECTIONS = [
     {
         title: 'CI/CD Integration',
         examples: [
-            { cmd: 'a11y-guard scan --fail-on-critical', desc: 'Block pipeline on critical violations (exit 1)' },
-            { cmd: 'a11y-guard scan --full --fail-on-critical', desc: 'Full scan — block on critical' },
+            { cmd: 'a11y-guard scan --fail-on-critical', desc: 'Block on critical violations only (exit 1)' },
+            { cmd: 'a11y-guard scan --fail-on-serious', desc: 'Block on serious or critical violations' },
+            { cmd: 'a11y-guard scan --fail-on-any', desc: 'Block on any violation (strictest gate)' },
             { cmd: 'a11y-guard scan --json-file ci-report', desc: 'Generate report artifact' },
-            { cmd: 'a11y-guard scan -o json > report.json', desc: 'Redirect to file' },
-            { cmd: 'a11y-guard scan --summary --full', desc: 'Quick CI check with contrast' }
+            { cmd: 'a11y-guard scan -o json > report.json', desc: 'Redirect to file' }
         ]
     },
     {

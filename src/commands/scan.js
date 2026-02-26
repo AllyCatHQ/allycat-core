@@ -72,7 +72,7 @@ export async function scanCommand(target = null, options = {}) {
     }
 
     outputResults(violations, config, scanMode, options);
-    exitIfCritical(violations, options);
+    exitOnThreshold(violations, options);
 }
 
 // -----------------------------------------------------------------------------
@@ -176,9 +176,18 @@ function displayScanConfiguration(config, scanMode, options, target) {
         ? `Scope:     ${chalk.cyan('Changed files only')}${target ? chalk.dim(` (${target})`) : ''}\n`
         : '';
 
+    const exitGateLine = options.failOnAny
+        ? `Exit gate: ${chalk.red('Any violation')}\n`
+        : options.failOnSerious
+            ? `Exit gate: ${chalk.red('Serious')} ${chalk.dim('or worse')}\n`
+            : options.failOnCritical
+                ? `Exit gate: ${chalk.red('Critical only')}\n`
+                : '';
+
     p.note(
         `Mode:      ${modeDisplay}\n` +
         scopeLine +
+        exitGateLine +
         `Standard:  ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Output:    ${chalk.bold(options.output || 'terminal')}\n` +
@@ -311,18 +320,22 @@ async function resolveChangedFiles(target) {
 // -----------------------------------------------------------------------------
 
 /**
- * Exit with code 1 if --fail-on-critical is set and critical violations exist.
+ * Exit with code 1 if a --fail-on-* threshold is set and matched.
+ *
+ * Severity order (axe-core): minor < moderate < serious < critical
+ *   --fail-on-critical  →  critical only
+ *   --fail-on-serious   →  serious or critical
+ *   --fail-on-any       →  any violation
  *
  * @param {Array} violations - All violations from the scan
- * @param {Object} options - CLI options
+ * @param {Object} options   - CLI options
  */
-function exitIfCritical(violations, options) {
-    if (!options.failOnCritical) {
-        return;
-    }
-
-    const hasCritical = violations.some(v => v.impact === 'critical');
-    if (hasCritical) {
-        process.exit(1);
+function exitOnThreshold(violations, options) {
+    if (options.failOnAny) {
+        if (violations.length > 0) process.exit(1);
+    } else if (options.failOnSerious) {
+        if (violations.some(v => v.impact === 'serious' || v.impact === 'critical')) process.exit(1);
+    } else if (options.failOnCritical) {
+        if (violations.some(v => v.impact === 'critical')) process.exit(1);
     }
 }
