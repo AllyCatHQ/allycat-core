@@ -8,6 +8,7 @@
  */
 
 import chalk from 'chalk';
+import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // FAQ
@@ -17,14 +18,14 @@ export const FAQ_ITEMS = [
     {
         q: 'Why is contrast checking not working?',
         a: `Contrast checking requires a real browser engine.
-   Use ${chalk.cyan('--full')} mode: ${chalk.yellow('a11y-guard scan --full')}
+   Use ${chalk.cyan('--full')} mode: ${chalk.yellow(`${CLI.SCAN} --full`)}
    This uses Playwright with Chromium for accurate contrast detection.`
     },
     {
         q: 'How do I install Playwright for full scans?',
         a: `Run these commands:
-   ${chalk.yellow('npm install playwright @axe-core/playwright')}
-   ${chalk.yellow('npx playwright install chromium')}`
+   ${chalk.yellow(INSTALL.PLAYWRIGHT)}
+   ${chalk.yellow(INSTALL.CHROMIUM)}`
     },
     {
         q: 'What\'s the difference between quick and full scan?',
@@ -40,14 +41,14 @@ export const FAQ_ITEMS = [
     },
     {
         q: 'Why do I see "No configuration found"?',
-        a: `Run ${chalk.cyan('a11y-guard init')} first to create the config file.
-   This creates ${chalk.yellow('a11y-config.json')} in your project root.`
+        a: `Run ${chalk.cyan(CLI.INIT)} first to create the config file.
+   This creates ${chalk.yellow(CONFIG_FILE_NAME)} in your project root.`
     },
     {
         q: 'Can I use both forward slashes and backslashes in paths?',
         a: `Yes! Both work on all platforms:
-   ${chalk.yellow('a11y-guard scan ./src')}
-   ${chalk.yellow('a11y-guard scan .\\src')}`
+   ${chalk.yellow(`${CLI.SCAN} ./src`)}
+   ${chalk.yellow(`${CLI.SCAN} .\\src`)}`
     },
     {
         q: 'How do I block a CI pipeline on accessibility failures?',
@@ -62,18 +63,18 @@ export const FAQ_ITEMS = [
    ${chalk.red('1')} — threshold met     → pipeline blocks
 
    Combine with ${chalk.cyan('--json-file')} to block ${chalk.bold('and')} save a report:
-   ${chalk.yellow('a11y-guard scan --fail-on-serious --json-file a11y-report')}`
+   ${chalk.yellow(`${CLI.SCAN} --fail-on-serious --json-file ${DEFAULT_REPORT_NAME}`)}`
     },
     {
         q: 'How do I save the report to a file?',
         a: `Two options:
 
    ${chalk.bold('Option 1:')} Use --json-file (recommended)
-   ${chalk.yellow('a11y-guard scan --json-file')}         ${chalk.dim('# Auto-timestamped')}
-   ${chalk.yellow('a11y-guard scan --json-file report')}  ${chalk.dim('# Custom name')}
+   ${chalk.yellow(`${CLI.SCAN} --json-file`)}         ${chalk.dim('# Auto-timestamped')}
+   ${chalk.yellow(`${CLI.SCAN} --json-file report`)}  ${chalk.dim('# Custom name')}
 
    ${chalk.bold('Option 2:')} Shell redirection
-   ${chalk.yellow('a11y-guard scan -o json > report.json')}`
+   ${chalk.yellow(`${CLI.SCAN} -o json > report.json`)}`
     },
     {
         q: 'What accessibility standards are supported?',
@@ -86,7 +87,7 @@ export const FAQ_ITEMS = [
         a: `Check these:
    1. File extension matches your framework config
    2. Files are not in ${chalk.yellow('node_modules/')}, ${chalk.yellow('dist/')}, or ${chalk.yellow('build/')}
-   3. Framework is set correctly in ${chalk.yellow('a11y-config.json')}`
+   3. Framework is set correctly in ${chalk.yellow(CONFIG_FILE_NAME)}`
     }
 ];
 
@@ -98,46 +99,46 @@ export const EXAMPLE_SECTIONS = [
     {
         title: 'Basic Scanning',
         examples: [
-            { cmd: 'a11y-guard scan', desc: 'Scan entire project' },
-            { cmd: 'a11y-guard scan ./src', desc: 'Scan specific folder' },
-            { cmd: 'a11y-guard scan ./src/App.tsx', desc: 'Scan specific file' },
-            { cmd: 'a11y-guard scan ./src ./public', desc: 'Scan multiple paths' }
+            { cmd: CLI.SCAN,                     desc: 'Scan entire project' },
+            { cmd: `${CLI.SCAN} ./src`,           desc: 'Scan specific folder' },
+            { cmd: `${CLI.SCAN} ./src/App.tsx`,   desc: 'Scan specific file' },
+            { cmd: `${CLI.SCAN} ./src ./public`,  desc: 'Scan multiple paths' }
         ]
     },
     {
         title: 'Scan Modes',
         examples: [
-            { cmd: 'a11y-guard scan --quick', desc: 'Fast scan, no contrast (default)' },
-            { cmd: 'a11y-guard scan --full', desc: 'Full scan with contrast checking' },
-            { cmd: 'a11y-guard scan -f', desc: 'Short form of --full' }
+            { cmd: `${CLI.SCAN} --quick`, desc: 'Fast scan, no contrast (default)' },
+            { cmd: `${CLI.SCAN} --full`,  desc: 'Full scan with contrast checking' },
+            { cmd: `${CLI.SCAN} -f`,      desc: 'Short form of --full' }
         ]
     },
     {
         title: 'Output Formats',
         examples: [
-            { cmd: 'a11y-guard scan', desc: 'Terminal output (default)' },
-            { cmd: 'a11y-guard scan --summary', desc: 'Summary counts only' },
-            { cmd: 'a11y-guard scan -o json', desc: 'JSON to terminal' },
-            { cmd: 'a11y-guard scan --json-file', desc: 'Save to auto-named file' },
-            { cmd: 'a11y-guard scan --json-file report', desc: 'Save to report.json' }
+            { cmd: CLI.SCAN,                          desc: 'Terminal output (default)' },
+            { cmd: `${CLI.SCAN} --summary`,           desc: 'Summary counts only' },
+            { cmd: `${CLI.SCAN} -o json`,             desc: 'JSON to terminal' },
+            { cmd: `${CLI.SCAN} --json-file`,         desc: 'Save to auto-named file' },
+            { cmd: `${CLI.SCAN} --json-file report`,  desc: 'Save to report.json' }
         ]
     },
     {
         title: 'CI/CD Integration',
         examples: [
-            { cmd: 'a11y-guard scan --fail-on-critical', desc: 'Block on critical violations only (exit 1)' },
-            { cmd: 'a11y-guard scan --fail-on-serious', desc: 'Block on serious or critical violations' },
-            { cmd: 'a11y-guard scan --fail-on-any', desc: 'Block on any violation (strictest gate)' },
-            { cmd: 'a11y-guard scan --json-file ci-report', desc: 'Generate report artifact' },
-            { cmd: 'a11y-guard scan -o json > report.json', desc: 'Redirect to file' }
+            { cmd: `${CLI.SCAN} --fail-on-critical`,              desc: 'Block on critical violations only (exit 1)' },
+            { cmd: `${CLI.SCAN} --fail-on-serious`,               desc: 'Block on serious or critical violations' },
+            { cmd: `${CLI.SCAN} --fail-on-any`,                   desc: 'Block on any violation (strictest gate)' },
+            { cmd: `${CLI.SCAN} --json-file ci-report`,           desc: 'Generate report artifact' },
+            { cmd: `${CLI.SCAN} -o json > report.json`,           desc: 'Redirect to file' }
         ]
     },
     {
         title: 'Combined Options',
         examples: [
-            { cmd: 'a11y-guard scan ./src --full --summary', desc: 'Full scan, summary only' },
-            { cmd: 'a11y-guard scan ./src -f --json-file', desc: 'Full scan to JSON file' },
-            { cmd: 'a11y-guard scan ./src -q -s', desc: 'Quick scan, summary (fastest)' }
+            { cmd: `${CLI.SCAN} ./src --full --summary`, desc: 'Full scan, summary only' },
+            { cmd: `${CLI.SCAN} ./src -f --json-file`,   desc: 'Full scan to JSON file' },
+            { cmd: `${CLI.SCAN} ./src -q -s`,            desc: 'Quick scan, summary (fastest)' }
         ]
     }
 ];

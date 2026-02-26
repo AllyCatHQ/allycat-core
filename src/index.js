@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
 import { scanCommand } from './commands/scan.js';
 import { helpCommand } from './commands/help.js';
+import { UI, APP_LINKS } from './constants.js';
 
 const program = new Command();
 
@@ -20,7 +21,7 @@ Fast scanning with precise error locations and clickable VS Code links.
   .version('1.0.0', '-v, --version', 'Display version number')
   .helpOption('-h, --help', 'Display help information')
   .addHelpText('after', `
-${chalk.dim('─'.repeat(60))}
+${chalk.dim(UI.DIVIDER)}
 
 ${chalk.bold('Quick Start:')}
   ${chalk.cyan('$')} a11y-guard init          ${chalk.dim('# Setup configuration')}
@@ -31,7 +32,7 @@ ${chalk.bold('Learn More:')}
   ${chalk.cyan('$')} a11y-guard help faq      ${chalk.dim('# Common questions')}
 
 ${chalk.bold('Documentation:')}
-  ${chalk.dim('https://github.com/dotcomico/A11yGuard-Core/blob/main/Readme.md')}
+  ${chalk.dim(APP_LINKS.DOCS)}
 `);
 
 // Init Command

@@ -7,6 +7,7 @@
  */
 
 import chalk from 'chalk';
+import { UI, CLI } from '../constants.js';
 import { FAQ_ITEMS, EXAMPLE_SECTIONS, GITHUB_ACTIONS_SNIPPET, GITLAB_CI_SNIPPET, JENKINS_SNIPPET } from './helpContent.js';
 
 // -----------------------------------------------------------------------------
@@ -22,20 +23,11 @@ export function helpCommand(topic) {
     console.log('');
 
     switch (topic?.toLowerCase()) {
-        case 'faq':
-            showFaq();
-            break;
-        case 'examples':
-            showExamples();
-            break;
-        case 'ci':
-            showCiGuide();
-            break;
-        case 'standards':
-            showStandards();
-            break;
-        default:
-            showTopicList();
+        case 'faq':       showFaq();       break;
+        case 'examples':  showExamples();  break;
+        case 'ci':        showCiGuide();   break;
+        case 'standards': showStandards(); break;
+        default:          showTopicList();
     }
 }
 
@@ -44,10 +36,9 @@ export function helpCommand(topic) {
 // -----------------------------------------------------------------------------
 
 function showFaq() {
-    const title = chalk.bold.cyan('Frequently Asked Questions');
-    const divider = chalk.dim('─'.repeat(60));
+    const divider = chalk.dim(UI.DIVIDER);
 
-    console.log(title);
+    console.log(chalk.bold.cyan('Frequently Asked Questions'));
     console.log(divider);
     console.log('');
 
@@ -58,7 +49,7 @@ function showFaq() {
     });
 
     console.log(divider);
-    console.log(chalk.dim('More help: a11y-guard help examples'));
+    console.log(chalk.dim(`More help: ${CLI.HELP} examples`));
     console.log('');
 }
 
@@ -67,10 +58,9 @@ function showFaq() {
 // -----------------------------------------------------------------------------
 
 function showExamples() {
-    const title = chalk.bold.cyan('Usage Examples');
-    const divider = chalk.dim('─'.repeat(60));
+    const divider = chalk.dim(UI.DIVIDER);
 
-    console.log(title);
+    console.log(chalk.bold.cyan('Usage Examples'));
     console.log(divider);
     console.log('');
 
@@ -84,7 +74,7 @@ function showExamples() {
     });
 
     console.log(divider);
-    console.log(chalk.dim('More help: a11y-guard help ci'));
+    console.log(chalk.dim(`More help: ${CLI.HELP} ci`));
     console.log('');
 }
 
@@ -93,10 +83,9 @@ function showExamples() {
 // -----------------------------------------------------------------------------
 
 function showCiGuide() {
-    const title = chalk.bold.cyan('CI/CD Integration Guide');
-    const divider = chalk.dim('─'.repeat(60));
+    const divider = chalk.dim(UI.DIVIDER);
 
-    console.log(title);
+    console.log(chalk.bold.cyan('CI/CD Integration Guide'));
     console.log(divider);
     console.log('');
 
@@ -118,7 +107,7 @@ function showCiGuide() {
     console.log('');
 
     console.log(divider);
-    console.log(chalk.dim('More help: a11y-guard help examples'));
+    console.log(chalk.dim(`More help: ${CLI.HELP} examples`));
     console.log('');
 }
 
@@ -127,10 +116,9 @@ function showCiGuide() {
 // -----------------------------------------------------------------------------
 
 function showStandards() {
-    const title = chalk.bold.cyan('Accessibility Standards');
-    const divider = chalk.dim('─'.repeat(60));
+    const divider = chalk.dim(UI.DIVIDER);
 
-    console.log(title);
+    console.log(chalk.bold.cyan('Accessibility Standards'));
     console.log(divider);
     console.log('');
 
@@ -177,7 +165,7 @@ function showStandards() {
     console.log('');
 
     console.log(divider);
-    console.log(chalk.dim('Set your standard: a11y-guard init'));
+    console.log(chalk.dim(`Set your standard: ${CLI.INIT}`));
     console.log('');
 }
 
@@ -186,29 +174,28 @@ function showStandards() {
 // -----------------------------------------------------------------------------
 
 function showTopicList() {
-    const title = chalk.bold.cyan('A11y-Guard Help');
-    const divider = chalk.dim('─'.repeat(60));
+    const divider = chalk.dim(UI.DIVIDER);
 
-    console.log(title);
+    console.log(chalk.bold.cyan('A11y-Guard Help'));
     console.log(divider);
     console.log('');
 
     console.log(chalk.bold('Available Help Topics:'));
     console.log('');
-    console.log(`  ${chalk.cyan('a11y-guard help faq')}       ${chalk.dim('Common questions and answers')}`);
-    console.log(`  ${chalk.cyan('a11y-guard help examples')}  ${chalk.dim('Real-world usage examples')}`);
-    console.log(`  ${chalk.cyan('a11y-guard help ci')}        ${chalk.dim('CI/CD integration guide')}`);
-    console.log(`  ${chalk.cyan('a11y-guard help standards')} ${chalk.dim('Accessibility standards explained')}`);
+    console.log(`  ${chalk.cyan(`${CLI.HELP} faq`)}       ${chalk.dim('Common questions and answers')}`);
+    console.log(`  ${chalk.cyan(`${CLI.HELP} examples`)}  ${chalk.dim('Real-world usage examples')}`);
+    console.log(`  ${chalk.cyan(`${CLI.HELP} ci`)}        ${chalk.dim('CI/CD integration guide')}`);
+    console.log(`  ${chalk.cyan(`${CLI.HELP} standards`)} ${chalk.dim('Accessibility standards explained')}`);
     console.log('');
 
     console.log(chalk.bold('Command Help:'));
     console.log('');
-    console.log(`  ${chalk.cyan('a11y-guard --help')}         ${chalk.dim('Overview of all commands')}`);
-    console.log(`  ${chalk.cyan('a11y-guard init --help')}    ${chalk.dim('Init command options')}`);
-    console.log(`  ${chalk.cyan('a11y-guard scan --help')}    ${chalk.dim('Scan command options')}`);
+    console.log(`  ${chalk.cyan(`${CLI.NAME} --help`)}         ${chalk.dim('Overview of all commands')}`);
+    console.log(`  ${chalk.cyan(`${CLI.INIT} --help`)}    ${chalk.dim('Init command options')}`);
+    console.log(`  ${chalk.cyan(`${CLI.SCAN} --help`)}    ${chalk.dim('Scan command options')}`);
     console.log('');
 
     console.log(divider);
-    console.log(chalk.dim('Quick start: a11y-guard init && a11y-guard scan'));
+    console.log(chalk.dim(`Quick start: ${CLI.INIT} && ${CLI.SCAN}`));
     console.log('');
 }

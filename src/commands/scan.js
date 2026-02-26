@@ -16,6 +16,7 @@ import { runQuickAudit } from '../engine/quickScanner.js';
 import { runFullAudit } from '../engine/fullScanner.js';
 import { outputResults } from './scanOutputters.js';
 import { SUPPORTED_EXTENSIONS } from '../utils/fileResolver.js';
+import { MESSAGES, INSTALL, UI, SCAN_MODES } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -29,10 +30,10 @@ import { SUPPORTED_EXTENSIONS } from '../utils/fileResolver.js';
  */
 export async function scanCommand(target = null, options = {}) {
     console.log('');
-    p.intro(`${chalk.bgMagenta.white(' A11y-Guard Scan ')}`);
+    p.intro(`${chalk.bgMagenta.white(UI.INTRO_SCAN)}`);
 
     // Pass 1: Load with preliminary mode to read defaultMode from config
-    const preliminaryConfig = await loadConfiguration('quick');
+    const preliminaryConfig = await loadConfiguration(SCAN_MODES.QUICK);
     if (!preliminaryConfig) {
         return;
     }
@@ -79,27 +80,20 @@ export async function scanCommand(target = null, options = {}) {
 // Configuration
 // -----------------------------------------------------------------------------
 
-/** Sensible defaults used when no config file exists */
-const DEFAULT_CONFIG = {
-    selectedStandard: 'wcag-aa',
-    rules: { rtl: false, level: 'AA' },
-    scan: { defaultMode: 'quick' },
-};
-
 /**
  * Load config, running first-time setup automatically if none exists.
  *
  * @param {'quick'|'full'} scanMode - Used to compute safe concurrency ceiling
  * @returns {Promise<Object|null>} - Config object, or null if user cancelled init
  */
-async function loadConfiguration(scanMode = 'quick') {
+async function loadConfiguration(scanMode = SCAN_MODES.QUICK) {
     if (!configExists()) {
-        p.log.info(chalk.cyan('No configuration found — starting first-time setup...\n'));
+        p.log.info(chalk.cyan(`${MESSAGES.NO_CONFIG}\n`));
         await initCommand();
 
         // User may have cancelled init
         if (!configExists()) {
-            p.outro(chalk.yellow('Scan cancelled — no configuration available.'));
+            p.outro(chalk.yellow(MESSAGES.SCAN_CANCELLED));
             return null;
         }
     }
@@ -115,13 +109,9 @@ async function loadConfiguration(scanMode = 'quick') {
  * @returns {string} - 'quick' or 'full'
  */
 function determineScanMode(options, config) {
-    if (options.quick) {
-        return 'quick';
-    }
-    if (options.full) {
-        return 'full';
-    }
-    return config.scan?.defaultMode || 'quick';
+    if (options.quick) return SCAN_MODES.QUICK;
+    if (options.full)  return SCAN_MODES.FULL;
+    return config.scan?.defaultMode || SCAN_MODES.QUICK;
 }
 
 // -----------------------------------------------------------------------------
@@ -143,7 +133,7 @@ function validateAndResolveTarget(target) {
 
     if (!fs.existsSync(absolutePath)) {
         p.log.error(chalk.red(`Target path not found: ${target}`));
-        p.outro(chalk.yellow('Please provide a valid file or directory path.'));
+        p.outro(chalk.yellow(MESSAGES.VALID_PATH_REQUIRED));
         return null;
     }
 
@@ -168,9 +158,9 @@ function validateAndResolveTarget(target) {
  * @param {string|null} target - Target path
  */
 function displayScanConfiguration(config, scanMode, options, target) {
-    const modeDisplay = scanMode === 'full'
-        ? chalk.green('Full (with contrast)')
-        : chalk.yellow('Quick (no contrast)');
+    const modeDisplay = scanMode === SCAN_MODES.FULL
+        ? chalk.green(UI.SCAN_LABEL_FULL)
+        : chalk.yellow(UI.SCAN_LABEL_QUICK);
 
     const scopeLine = options.changed
         ? `Scope:     ${chalk.cyan('Changed files only')}${target ? chalk.dim(` (${target})`) : ''}\n`
@@ -210,22 +200,22 @@ function displayScanConfiguration(config, scanMode, options, target) {
  */
 async function executeScan(config, scanMode, targetPath, files = null) {
     const spinner = p.spinner();
-    spinner.start('Analyzing source files...');
+    spinner.start(MESSAGES.ANALYZING);
 
     try {
         let violations;
 
-        if (scanMode === 'full') {
+        if (scanMode === SCAN_MODES.FULL) {
             violations = await runFullAudit(config, targetPath, files);
         } else {
             violations = await runQuickAudit(config, targetPath, files);
         }
 
-        spinner.stop(chalk.green('Analysis Complete.'));
+        spinner.stop(chalk.green(MESSAGES.ANALYSIS_COMPLETE));
         return violations;
 
     } catch (error) {
-        spinner.stop(chalk.red('Analysis failed.'));
+        spinner.stop(chalk.red(MESSAGES.ANALYSIS_FAILED));
         handleScanError(error);
         return null;
     }
@@ -240,9 +230,9 @@ function handleScanError(error) {
     p.log.error(error.message);
 
     if (isPlaywrightNotInstalledError(error)) {
-        p.log.info(chalk.dim('Hint: Run "npm install playwright @axe-core/playwright" first.'));
+        p.log.info(chalk.dim(`Hint: Run "${INSTALL.PLAYWRIGHT}" first.`));
     } else if (isBrowserNotInstalledError(error)) {
-        p.log.info(chalk.dim('Hint: Run "npx playwright install chromium" to install the browser.'));
+        p.log.info(chalk.dim(`Hint: Run "${INSTALL.CHROMIUM}" to install the browser.`));
     }
 }
 

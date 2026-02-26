@@ -11,6 +11,7 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
+import { UI, SCAN_MODES, DEFAULT_REPORT_NAME } from '../constants.js';
 import { formatSummary, formatByFile, countByImpact, groupByFile, formatViolationForJson } from '../utils/violationFormatter.js';
 import { generatePrompts } from '../engine/promptGenerator.js';
 import { generateReport } from '../engine/reportGenerator.js';
@@ -108,12 +109,12 @@ function outputTerminal(violations, scanMode) {
  */
 function displayTerminalTips(scanMode) {
     console.log('');
-    console.log(chalk.dim('─'.repeat(60)));
+    console.log(chalk.dim(UI.DIVIDER));
     console.log(chalk.dim('Tips:'));
     console.log(chalk.dim('  • File paths with line numbers are clickable in VS Code'));
     console.log(chalk.dim('  • Use --output json for CI/CD integration'));
 
-    if (scanMode === 'quick') {
+    if (scanMode === SCAN_MODES.QUICK) {
         console.log(chalk.dim('  • Use --full to enable contrast checking'));
     }
 
@@ -150,7 +151,7 @@ function buildJsonReport(violations, config, scanMode) {
         scanMode: scanMode,
         standard: config.selectedStandard,
         rtlEnabled: config.rules.rtl,
-        contrastChecked: scanMode === 'full',
+        contrastChecked: scanMode === SCAN_MODES.FULL,
         totalViolations: violations.length,
         summary: countByImpact(violations),
         byFile: groupByFile(violations),
@@ -185,7 +186,7 @@ function generateJsonFilename(userFilename) {
         .replace(/[:.]/g, '')
         .slice(0, 17);
 
-    return `a11y-report-${timestamp}.json`;
+    return `${DEFAULT_REPORT_NAME}-${timestamp}.json`;
 }
 
 /**
@@ -233,10 +234,10 @@ function outputPrompts(violations, config) {
     if (prompts.length === 0) return;
 
     console.log('');
-    console.log(chalk.dim('─'.repeat(60)));
+    console.log(chalk.dim(UI.DIVIDER));
     console.log(chalk.bold.magenta('  ✦ AI Fix Prompts'));
     console.log(chalk.dim('  Copy the prompt for each file and paste into your AI agent.'));
-    console.log(chalk.dim('─'.repeat(60)));
+    console.log(chalk.dim(UI.DIVIDER));
 
     for (const { file, prompt } of prompts) {
         console.log('');
