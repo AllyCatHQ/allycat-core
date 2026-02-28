@@ -45,6 +45,19 @@ export async function initCommand() {
                 message: 'Enable AI-powered fix suggestions?',
                 initialValue: true,
             }),
+            aiAgent: ({ results }) => !results.useAI
+                ? Promise.resolve('generic')
+                : p.select({
+                    message: 'Which AI agent do you use?',
+                    options: [
+                        { value: 'claude',   label: '🟣 Claude',   hint: 'Anthropic — Claude 3/4' },
+                        { value: 'cursor',   label: '🔵 Cursor',   hint: 'Cursor IDE AI' },
+                        { value: 'chatgpt',  label: '🟢 ChatGPT',  hint: 'OpenAI — GPT-4o' },
+                        { value: 'gemini',   label: '🔴 Gemini',   hint: 'Google Gemini' },
+                        { value: 'copilot',  label: '⚫ Copilot',  hint: 'GitHub Copilot' },
+                        { value: 'generic',  label: '⚪ Other / Skip', hint: 'Generic prompt' },
+                    ],
+                }),
         },
         {
             onCancel: () => {
@@ -65,7 +78,8 @@ export async function initCommand() {
             defaultMode: group.scanMode
         },
         ai: {
-            enabled: group.useAI
+            enabled: group.useAI,
+            agent: group.aiAgent,
         },
         performance: {
             concurrency: 5
@@ -84,6 +98,7 @@ export async function initCommand() {
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Default Mode: ${chalk.bold(config.scan.defaultMode === SCAN_MODES.FULL ? UI.SCAN_LABEL_FULL : UI.SCAN_LABEL_QUICK_FAST)}\n` +
         `AI Suggestions: ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
+        (config.ai.enabled ? `AI Agent:     ${chalk.bold(config.ai.agent)}\n` : '') +
         `Concurrency: ${chalk.bold(config.performance.concurrency)} files in parallel`,
         'Configuration Summary'
     );
