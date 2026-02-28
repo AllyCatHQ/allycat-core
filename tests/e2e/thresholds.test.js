@@ -63,12 +63,13 @@ assert('critical file → exit 1', run([CRITICAL, '--fail-on-critical']), 1);
 assert('clean file    → exit 0', run([CLEAN,    '--fail-on-critical']), 0);
 
 console.log('\n-- --fail-on-serious -------------------------------------------');
-// critical violations satisfy the "serious or worse" threshold
-assert('critical file → exit 1', run([CRITICAL, '--fail-on-serious']),  1);
+// critical violations satisfy the "serious or worse" threshold → exit 2
+assert('critical file → exit 2', run([CRITICAL, '--fail-on-serious']),  2);
 assert('clean file    → exit 0', run([CLEAN,    '--fail-on-serious']),  0);
 
 console.log('\n-- --fail-on-any -----------------------------------------------');
-assert('critical file → exit 1', run([CRITICAL, '--fail-on-any']),      1);
+// any violation present → exit 3
+assert('critical file → exit 3', run([CRITICAL, '--fail-on-any']),      3);
 assert('clean file    → exit 0', run([CLEAN,    '--fail-on-any']),      0);
 
 console.log('\n-- no flag (gate disabled) -------------------------------------');

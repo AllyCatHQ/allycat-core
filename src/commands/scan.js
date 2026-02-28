@@ -310,21 +310,24 @@ async function resolveChangedFiles(target) {
 // -----------------------------------------------------------------------------
 
 /**
- * Exit with code 1 if a --fail-on-* threshold is set and matched.
+ * Exit with a non-zero code if a --fail-on-* threshold is set and matched.
  *
  * Severity order (axe-core): minor < moderate < serious < critical
- *   --fail-on-critical  →  critical only
- *   --fail-on-serious   →  serious or critical
- *   --fail-on-any       →  any violation
+ *   --fail-on-critical  →  exit 1  (critical only)
+ *   --fail-on-serious   →  exit 2  (serious or critical)
+ *   --fail-on-any       →  exit 3  (any violation)
+ *
+ * Distinct exit codes let CI pipelines distinguish which severity level
+ * triggered the failure without parsing terminal output.
  *
  * @param {Array} violations - All violations from the scan
  * @param {Object} options   - CLI options
  */
 function exitOnThreshold(violations, options) {
     if (options.failOnAny) {
-        if (violations.length > 0) process.exit(1);
+        if (violations.length > 0) process.exit(3);
     } else if (options.failOnSerious) {
-        if (violations.some(v => v.impact === 'serious' || v.impact === 'critical')) process.exit(1);
+        if (violations.some(v => v.impact === 'serious' || v.impact === 'critical')) process.exit(2);
     } else if (options.failOnCritical) {
         if (violations.some(v => v.impact === 'critical')) process.exit(1);
     }

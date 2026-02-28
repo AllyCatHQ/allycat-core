@@ -67,8 +67,8 @@ program
   .option('--json-file [filename]', 'Save JSON report to file (auto-names if no filename)')
   .option('--group-by-file', 'Group violations by file (default)', true)
   .option('--fail-on-critical', 'Exit with code 1 if any critical violations are found')
-  .option('--fail-on-serious', 'Exit with code 1 if any serious or critical violations are found')
-  .option('--fail-on-any', 'Exit with code 1 if any violations are found')
+  .option('--fail-on-serious', 'Exit with code 2 if any serious or critical violations are found')
+  .option('--fail-on-any', 'Exit with code 3 if any violations are found')
   .option('--changed', 'Scan only files changed since the last commit (requires git)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
@@ -94,8 +94,8 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} a11y-guard scan --json-file        ${chalk.dim('# Save to timestamped file')}
   ${chalk.cyan('$')} a11y-guard scan --json-file report ${chalk.dim('# Save to report.json')}
   ${chalk.cyan('$')} a11y-guard scan --fail-on-critical ${chalk.dim('# Exit 1 if critical violations found')}
-  ${chalk.cyan('$')} a11y-guard scan --fail-on-serious  ${chalk.dim('# Exit 1 if serious or critical found')}
-  ${chalk.cyan('$')} a11y-guard scan --fail-on-any      ${chalk.dim('# Exit 1 if any violation found')}
+  ${chalk.cyan('$')} a11y-guard scan --fail-on-serious  ${chalk.dim('# Exit 2 if serious or critical found')}
+  ${chalk.cyan('$')} a11y-guard scan --fail-on-any      ${chalk.dim('# Exit 3 if any violation found')}
   ${chalk.cyan('$')} a11y-guard scan --changed          ${chalk.dim('# Scan only git-changed files')}
   ${chalk.cyan('$')} a11y-guard scan --changed ./src    ${chalk.dim('# Changed files scoped to ./src')}
 `)

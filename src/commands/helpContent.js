@@ -52,15 +52,17 @@ export const FAQ_ITEMS = [
     },
     {
         q: 'How do I block a CI pipeline on accessibility failures?',
-        a: `Choose a threshold flag — all exit with code 1 on failure:
+        a: `Choose a threshold flag — each uses a distinct exit code:
 
    ${chalk.cyan('--fail-on-critical')}  ${chalk.dim('# critical violations only (loosest gate)')}
    ${chalk.cyan('--fail-on-serious')}   ${chalk.dim('# serious or critical')}
    ${chalk.cyan('--fail-on-any')}       ${chalk.dim('# any violation (strictest gate)')}
 
    Exit codes:
-   ${chalk.green('0')} — threshold not met → pipeline continues
-   ${chalk.red('1')} — threshold met     → pipeline blocks
+   ${chalk.green('0')} — threshold not met        → pipeline continues
+   ${chalk.red('1')} — critical violations found  → --fail-on-critical triggered
+   ${chalk.red('2')} — serious violations found   → --fail-on-serious triggered
+   ${chalk.red('3')} — any violations found       → --fail-on-any triggered
 
    Combine with ${chalk.cyan('--json-file')} to block ${chalk.bold('and')} save a report:
    ${chalk.yellow(`${CLI.SCAN} --fail-on-serious --json-file ${DEFAULT_REPORT_NAME}`)}`
