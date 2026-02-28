@@ -15,6 +15,7 @@ import { initCommand } from './init.js';
 import { runQuickAudit } from '../engine/scanners/quickScanner.js';
 import { runFullAudit } from '../engine/scanners/fullScanner.js';
 import { outputResults } from './scanOutputters.js';
+import { watchMode } from './watchMode.js';
 import { SUPPORTED_EXTENSIONS } from '../utils/fileResolver.js';
 import { MESSAGES, INSTALL, UI, SCAN_MODES } from '../constants.js';
 
@@ -43,6 +44,12 @@ export async function scanCommand(target = null, options = {}) {
 
     // Pass 2: Reload with correct mode so concurrency ceiling is accurate
     const config = loadConfig(scanMode);
+
+    // Watch mode: delegate entirely — does not return to the normal scan path
+    if (options.watch) {
+        await watchMode(target, config, scanMode);
+        return;
+    }
 
     let targetPath = null;
     let preResolvedFiles = null;

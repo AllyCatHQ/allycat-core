@@ -70,6 +70,7 @@ program
   .option('--fail-on-serious', 'Exit with code 2 if any serious or critical violations are found')
   .option('--fail-on-any', 'Exit with code 3 if any violations are found')
   .option('--changed', 'Scan only files changed since the last commit (requires git)')
+  .option('--watch', 'Watch files and re-scan incrementally on every change')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan
@@ -98,6 +99,8 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} a11y-guard scan --fail-on-any      ${chalk.dim('# Exit 3 if any violation found')}
   ${chalk.cyan('$')} a11y-guard scan --changed          ${chalk.dim('# Scan only git-changed files')}
   ${chalk.cyan('$')} a11y-guard scan --changed ./src    ${chalk.dim('# Changed files scoped to ./src')}
+  ${chalk.cyan('$')} a11y-guard scan --watch            ${chalk.dim('# Watch and re-scan on file change')}
+  ${chalk.cyan('$')} a11y-guard scan --watch ./src      ${chalk.dim('# Watch specific folder')}
 `)
   .action((target, options) => scanCommand(target, options));
 
