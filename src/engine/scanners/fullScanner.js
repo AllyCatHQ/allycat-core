@@ -27,6 +27,8 @@ import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/viola
 import { findLineNumber } from '../../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
 import { transformVueToHtml, isVueFile } from '../transformers/vueTransformer.js';
+import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
+import { isAngularComponentTs, extractInlineTemplate } from '../transformers/angularTsExtractor.js';
 import { resolvAndInjectCss } from '../../utils/cssResolver.js';
 import path from 'path';
 import pLimit from 'p-limit';
@@ -247,15 +249,26 @@ async function scanSingleFile(browser, filePath, config, cssCache) {
     try {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
-        const isJsx = isJsxFile(filePath);
-        const isVue = !isJsx && isVueFile(filePath);
-        const isComponent = isJsx || isVue;
+        const isJsx        = isJsxFile(filePath);
+        const isVue        = !isJsx && isVueFile(filePath);
+        const isAngularHtml = !isJsx && !isVue && isAngularTemplate(sourceContent, filePath);
+        const isAngularTs  = !isJsx && !isVue && !isAngularHtml && isAngularComponentTs(sourceContent, filePath);
+        const isComponent  = isJsx || isVue || isAngularHtml || isAngularTs;
 
-        const { html: transformedHtml, lineMap, ordinalIndex } = isJsx
-            ? transformJsxToHtml(sourceContent)
-            : isVue
-                ? transformVueToHtml(sourceContent)
-                : { html: sourceContent, lineMap: null, ordinalIndex: null };
+        let transformedHtml, lineMap, ordinalIndex;
+        if (isJsx) {
+            ({ html: transformedHtml, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
+        } else if (isVue) {
+            ({ html: transformedHtml, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
+        } else if (isAngularHtml) {
+            ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(sourceContent));
+        } else if (isAngularTs) {
+            const extracted = extractInlineTemplate(sourceContent);
+            if (!extracted) return [];  // templateUrl-only or unextractable — .html scanned separately
+            ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(extracted.content, extracted.lineOffset));
+        } else {
+            transformedHtml = sourceContent; lineMap = null; ordinalIndex = null;
+        }
 
         // Inject imported CSS so Playwright can compute accurate contrast values
         const scanContent = await resolvAndInjectCss(

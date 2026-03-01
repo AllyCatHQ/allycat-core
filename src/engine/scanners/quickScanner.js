@@ -23,6 +23,8 @@ import { checkRtlCompliance, checkJsxRtlCompliance } from '../../utils/rtlValida
 import { processAxeViolations } from '../../utils/violationProcessor.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
 import { transformVueToHtml, isVueFile } from '../transformers/vueTransformer.js';
+import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
+import { isAngularComponentTs, extractInlineTemplate } from '../transformers/angularTsExtractor.js';
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
@@ -148,15 +150,26 @@ async function scanSingleFile(filePath, config) {
     try {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
-        const isJsx = isJsxFile(filePath);
-        const isVue = !isJsx && isVueFile(filePath);
-        const isComponent = isJsx || isVue;
+        const isJsx        = isJsxFile(filePath);
+        const isVue        = !isJsx && isVueFile(filePath);
+        const isAngularHtml = !isJsx && !isVue && isAngularTemplate(sourceContent, filePath);
+        const isAngularTs  = !isJsx && !isVue && !isAngularHtml && isAngularComponentTs(sourceContent, filePath);
+        const isComponent  = isJsx || isVue || isAngularHtml || isAngularTs;
 
-        const { html: scanContent, lineMap, ordinalIndex } = isJsx
-            ? transformJsxToHtml(sourceContent)
-            : isVue
-                ? transformVueToHtml(sourceContent)
-                : { html: sourceContent, lineMap: null, ordinalIndex: null };
+        let scanContent, lineMap, ordinalIndex;
+        if (isJsx) {
+            ({ html: scanContent, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
+        } else if (isVue) {
+            ({ html: scanContent, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
+        } else if (isAngularHtml) {
+            ({ html: scanContent, lineMap, ordinalIndex } = transformAngularToHtml(sourceContent));
+        } else if (isAngularTs) {
+            const extracted = extractInlineTemplate(sourceContent);
+            if (!extracted) return [];  // templateUrl-only or unextractable — .html scanned separately
+            ({ html: scanContent, lineMap, ordinalIndex } = transformAngularToHtml(extracted.content, extracted.lineOffset));
+        } else {
+            scanContent = sourceContent; lineMap = null; ordinalIndex = null;
+        }
 
         const window = createJsdomWithAxe(scanContent);
         const axeResults = await executeAxeAnalysis(window, config);

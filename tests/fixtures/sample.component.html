@@ -1,0 +1,52 @@
+<!-- Angular external template fixture — covers legacy + Angular 17+ syntax -->
+
+<!-- Angular 17+ control flow -->
+@if (isLoggedIn) {
+  <nav aria-label="Main navigation">
+    <a href="/home">Home</a>
+    <a href="/profile">Profile</a>
+  </nav>
+} @else {
+  <a href="/login">Login</a>
+}
+
+<!-- Legacy structural directives + binding attributes -->
+<main>
+  <h1 [attr.aria-label]="pageTitle">Welcome</h1>
+
+  <!-- Image with dynamic alt — transformer must convert [alt] → alt="dynamic" -->
+  <img *ngIf="showBanner" [src]="bannerUrl" [alt]="bannerAlt" class="banner">
+
+  <!-- Intentional a11y violation: missing alt (static, no binding) -->
+  <img src="logo.png">
+
+  <section>
+    <h2>Items</h2>
+    <ul>
+      @for (item of items; track item.id) {
+        <li [attr.aria-label]="item.name">{{ item.name }}</li>
+      }
+    </ul>
+  </section>
+
+  <!-- Form with Angular bindings -->
+  <form (submit)="onSubmit($event)">
+    <label for="search">Search</label>
+    <input id="search" type="text" [(ngModel)]="query" [attr.aria-describedby]="hintId">
+
+    <!-- Intentional a11y violation: button with no accessible name -->
+    <button [disabled]="isLoading" (click)="handleSearch()"></button>
+  </form>
+
+  <!-- Angular built-in elements -->
+  <ng-container *ngFor="let item of featured">
+    <app-card [title]="item.title" [aria-label]="item.name">
+      <ng-content></ng-content>
+    </app-card>
+  </ng-container>
+
+  <!-- Custom components + router -->
+  <app-header [user]="currentUser" (logout)="handleLogout()"></app-header>
+  <mat-button [disabled]="loading" aria-label="Submit form">Submit</mat-button>
+  <router-outlet></router-outlet>
+</main>

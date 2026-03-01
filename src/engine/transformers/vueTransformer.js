@@ -16,6 +16,7 @@
  */
 
 import { parse, NodeTypes } from '@vue/compiler-dom';
+import { wrapInDocument, escapeAttr, HTML_TAGS } from './transformerUtils.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -365,70 +366,4 @@ function tryExtractLiteralString(expr) {
     return m ? m[2] : null;
 }
 
-// -----------------------------------------------------------------------------
-// Document Wrapper
-// -----------------------------------------------------------------------------
-
-/**
- * Wrap rendered HTML fragments in a full HTML document structure.
- * Identical shell to jsxTransformer.wrapInDocument() — HTML_WRAPPER_OFFSET = 4.
- *
- * @param {string} bodyContent
- * @returns {string}
- */
-function wrapInDocument(bodyContent) {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><title>A11y Scan</title></head>
-<body>
-${bodyContent}
-</body>
-</html>`;
-}
-
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
-
-/**
- * Known HTML tags — used to distinguish native elements from custom components.
- * @type {Set<string>}
- */
-const HTML_TAGS = new Set([
-    'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio',
-    'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button',
-    'canvas', 'caption', 'cite', 'code', 'col', 'colgroup',
-    'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt',
-    'em', 'embed',
-    'fieldset', 'figcaption', 'figure', 'footer', 'form',
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'html',
-    'i', 'iframe', 'img', 'input', 'ins',
-    'kbd',
-    'label', 'legend', 'li', 'link',
-    'main', 'map', 'mark', 'menu', 'meta', 'meter',
-    'nav', 'noscript',
-    'object', 'ol', 'optgroup', 'option', 'output',
-    'p', 'picture', 'pre', 'progress',
-    'q',
-    's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span',
-    'strong', 'style', 'sub', 'summary', 'sup',
-    'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead',
-    'time', 'title', 'tr', 'track',
-    'u', 'ul',
-    'var', 'video',
-    'wbr',
-]);
-
-/**
- * Escape a string for safe use in an HTML attribute value.
- *
- * @param {string} value
- * @returns {string}
- */
-function escapeAttr(value) {
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
+// wrapInDocument, escapeAttr, HTML_TAGS — imported from transformerUtils.js

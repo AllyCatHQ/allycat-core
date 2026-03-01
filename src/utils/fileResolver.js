@@ -15,10 +15,10 @@ import { normalizeForGlob } from './pathUtils.js';
 
 /**
  * All file types the scanner supports.
- * Scan method (HTML vs JSX path) is determined at runtime via isJsxFile().
- * No framework configuration required.
+ * Scan method (HTML / JSX / Vue / Angular) is determined at runtime by each transformer.
+ * 'component.ts' matches *.component.ts — Angular inline template files.
  */
-export const SUPPORTED_EXTENSIONS = ['html', 'jsx', 'tsx', 'vue'];
+export const SUPPORTED_EXTENSIONS = ['html', 'jsx', 'tsx', 'vue', 'component.ts'];
 
 /**
  * Resolve the list of files to scan.
@@ -45,9 +45,10 @@ export async function resolveTargetPath(targetPath, extensions) {
     const stats = statSync(targetPath);
 
     if (stats.isFile()) {
-        const fileExtension = path.extname(targetPath).slice(1);
-        if (!extensions.includes(fileExtension)) {
-            p.log.warn(`File extension .${fileExtension} not in expected list: ${extensions.join(', ')}`);
+        const fileName = path.basename(targetPath);
+        const isSupported = extensions.some(ext => fileName.endsWith(`.${ext}`));
+        if (!isSupported) {
+            p.log.warn(`File extension not in supported list: ${extensions.join(', ')}`);
         }
         return [targetPath];
     }

@@ -18,6 +18,7 @@ import { parse } from '@babel/parser';
 import _traverse from '@babel/traverse';
 const traverse = _traverse.default ?? _traverse;
 import * as t from '@babel/types';
+import { wrapInDocument, escapeAttr, HTML_TAGS } from './transformerUtils.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -483,66 +484,7 @@ function resolveStyleObject(expression) {
 
     return declarations.length > 0 ? declarations.join('; ') : null;
 }
-// -----------------------------------------------------------------------------
-// Document Wrapper
-// -----------------------------------------------------------------------------
-
-/**
- * Wrap rendered HTML fragments in a full HTML document structure.
- *
- * IMPORTANT: HTML_WRAPPER_OFFSET must match the number of lines before
- * ${bodyContent}. Count carefully if you change this template:
- *   line 1: <!DOCTYPE html>
- *   line 2: <html lang="en">
- *   line 3: <head><meta charset="UTF-8"><title>A11y Scan</title></head>
- *   line 4: <body>
- *   line 5+: ${bodyContent}
- *
- * @param {string} bodyContent
- * @returns {string}
- */
-function wrapInDocument(bodyContent) {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><title>A11y Scan</title></head>
-<body>
-${bodyContent}
-</body>
-</html>`;
-}
-
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
-
-/**
- * Known HTML tags — used to distinguish native elements from custom components.
- * @type {Set<string>}
- */
-const HTML_TAGS = new Set([
-    'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio',
-    'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button',
-    'canvas', 'caption', 'cite', 'code', 'col', 'colgroup',
-    'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt',
-    'em', 'embed',
-    'fieldset', 'figcaption', 'figure', 'footer', 'form',
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'html',
-    'i', 'iframe', 'img', 'input', 'ins',
-    'kbd',
-    'label', 'legend', 'li', 'link',
-    'main', 'map', 'mark', 'menu', 'meta', 'meter',
-    'nav', 'noscript',
-    'object', 'ol', 'optgroup', 'option', 'output',
-    'p', 'picture', 'pre', 'progress',
-    'q',
-    's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span',
-    'strong', 'style', 'sub', 'summary', 'sup',
-    'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead',
-    'time', 'title', 'tr', 'track',
-    'u', 'ul',
-    'var', 'video',
-    'wbr',
-]);
+// wrapInDocument, escapeAttr, HTML_TAGS — imported from transformerUtils.js
 
 /**
  * Check if a tag name is a native HTML element.
@@ -552,18 +494,4 @@ const HTML_TAGS = new Set([
  */
 function isHtmlTag(name) {
     return HTML_TAGS.has(name.toLowerCase());
-}
-
-/**
- * Escape a string for safe use in an HTML attribute value.
- *
- * @param {string} value
- * @returns {string}
- */
-function escapeAttr(value) {
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
 }
