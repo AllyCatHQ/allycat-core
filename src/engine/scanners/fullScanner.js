@@ -26,7 +26,7 @@ import { createRtlViolation } from '../../utils/rtlValidator.js';
 import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/violationProcessor.js';
 import { findLineNumber } from '../../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
-import { transformVueToHtml, isVueFile } from '../transformers/vueTransformer.js';
+import { transformVueToHtml, isVueFile, extractStyleBlocks } from '../transformers/vueTransformer.js';
 import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
 import { isAngularComponentTs, extractInlineTemplate } from '../transformers/angularTsExtractor.js';
 import { resolvAndInjectCss } from '../../utils/cssResolver.js';
@@ -270,12 +270,17 @@ async function scanSingleFile(browser, filePath, config, cssCache) {
             transformedHtml = sourceContent; lineMap = null; ordinalIndex = null;
         }
 
+        // Vue SFC <style> / <style scoped> blocks — extract raw CSS strings
+        // and pass directly to the injector (no file path resolution needed).
+        const extraCss = isVue ? extractStyleBlocks(sourceContent) : [];
+
         // Inject imported CSS so Playwright can compute accurate contrast values
         const scanContent = await resolvAndInjectCss(
             transformedHtml,
             sourceContent,
             path.resolve(filePath),
-            cssCache
+            cssCache,
+            extraCss
         );
 
         const context = await browser.newContext();

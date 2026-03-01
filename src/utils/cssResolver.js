@@ -200,23 +200,31 @@ export function injectCssIntoHtml(html, cssContents) {
  * @param {string} sourceContent - Raw source file content (for import extraction)
  * @param {string} sourceFilePath - Absolute path of the source file
  * @param {Map<string, string>} resolvedCache - Shared memoization cache
+ * @param {string[]} [extraCssStrings=[]] - Already-resolved CSS strings to inject
+ *   directly (e.g. Vue <style> block contents, Angular inline styles[]).
+ *   These bypass the file-load pipeline and go straight to injectCssIntoHtml.
  * @returns {Promise<string>} - HTML with CSS injected
  */
-export async function resolvAndInjectCss(html, sourceContent, sourceFilePath, resolvedCache) {
+export async function resolvAndInjectCss(html, sourceContent, sourceFilePath, resolvedCache, extraCssStrings = []) {
     const isHtml = sourceFilePath.endsWith('.html');
 
-    // HTML files use <link href=""> — JSX/TSX use import statements
+    // HTML files use <link href=""> — JSX/TSX/Vue use import statements
     const rawImports = isHtml
         ? extractCssLinkHrefs(sourceContent)
         : extractCssImports(sourceContent);
 
-    if (rawImports.length === 0) return html;
+    const absolutePaths = rawImports.length > 0
+        ? resolveCssPaths(rawImports, sourceFilePath)
+        : [];
 
-    const absolutePaths = resolveCssPaths(rawImports, sourceFilePath);
-    if (absolutePaths.length === 0) return html;
+    const fileContents = absolutePaths.length > 0
+        ? await loadCssFiles(absolutePaths, resolvedCache)
+        : [];
 
-    const cssContents = await loadCssFiles(absolutePaths, resolvedCache);
-    return injectCssIntoHtml(html, cssContents);
+    const allCss = [...fileContents, ...extraCssStrings];
+    if (allCss.length === 0) return html;
+
+    return injectCssIntoHtml(html, allCss);
 }
 
 // -----------------------------------------------------------------------------

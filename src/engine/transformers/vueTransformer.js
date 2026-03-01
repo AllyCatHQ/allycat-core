@@ -57,6 +57,28 @@ export function isVueFile(filePath) {
 }
 
 /**
+ * Extract raw CSS content from all <style> blocks in a Vue SFC.
+ *
+ * Handles: <style>, <style scoped>, <style module>, and any combination
+ * of attributes. The raw CSS string is extracted as-is — no hash transformation
+ * is applied (scoped hashes are a build-time concern, not needed for a11y scanning).
+ *
+ * @param {string} sourceCode - Raw .vue file contents
+ * @returns {string[]} - Array of raw CSS strings (one per <style> block found)
+ */
+export function extractStyleBlocks(sourceCode) {
+    const blocks = [];
+    // Match <style> with any optional attributes (scoped, module, lang="scss", etc.)
+    const pattern = /<style(?:\s[^>]*)?>([^]*?)<\/style>/gi;
+    let match;
+    while ((match = pattern.exec(sourceCode)) !== null) {
+        const content = match[1].trim();
+        if (content) blocks.push(content);
+    }
+    return blocks;
+}
+
+/**
  * Number of lines added before body content by wrapInDocument.
  * Matches HTML_WRAPPER_OFFSET in jsxTransformer — same document shell.
  *
