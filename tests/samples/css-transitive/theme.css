@@ -1,0 +1,17 @@
+/**
+ * theme.css — MIDDLE layer (loaded directly by components)
+ *
+ * Components import this file. It @imports colors.css to pull in
+ * contrast-relevant classes transitively.
+ *
+ * Feature 2: If cssResolver.js resolves @import directives inside loaded CSS,
+ * the classes from colors.css will be available to Playwright → violations found.
+ */
+
+@import './colors.css';
+
+/* Theme wrapper — no contrast impact */
+.theme-wrapper {
+  padding: 16px;
+  font-family: sans-serif;
+}
