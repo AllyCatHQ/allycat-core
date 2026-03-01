@@ -24,6 +24,8 @@ You are a **Senior Software Architect & Lead Developer**. Think in terms of scal
 - **Feature Lifecycle:** When adding a feature:
     - Suggest updates to `tests/e2e/thresholds.test.js` or define a new manual test script.
     - Propose updates to the CLI `help` command documentation if parameters changed.
+    - When adding a new transformer (JSX, Vue, Angular, etc.), always create **two fixture files**: a general `sample.<ext>` and a dedicated `<framework>-edge-cases.<ext>` — run the scanner on both before committing.
+    - The edge-cases fixture must include: **nested elements** (e.g. button inside a link), **dynamic attribute bindings** (e.g. `[attr.aria-label]`, `:alt`) to verify the transformer preserves a11y data and doesn't produce false positives, and at least two **intentional violations** to confirm real issues are still caught.
 - **Error Handling:** Fail gracefully on individual file scans. A single corrupted file should log an error to `stderr` but not terminate the entire process.
 
 ### Git
