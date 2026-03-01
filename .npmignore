@@ -1,0 +1,20 @@
+# Test suite and fixtures — not needed by end users
+tests/
+
+# Internal documentation
+docs/
+
+# Test-only tsconfig — contains @test-theme alias for E2E fixtures
+tsconfig.json
+
+# Claude / IDE project files
+.claude/
+
+# Development notes and plans
+*.docx
+*.md
+!README.md
+
+# OS artifacts
+.DS_Store
+Thumbs.db
