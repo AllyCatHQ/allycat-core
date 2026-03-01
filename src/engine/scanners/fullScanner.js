@@ -29,7 +29,7 @@ import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js
 import { transformVueToHtml, isVueFile, extractStyleBlocks } from '../transformers/vueTransformer.js';
 import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
 import { isAngularComponentTs, extractInlineTemplate, extractStyleUrls, extractInlineStyles } from '../transformers/angularTsExtractor.js';
-import { resolvAndInjectCss, resolveCssPaths, loadCssFiles } from '../../utils/cssResolver.js';
+import { resolvAndInjectCss, resolveCssPaths, loadCssFiles, loadTsconfigAliases } from '../../utils/cssResolver.js';
 import path from 'path';
 import pLimit from 'p-limit';
 
@@ -60,6 +60,10 @@ export async function runFullAudit(config, targetPath = null, files = null) {
     // Shared CSS cache for this scan run — each CSS file read from disk exactly once
     const cssCache = new Map();
 
+    // Custom path aliases from tsconfig.json (e.g. @components/ → src/components/)
+    // Loaded once per scan run; empty Map if tsconfig.json is absent or has no paths
+    const aliases = await loadTsconfigAliases(process.cwd());
+
     const rawConcurrency = config?.performance?.concurrency ?? 5;
     const concurrency = Math.min(rawConcurrency, 3); // Hard cap: Playwright memory overhead
     const limit = pLimit(concurrency);
@@ -69,7 +73,7 @@ export async function runFullAudit(config, targetPath = null, files = null) {
             filesToScan.map(filePath =>
                 limit(async () => {
                     try {
-                        return await scanSingleFile(browser, filePath, config, cssCache);
+                        return await scanSingleFile(browser, filePath, config, cssCache, aliases);
                     } catch (err) {
                         p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
                         return [];
@@ -243,7 +247,7 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx
  * @param {Object} config - User configuration
  * @returns {Promise<Array>} - Array of violation objects
  */
-async function scanSingleFile(browser, filePath, config, cssCache) {
+async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
     const violations = [];
 
     try {
@@ -292,7 +296,8 @@ async function scanSingleFile(browser, filePath, config, cssCache) {
             sourceContent,
             path.resolve(filePath),
             cssCache,
-            extraCss
+            extraCss,
+            aliases
         );
 
         const context = await browser.newContext();

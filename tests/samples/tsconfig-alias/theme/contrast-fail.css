@@ -1,0 +1,23 @@
+/**
+ * contrast-fail.css
+ *
+ * Feature 5: Custom alias resolution via tsconfig.json paths.
+ * Imported via: import '@test-theme/contrast-fail.css'
+ *
+ * If the @test-theme alias is resolved correctly → CSS injected →
+ * Playwright detects contrast violations → exit 3.
+ */
+
+/* ~1.6:1 contrast ratio — fails WCAG AA */
+.alias-fail-gray {
+  color: #cccccc;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* ~1.07:1 contrast ratio — fails WCAG AA */
+.alias-fail-yellow {
+  color: #ffff00;
+  background-color: #ffffff;
+  font-size: 16px;
+}

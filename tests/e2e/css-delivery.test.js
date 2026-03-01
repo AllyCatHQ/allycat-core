@@ -30,12 +30,13 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const CLI      = path.join(__dirname, '../..', 'src', 'index.js');
-const VUE_DIR  = path.join(__dirname, '../samples/vue/css-delivery');
-const TRANS    = path.join(__dirname, '../samples/css-transitive');
-const ANG_DIR  = path.join(__dirname, '../samples/angular/css-delivery');
-const HTML_DIR = path.join(__dirname, '../samples/html');
-const JSX_DIR  = path.join(__dirname, '../samples/react/jsx');
+const CLI         = path.join(__dirname, '../..', 'src', 'index.js');
+const VUE_DIR     = path.join(__dirname, '../samples/vue/css-delivery');
+const TRANS       = path.join(__dirname, '../samples/css-transitive');
+const ANG_DIR     = path.join(__dirname, '../samples/angular/css-delivery');
+const HTML_DIR    = path.join(__dirname, '../samples/html');
+const JSX_DIR     = path.join(__dirname, '../samples/react/jsx');
+const TSALIAS_DIR = path.join(__dirname, '../samples/tsconfig-alias');
 
 // -----------------------------------------------------------------------------
 // Runner
@@ -166,6 +167,21 @@ assert(
     'print-media.html:   print CSS must NOT be injected → no violations (exit 0)',
     runFull(path.join(HTML_DIR, 'print-media.html')),
     0
+);
+
+// -----------------------------------------------------------------------------
+// Feature 5 — Custom alias resolution via tsconfig.json paths
+// Root cause: cssResolver hardcodes only 4 alias prefixes; tsconfig paths ignored.
+// Fix: loadTsconfigAliases() reads compilerOptions.paths from tsconfig.json once
+//      per scan run and passes the alias map through resolveOnePath().
+// -----------------------------------------------------------------------------
+
+console.log('\n── Feature 5: Custom alias resolution (tsconfig.json paths) ─────────');
+
+assert(
+    'TsAliasJsx.jsx:  import @test-theme/contrast-fail.css → violations found',
+    runFull(path.join(TSALIAS_DIR, 'TsAliasJsx.jsx')),
+    3
 );
 
 // -----------------------------------------------------------------------------
