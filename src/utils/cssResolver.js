@@ -88,6 +88,48 @@ const ROOT_ALIAS_PREFIXES = ['@styles/', '@/', '@assets/', '@css/'];
 // -----------------------------------------------------------------------------
 
 /**
+ * Load and parse tsconfig.json path aliases from the project root.
+ *
+ * Reads `compilerOptions.paths` and converts each wildcard pattern into a
+ * simple prefix → absolute-base-dir mapping. Only `*` wildcard patterns
+ * (e.g. `"@theme/*": ["src/theme/*"]`) are supported — exact-match patterns
+ * are skipped as they are uncommon for CSS alias use cases.
+ *
+ * Resolves relative to `baseUrl` when present, otherwise to `projectRoot`.
+ *
+ * Returns an empty Map silently if tsconfig.json is absent or has no paths —
+ * callers treat a missing tsconfig as "no custom aliases".
+ *
+ * @param {string} projectRoot - Absolute path of the project root (process.cwd())
+ * @returns {Promise<Map<string, string>>} - Map of alias prefix → absolute base dir
+ */
+export async function loadTsconfigAliases(projectRoot) {
+    try {
+        const raw = await fs.readFile(path.join(projectRoot, 'tsconfig.json'), 'utf8');
+        const tsconfig = JSON.parse(raw);
+        const paths = tsconfig?.compilerOptions?.paths;
+        if (!paths || typeof paths !== 'object') return new Map();
+
+        // baseUrl is relative to tsconfig location (= projectRoot here)
+        const baseUrl = tsconfig?.compilerOptions?.baseUrl ?? '.';
+        const resolvedBase = path.resolve(projectRoot, baseUrl);
+
+        const aliases = new Map();
+        for (const [pattern, targets] of Object.entries(paths)) {
+            // Only handle wildcard patterns: "@alias/*"
+            if (!pattern.endsWith('/*') || !Array.isArray(targets) || targets.length === 0) continue;
+            const prefix = pattern.slice(0, -1); // "@alias/*" → "@alias/"
+            const targetRel = targets[0].replace(/\/\*$/, ''); // "src/alias/*" → "src/alias"
+            aliases.set(prefix, path.resolve(resolvedBase, targetRel));
+        }
+        return aliases;
+    } catch {
+        // tsconfig.json not found or unparseable — silently skip
+        return new Map();
+    }
+}
+
+/**
  * Extract all CSS import paths from a source file's content.
  *
  * Runs all import patterns against the source and deduplicates results.
@@ -126,14 +168,15 @@ export function extractCssImports(sourceContent) {
  *
  * @param {string[]} imports - Raw import paths from extractCssImports()
  * @param {string} sourceFilePath - Absolute path of the file containing the imports
+ * @param {Map<string,string>} [aliases] - Dynamic aliases from loadTsconfigAliases()
  * @returns {string[]} - Array of resolved absolute paths
  */
-export function resolveCssPaths(imports, sourceFilePath) {
+export function resolveCssPaths(imports, sourceFilePath, aliases = new Map()) {
     const sourceDir = path.dirname(sourceFilePath);
     const projectRoot = process.cwd();
 
     return imports
-        .map(importPath => resolveOnePath(importPath, sourceDir, projectRoot))
+        .map(importPath => resolveOnePath(importPath, sourceDir, projectRoot, aliases))
         .filter(Boolean);
 }
 
@@ -234,9 +277,10 @@ export function injectCssIntoHtml(html, cssContents) {
  * @param {string[]} [extraCssStrings=[]] - Already-resolved CSS strings to inject
  *   directly (e.g. Vue <style> block contents, Angular inline styles[]).
  *   These bypass the file-load pipeline and go straight to injectCssIntoHtml.
+ * @param {Map<string,string>} [aliases=new Map()] - Dynamic aliases from loadTsconfigAliases()
  * @returns {Promise<string>} - HTML with CSS injected
  */
-export async function resolvAndInjectCss(html, sourceContent, sourceFilePath, resolvedCache, extraCssStrings = []) {
+export async function resolvAndInjectCss(html, sourceContent, sourceFilePath, resolvedCache, extraCssStrings = [], aliases = new Map()) {
     const isHtml = sourceFilePath.endsWith('.html');
 
     // HTML files use <link href=""> — JSX/TSX/Vue use import statements
@@ -245,7 +289,7 @@ export async function resolvAndInjectCss(html, sourceContent, sourceFilePath, re
         : extractCssImports(sourceContent);
 
     const absolutePaths = rawImports.length > 0
-        ? resolveCssPaths(rawImports, sourceFilePath)
+        ? resolveCssPaths(rawImports, sourceFilePath, aliases)
         : [];
 
     const fileContents = absolutePaths.length > 0
@@ -268,22 +312,28 @@ export async function resolvAndInjectCss(html, sourceContent, sourceFilePath, re
  * @param {string} importPath - Raw import string
  * @param {string} sourceDir - Directory of the importing file
  * @param {string} projectRoot - process.cwd()
+ * @param {Map<string,string>} [aliases] - Dynamic aliases from loadTsconfigAliases()
  * @returns {string|null} - Absolute path or null if unresolvable
  */
-function resolveOnePath(importPath, sourceDir, projectRoot) {
+function resolveOnePath(importPath, sourceDir, projectRoot, aliases = new Map()) {
     // Relative import: starts with ./ or ../
     if (importPath.startsWith('./') || importPath.startsWith('../')) {
         return path.resolve(sourceDir, importPath);
     }
 
-    // Root alias import: @styles/..., @/..., etc.
+    // Hardcoded root alias import: @styles/..., @/..., etc.
     const matchedAlias = ROOT_ALIAS_PREFIXES.find(prefix => importPath.startsWith(prefix));
     if (matchedAlias) {
-        // Strip alias prefix and resolve from project root
         const stripped = importPath.slice(matchedAlias.length);
-        // Map @/ → src/, @styles/ → src/styles/, etc.
         const aliasToDir = resolveAliasDir(matchedAlias, projectRoot);
         return path.resolve(aliasToDir, stripped);
+    }
+
+    // Dynamic tsconfig.json alias (e.g. @components/, ~/utils/)
+    for (const [prefix, baseDir] of aliases) {
+        if (importPath.startsWith(prefix)) {
+            return path.resolve(baseDir, importPath.slice(prefix.length));
+        }
     }
 
     // Unrecognized format (e.g. bare module: 'normalize.css')
