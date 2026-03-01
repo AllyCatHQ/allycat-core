@@ -140,8 +140,17 @@ assert(
 
 console.log('\n── Feature 3: Angular styleUrls & inline styles[] ──────────────────');
 
-markPending('style-urls.component.ts:   styleUrls: [./style-urls.component.css] → violations');
-markPending('inline-styles.component.ts: styles: [...CSS strings...]            → violations');
+assert(
+    'style-urls.component.ts:   styleUrls: [./style-urls.component.css] → violations found',
+    runFull(path.join(ANG_DIR, 'style-urls.component.ts')),
+    3
+);
+
+assert(
+    'inline-styles.component.ts: styles: [...CSS strings...]             → violations found',
+    runFull(path.join(ANG_DIR, 'inline-styles.component.ts')),
+    3
+);
 
 // -----------------------------------------------------------------------------
 // Feature 4 — <link media="print"> filtering

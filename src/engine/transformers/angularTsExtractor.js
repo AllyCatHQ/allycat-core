@@ -78,3 +78,79 @@ export function extractInlineTemplate(sourceCode) {
     const content = sourceCode.slice(backtickPos + 1, i);
     return { content, lineOffset };
 }
+
+/**
+ * Extract CSS file paths from the `styleUrls` metadata key.
+ *
+ * Handles: styleUrls: ['./comp.css', '../shared/base.css']
+ * CSS file paths never contain `]` → simple regex is safe and O(S).
+ *
+ * @param {string} sourceCode
+ * @returns {string[]} - Raw path strings (relative, caller resolves to absolute)
+ */
+export function extractStyleUrls(sourceCode) {
+    const match = sourceCode.match(/styleUrls\s*:\s*\[([^\]]*)\]/);
+    if (!match) return [];
+    const paths = [];
+    const strPat = /['"]([^'"]+\.css)['"]/g;
+    let m;
+    while ((m = strPat.exec(match[1])) !== null) paths.push(m[1]);
+    return paths;
+}
+
+/**
+ * Extract raw CSS strings from the `styles` metadata array.
+ *
+ * Handles: styles: ['.btn { color: red; }', `.input[type="text"] { border: 1px; }`]
+ *
+ * CSS strings CAN contain `]` (e.g. attribute selectors like div[type="text"]).
+ * A bracket-depth scanner is used to find the correct array boundary — O(S).
+ * String boundaries (single, double, backtick) are tracked to ignore `]` inside literals.
+ *
+ * @param {string} sourceCode
+ * @returns {string[]} - Raw CSS strings ready for injection
+ */
+export function extractInlineStyles(sourceCode) {
+    const keyPos = sourceCode.search(/\bstyles\s*:\s*\[/);
+    if (keyPos === -1) return [];
+
+    const openBracket = sourceCode.indexOf('[', keyPos);
+    if (openBracket === -1) return [];
+
+    // Walk character-by-character tracking string boundaries and bracket depth
+    let i = openBracket + 1;
+    let depth = 1;
+    let inStr = false;
+    let strChar = '';
+    const buf = [];
+
+    while (i < sourceCode.length && depth > 0) {
+        const ch = sourceCode[i];
+        if (inStr) {
+            if (ch === '\\') {
+                // Escape sequence — consume both chars, push both to buf
+                buf.push(ch, sourceCode[i + 1] ?? '');
+                i += 2;
+                continue;
+            }
+            if (ch === strChar) inStr = false;
+        } else {
+            if (ch === '"' || ch === "'" || ch === '`') { inStr = true; strChar = ch; }
+            else if (ch === '[') depth++;
+            else if (ch === ']') { depth--; if (depth === 0) break; }
+        }
+        buf.push(ch);
+        i++;
+    }
+
+    // Extract every quoted string literal from the collected array content
+    const arrayContent = buf.join('');
+    const css = [];
+    const strPat = /(['"`])([\s\S]*?)\1/g;
+    let m;
+    while ((m = strPat.exec(arrayContent)) !== null) {
+        const c = m[2].trim();
+        if (c) css.push(c);
+    }
+    return css;
+}

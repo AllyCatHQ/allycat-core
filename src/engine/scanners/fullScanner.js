@@ -28,8 +28,8 @@ import { findLineNumber } from '../../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
 import { transformVueToHtml, isVueFile, extractStyleBlocks } from '../transformers/vueTransformer.js';
 import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
-import { isAngularComponentTs, extractInlineTemplate } from '../transformers/angularTsExtractor.js';
-import { resolvAndInjectCss } from '../../utils/cssResolver.js';
+import { isAngularComponentTs, extractInlineTemplate, extractStyleUrls, extractInlineStyles } from '../transformers/angularTsExtractor.js';
+import { resolvAndInjectCss, resolveCssPaths, loadCssFiles } from '../../utils/cssResolver.js';
 import path from 'path';
 import pLimit from 'p-limit';
 
@@ -270,9 +270,21 @@ async function scanSingleFile(browser, filePath, config, cssCache) {
             transformedHtml = sourceContent; lineMap = null; ordinalIndex = null;
         }
 
-        // Vue SFC <style> / <style scoped> blocks — extract raw CSS strings
-        // and pass directly to the injector (no file path resolution needed).
-        const extraCss = isVue ? extractStyleBlocks(sourceContent) : [];
+        // Build extraCss: framework-specific CSS that lives outside the normal
+        // import/link pipeline and must be passed directly to the HTML injector.
+        let extraCss = [];
+        if (isVue) {
+            // Vue SFC: extract <style>, <style scoped>, <style module> block contents
+            extraCss = extractStyleBlocks(sourceContent);
+        } else if (isAngularTs) {
+            // Angular component: load styleUrls files + collect inline styles[] strings
+            const rawUrls = extractStyleUrls(sourceContent);
+            if (rawUrls.length > 0) {
+                const absPaths = resolveCssPaths(rawUrls, path.resolve(filePath));
+                extraCss.push(...await loadCssFiles(absPaths, cssCache));
+            }
+            extraCss.push(...extractInlineStyles(sourceContent));
+        }
 
         // Inject imported CSS so Playwright can compute accurate contrast values
         const scanContent = await resolvAndInjectCss(
