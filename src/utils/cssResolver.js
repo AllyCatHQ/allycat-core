@@ -50,10 +50,14 @@ const CSS_IMPORT_PATTERNS = [
  *
  * Used for HTML files — ESM import pattern does not apply.
  *
+ * HTML comments are stripped before matching so `<!-- <link href="x.css"> -->`
+ * does not produce false positives.
+ *
  * @param {string} sourceContent - Raw HTML file content
  * @returns {string[]} - Array of raw href values
  */
 export function extractCssLinkHrefs(sourceContent) {
+    const stripped = stripHtmlComments(sourceContent);
     const found = new Set();
     const pattern = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+\.css)["'][^>]*>/gi;
     // Also match href-before-rel order
@@ -61,7 +65,7 @@ export function extractCssLinkHrefs(sourceContent) {
 
     for (const regex of [pattern, patternAlt]) {
         let match;
-        while ((match = regex.exec(sourceContent)) !== null) {
+        while ((match = regex.exec(stripped)) !== null) {
             found.add(match[1]);
         }
     }
@@ -87,17 +91,21 @@ const ROOT_ALIAS_PREFIXES = ['@styles/', '@/', '@assets/', '@css/'];
  * Runs all import patterns against the source and deduplicates results.
  * Returns raw import strings exactly as written in source.
  *
+ * JS comments are stripped before matching so `// import './x.css'` and
+ * `/* import './x.css' *\/` do not produce false positives.
+ *
  * @param {string} sourceContent - Raw file content (JSX, TSX, HTML)
  * @returns {string[]} - Array of raw import paths e.g. ['./Button.css', '@styles/theme.css']
  */
 export function extractCssImports(sourceContent) {
+    const stripped = stripJsComments(sourceContent);
     const found = new Set();
 
     for (const pattern of CSS_IMPORT_PATTERNS) {
         // Reset lastIndex — patterns are stateful when using /g flag
         pattern.lastIndex = 0;
         let match;
-        while ((match = pattern.exec(sourceContent)) !== null) {
+        while ((match = pattern.exec(stripped)) !== null) {
             found.add(match[1]);
         }
     }
@@ -198,7 +206,10 @@ export function injectCssIntoHtml(html, cssContents) {
     if (cssContents.length === 0) return html;
 
     const combined = cssContents.join('\n\n');
-    const styleBlock = `<style>\n${combined}\n</style>`;
+    // Prepend :root {} so actual CSS rules are never in the "first rule" position.
+    // Chromium silently discards the first CSS rule in a dynamically-injected <style>
+    // block — the no-op rule absorbs that skip, leaving all real rules intact.
+    const styleBlock = `<style>\n:root {}\n${combined}\n</style>`;
 
     if (html.includes('</head>')) {
         return html.replace('</head>', `${styleBlock}\n</head>`);
@@ -302,6 +313,77 @@ function resolveAliasDir(alias, projectRoot) {
     };
 
     return aliasMap[alias] ?? srcRoot;
+}
+
+/**
+ * Strip JavaScript line comments (//) and block comments (/* *\/) from source.
+ *
+ * String literals (single, double, backtick) are preserved verbatim — patterns
+ * like `"https://..."` or `'/* not a comment *\/'` are NOT stripped.
+ * Newlines inside block comments are preserved so line offsets stay stable.
+ *
+ * Used before CSS extraction patterns to prevent commented-out imports and
+ * metadata keys (e.g. `// import './x.css'`, `/* styleUrls: [...] *\/`) from
+ * producing false positives.
+ *
+ * Complexity: O(S) — single pass through source.
+ *
+ * @param {string} source - Raw JavaScript / TypeScript source
+ * @returns {string} - Source with comment content removed
+ */
+export function stripJsComments(source) {
+    let result = '';
+    let i = 0;
+    const len = source.length;
+
+    while (i < len) {
+        const ch = source[i];
+
+        // String literal — copy verbatim until closing quote (respecting escape sequences)
+        if (ch === '"' || ch === "'" || ch === '`') {
+            result += source[i++];
+            while (i < len) {
+                if (source[i] === '\\') {
+                    result += source[i++];
+                    if (i < len) result += source[i++];
+                    continue;
+                }
+                if (source[i] === ch) { result += source[i++]; break; }
+                result += source[i++];
+            }
+
+        // Line comment (//) — skip everything up to the newline (newline itself is kept)
+        } else if (ch === '/' && i + 1 < len && source[i + 1] === '/') {
+            while (i < len && source[i] !== '\n') i++;
+
+        // Block comment (/* ... */) — skip content, preserve newlines for line-offset stability
+        } else if (ch === '/' && i + 1 < len && source[i + 1] === '*') {
+            i += 2;
+            while (i < len && !(source[i] === '*' && i + 1 < len && source[i + 1] === '/')) {
+                if (source[i] === '\n') result += '\n';
+                i++;
+            }
+            i += 2; // consume the closing */
+
+        } else {
+            result += source[i++];
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Strip HTML comments (<!-- ... -->) from source.
+ *
+ * Used before CSS extraction patterns in HTML/Vue sources to prevent
+ * commented-out <link> or <style> tags from producing false positives.
+ *
+ * @param {string} source - Raw HTML or Vue SFC content
+ * @returns {string}
+ */
+function stripHtmlComments(source) {
+    return source.replace(/<!--[\s\S]*?-->/g, '');
 }
 
 /**

@@ -15,6 +15,8 @@
  * @module engine/transformers/angularTsExtractor
  */
 
+import { stripJsComments } from '../../utils/cssResolver.js';
+
 // -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------
@@ -89,7 +91,8 @@ export function extractInlineTemplate(sourceCode) {
  * @returns {string[]} - Raw path strings (relative, caller resolves to absolute)
  */
 export function extractStyleUrls(sourceCode) {
-    const match = sourceCode.match(/styleUrls\s*:\s*\[([^\]]*)\]/);
+    const stripped = stripJsComments(sourceCode);
+    const match = stripped.match(/styleUrls\s*:\s*\[([^\]]*)\]/);
     if (!match) return [];
     const paths = [];
     const strPat = /['"]([^'"]+\.css)['"]/g;
@@ -111,10 +114,11 @@ export function extractStyleUrls(sourceCode) {
  * @returns {string[]} - Raw CSS strings ready for injection
  */
 export function extractInlineStyles(sourceCode) {
-    const keyPos = sourceCode.search(/\bstyles\s*:\s*\[/);
+    const stripped = stripJsComments(sourceCode);
+    const keyPos = stripped.search(/\bstyles\s*:\s*\[/);
     if (keyPos === -1) return [];
 
-    const openBracket = sourceCode.indexOf('[', keyPos);
+    const openBracket = stripped.indexOf('[', keyPos);
     if (openBracket === -1) return [];
 
     // Walk character-by-character tracking string boundaries and bracket depth
@@ -124,12 +128,12 @@ export function extractInlineStyles(sourceCode) {
     let strChar = '';
     const buf = [];
 
-    while (i < sourceCode.length && depth > 0) {
-        const ch = sourceCode[i];
+    while (i < stripped.length && depth > 0) {
+        const ch = stripped[i];
         if (inStr) {
             if (ch === '\\') {
                 // Escape sequence — consume both chars, push both to buf
-                buf.push(ch, sourceCode[i + 1] ?? '');
+                buf.push(ch, stripped[i + 1] ?? '');
                 i += 2;
                 continue;
             }

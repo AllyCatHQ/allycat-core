@@ -63,15 +63,20 @@ export function isVueFile(filePath) {
  * of attributes. The raw CSS string is extracted as-is — no hash transformation
  * is applied (scoped hashes are a build-time concern, not needed for a11y scanning).
  *
+ * HTML comments are stripped before searching so `<!-- <style>...</style> -->`
+ * inside a <template> block does not produce a false CSS match.
+ *
  * @param {string} sourceCode - Raw .vue file contents
  * @returns {string[]} - Array of raw CSS strings (one per <style> block found)
  */
 export function extractStyleBlocks(sourceCode) {
+    // Strip HTML comments so commented-out <style> blocks in <template> are ignored
+    const stripped = sourceCode.replace(/<!--[\s\S]*?-->/g, '');
     const blocks = [];
     // Match <style> with any optional attributes (scoped, module, lang="scss", etc.)
     const pattern = /<style(?:\s[^>]*)?>([^]*?)<\/style>/gi;
     let match;
-    while ((match = pattern.exec(sourceCode)) !== null) {
+    while ((match = pattern.exec(stripped)) !== null) {
         const content = match[1].trim();
         if (content) blocks.push(content);
     }
