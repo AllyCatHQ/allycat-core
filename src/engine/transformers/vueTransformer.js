@@ -91,11 +91,16 @@ function extractTemplateBlock(sourceCode) {
 
     if (startLine === -1) return null;
 
+    // Track nesting so inner <template v-if> / <template v-for> don't
+    // fool us into stopping at their </template> instead of the outer one.
+    let depth = 1;
     let endLine = -1;
     for (let i = startLine + 1; i < lines.length; i++) {
-        if (/^<\/template>/.test(lines[i].trim())) {
-            endLine = i;
-            break;
+        const trimmed = lines[i].trim();
+        if (/^<template(\s.*)?>\s*$/.test(trimmed)) depth++;
+        else if (/^<\/template>/.test(trimmed)) {
+            depth--;
+            if (depth === 0) { endLine = i; break; }
         }
     }
 
@@ -257,10 +262,12 @@ function resolveTag(tagName) {
     if (lower === 'template') return { tag: null, isFragment: true };
 
     // Vue built-in elements → map to semantic HTML
-    if (lower === 'slot')                              return { tag: 'span',  isFragment: false };
-    if (lower === 'transition' || lower === 'transition-group') return { tag: 'div', isFragment: false };
-    if (lower === 'router-link' || lower === 'nuxt-link')       return { tag: 'a',   isFragment: false };
-    if (lower === 'keep-alive')                        return { tag: 'div',  isFragment: false };
+    if (lower === 'slot')                                               return { tag: 'span', isFragment: false };
+    if (lower === 'transition' || lower === 'transitiongroup')          return { tag: 'div',  isFragment: false };
+    if (lower === 'router-link' || lower === 'routerlink' ||
+        lower === 'nuxt-link'   || lower === 'nuxtlink')                return { tag: 'a',    isFragment: false };
+    if (lower === 'keep-alive'  || lower === 'keepalive')               return { tag: 'div',  isFragment: false };
+    if (lower === 'teleport'    || lower === 'suspense')                return { tag: 'div',  isFragment: false };
 
     // Native HTML tag
     if (HTML_TAGS.has(lower)) return { tag: lower, isFragment: false };
