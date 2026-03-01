@@ -162,8 +162,10 @@ assert(
 
 console.log('\n── Feature 4: <link media="print"> filtering ────────────────────────');
 
-markPending(
-    'print-media.html:   print CSS must NOT be injected → no violations (exit 0)'
+assert(
+    'print-media.html:   print CSS must NOT be injected → no violations (exit 0)',
+    runFull(path.join(HTML_DIR, 'print-media.html')),
+    0
 );
 
 // -----------------------------------------------------------------------------

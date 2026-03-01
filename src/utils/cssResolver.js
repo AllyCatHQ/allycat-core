@@ -66,6 +66,8 @@ export function extractCssLinkHrefs(sourceContent) {
     for (const regex of [pattern, patternAlt]) {
         let match;
         while ((match = regex.exec(stripped)) !== null) {
+            // Skip print-only stylesheets — they must not be injected into screen renders
+            if (/media=["']print["']/i.test(match[0])) continue;
             found.add(match[1]);
         }
     }
