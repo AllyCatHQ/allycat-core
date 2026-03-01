@@ -221,15 +221,18 @@ function cleanAngularAttributes(line) {
     // Attribute binding: [attr.aria-label]="..." → aria-label="dynamic"
     r = r.replace(/\[attr\.([\w-]+)\]\s*=\s*"[^"]*"/g, '$1="dynamic"');
 
-    // Class / style bindings — no HTML output, remove
+    // Class / style / Angular directive bindings — no HTML output, remove
+    // Covers: [class.foo], [style.color], [ngClass], [ngStyle], [ngSwitch], [cdkVirtualFor], etc.
     r = r.replace(/\[class\.[\w-]+\]\s*=\s*"[^"]*"/g, '');
     r = r.replace(/\[style\.[\w-]+\]\s*=\s*"[^"]*"/g, '');
+    r = r.replace(/\[ng(?:Class|Style|Switch|If|For|Model)\]\s*=\s*"[^"]*"/gi, '');
+    r = r.replace(/\[cdk[\w]+\]\s*=\s*"[^"]*"/gi, '');
 
     // Generic property binding: [disabled]="expr" → disabled="dynamic"
     r = r.replace(/\[([\w][\w-]*)\]\s*=\s*"[^"]*"/g, '$1="dynamic"');
 
-    // Event bindings: (click)="fn()", (keydown.enter)="fn()"
-    r = r.replace(/\([\w.$-]+\)\s*=\s*"[^"]*"/g, '');
+    // Event bindings: (click)="fn()", (keydown.enter)="fn()", (document:click)="fn()"
+    r = r.replace(/\([\w.$:-]+\)\s*=\s*"[^"]*"/g, '');
 
     // Structural directives: *ngIf="...", *ngFor="...", *ngSwitchDefault
     r = r.replace(/\*ng\w+(?:\s*=\s*"[^"]*")?/gi, '');
