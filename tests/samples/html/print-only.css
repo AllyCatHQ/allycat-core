@@ -1,0 +1,25 @@
+/**
+ * print-only.css
+ *
+ * CSS intended for print media only.
+ * This file is linked via: <link rel="stylesheet" media="print" href="./print-only.css">
+ *
+ * Feature 4: cssResolver must filter out <link media="print"> tags.
+ *
+ * If NOT filtered (current bug): this CSS is injected → contrast violations found → exit 3.
+ * If filtered correctly:         this CSS is skipped  → no violations              → exit 0.
+ */
+
+/* ratio ~1.6:1 — fails AA */
+.print-fail-gray {
+  color: #cccccc;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* ratio ~1.07:1 — fails AA */
+.print-fail-yellow {
+  color: #ffff00;
+  background-color: #ffffff;
+  font-size: 16px;
+}

@@ -1,0 +1,43 @@
+/**
+ * external.css
+ *
+ * External stylesheet for external-import.vue
+ *
+ * Loaded via: import './external.css' in the Vue <script> block.
+ * This delivery method already works (cssResolver detects ESM imports).
+ *
+ * Purpose: regression baseline — confirms existing import extraction
+ * continues to work alongside the new <style> block extraction.
+ */
+
+/* ── FAILING ─────────────────────────────────────────────────────────── */
+
+/* ratio ~1.6:1 — fails AA */
+.vue-ext-fail-gray {
+  color: #cccccc;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* ratio ~1.07:1 — fails AA */
+.vue-ext-fail-yellow {
+  color: #ffff00;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* ── PASSING ─────────────────────────────────────────────────────────── */
+
+/* ratio 21:1 — passes AA + AAA */
+.vue-ext-pass-black {
+  color: #000000;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* ratio ~14.7:1 — passes AAA */
+.vue-ext-pass-navy {
+  color: #003580;
+  background-color: #ffffff;
+  font-size: 16px;
+}

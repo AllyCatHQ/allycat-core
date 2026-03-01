@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Print Media Filter Test</title>
+    <!--
+      Feature 4: <link media="print"> filtering (PENDING)
+
+      print-only.css contains contrast-failing classes.
+      If this <link> is correctly filtered (not injected), the elements below
+      use browser-default colors (black on white) → no contrast violations.
+
+      Expected after Feature 4: exit 0 with --full --fail-on-any
+      Current state (PENDING/BUG): print CSS injected → exit 3
+    -->
+    <link rel="stylesheet" media="print" href="./print-only.css">
+</head>
+<body>
+    <main>
+        <h1>Print Media Filter Test</h1>
+
+        <!-- Uses classes from print-only.css -->
+        <!-- FAIL if print CSS is incorrectly injected — ~1.6:1 -->
+        <p class="print-fail-gray">Gray on white — print-only class</p>
+
+        <!-- FAIL if print CSS is incorrectly injected — ~1.07:1 -->
+        <p class="print-fail-yellow">Yellow on white — print-only class</p>
+
+        <!-- Static text with no class — always passes -->
+        <p>Default browser text — always passes contrast</p>
+    </main>
+</body>
+</html>

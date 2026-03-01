@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transitive CSS Import Test — HTML</title>
+    <!--
+      Loads theme.css which @imports colors.css.
+      Feature 2: If @import is resolved, contrast-failing classes are injected.
+      Expected after Feature 2: exit 3 with --fail-on-any
+    -->
+    <link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+    <main>
+        <h1>Transitive CSS Import Test — HTML</h1>
+
+        <!-- FAIL: from colors.css (via theme.css @import) — ~1.6:1 -->
+        <p class="trans-fail-gray">Gray on white — should fail if @import resolved</p>
+
+        <!-- FAIL: from colors.css (via theme.css @import) — ~1.07:1 -->
+        <p class="trans-fail-yellow">Yellow on white — should fail if @import resolved</p>
+
+        <!-- PASS: 21:1 -->
+        <p class="trans-pass-black">Black on white — should always pass</p>
+
+        <!-- PASS: ~14.7:1 -->
+        <p class="trans-pass-navy">Navy on white — should always pass</p>
+    </main>
+</body>
+</html>

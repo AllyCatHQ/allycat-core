@@ -1,0 +1,39 @@
+/**
+ * style-urls.component.css
+ *
+ * External stylesheet for style-urls.component.ts (Angular styleUrls).
+ * Feature 3: angularTsExtractor must read styleUrls metadata and pass
+ * these paths to cssResolver for injection.
+ */
+
+/* ── FAILING ─────────────────────────────────────────────────────────── */
+
+/* ratio ~1.6:1 — fails AA */
+.ang-fail-gray {
+  color: #cccccc;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* ratio ~1.07:1 — fails AA */
+.ang-fail-yellow {
+  color: #ffff00;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* ── PASSING ─────────────────────────────────────────────────────────── */
+
+/* ratio 21:1 — passes AA + AAA */
+.ang-pass-black {
+  color: #000000;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* ratio ~14.7:1 — passes AAA */
+.ang-pass-navy {
+  color: #003580;
+  background-color: #ffffff;
+  font-size: 16px;
+}
