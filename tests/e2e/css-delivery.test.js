@@ -114,9 +114,23 @@ assert(
 
 console.log('\n── Feature 2: Transitive @import inside CSS files ──────────────────');
 
-markPending('TransitiveJsx.jsx:  import theme.css → @import colors.css → violations');
-markPending('transitive.html:    <link> theme.css  → @import colors.css → violations');
-markPending('transitive.vue:     import theme.css → @import colors.css → violations');
+assert(
+    'TransitiveJsx.jsx:  import theme.css → @import colors.css → violations found',
+    runFull(path.join(TRANS, 'TransitiveJsx.jsx')),
+    3
+);
+
+assert(
+    'transitive.html:    <link> theme.css  → @import colors.css → violations found',
+    runFull(path.join(TRANS, 'transitive.html')),
+    3
+);
+
+assert(
+    'transitive.vue:     import theme.css → @import colors.css → violations found',
+    runFull(path.join(TRANS, 'transitive.vue')),
+    3
+);
 
 // -----------------------------------------------------------------------------
 // Feature 3 — Angular styleUrls & inline styles[] array

@@ -138,28 +138,46 @@ export function resolveCssPaths(imports, sourceFilePath) {
  *
  * @param {string[]} absolutePaths - Resolved CSS file paths
  * @param {Map<string, string>} resolvedCache - Shared memoization cache for this scan run
- * @returns {Promise<string[]>} - Array of CSS file contents (in same order, missing files excluded)
+ * @param {Set<string>} [_visited] - Internal cycle-guard set (do not pass — used by recursion)
+ * @returns {Promise<string[]>} - Array of CSS file contents (missing files excluded)
  */
-export async function loadCssFiles(absolutePaths, resolvedCache) {
+export async function loadCssFiles(absolutePaths, resolvedCache, _visited = new Set()) {
     const contents = [];
 
     for (const absolutePath of absolutePaths) {
+        // Cycle guard — prevents infinite loops from circular @import chains
+        if (_visited.has(absolutePath)) continue;
+        _visited.add(absolutePath);
+
         const cached = resolvedCache.get(absolutePath);
+        let content;
 
         if (cached !== undefined) {
-            contents.push(cached);
-            continue;
+            content = cached;
+        } else {
+            try {
+                content = await fs.readFile(absolutePath, 'utf8');
+                resolvedCache.set(absolutePath, content);
+            } catch {
+                p.log.warn(`CSS not found, skipping: ${path.relative(process.cwd(), absolutePath)}`);
+                // Store empty string so we don't retry this path in the same run
+                resolvedCache.set(absolutePath, '');
+                continue;
+            }
         }
 
-        try {
-            const content = await fs.readFile(absolutePath, 'utf8');
-            resolvedCache.set(absolutePath, content);
-            contents.push(content);
-        } catch {
-            p.log.warn(`CSS not found, skipping: ${path.relative(process.cwd(), absolutePath)}`);
-            // Store empty string so we don't retry this path in the same run
-            resolvedCache.set(absolutePath, '');
+        if (!content) continue;
+
+        // Resolve @import directives inside this CSS file (transitive imports).
+        // Nested content is prepended so cascade order is correct:
+        // imported rules appear before the rules in the importing file.
+        const transitivePaths = extractTransitiveCssImports(content, absolutePath);
+        if (transitivePaths.length > 0) {
+            const nested = await loadCssFiles(transitivePaths, resolvedCache, _visited);
+            contents.push(...nested);
         }
+
+        contents.push(content);
     }
 
     return contents.filter(c => c.length > 0);
@@ -284,4 +302,30 @@ function resolveAliasDir(alias, projectRoot) {
     };
 
     return aliasMap[alias] ?? srcRoot;
+}
+
+/**
+ * Extract absolute paths from @import directives inside a CSS file.
+ *
+ * Only resolves relative imports (./  or  ../).
+ * Bare module imports (e.g. @import 'normalize.css') are skipped —
+ * those require node_modules resolution handled separately in Feature 6.
+ *
+ * @param {string} cssContent - Contents of an already-loaded CSS file
+ * @param {string} cssFilePath - Absolute path of that CSS file (used as resolution base)
+ * @returns {string[]} - Absolute paths of transitively imported CSS files
+ */
+function extractTransitiveCssImports(cssContent, cssFilePath) {
+    const cssDir = path.dirname(cssFilePath);
+    // Matches: @import './file.css'  @import "../file.css"
+    const pattern = /@import\s+['"]([^'"]+\.css)['"]/g;
+    const paths = [];
+    let match;
+    while ((match = pattern.exec(cssContent)) !== null) {
+        const raw = match[1];
+        if (raw.startsWith('./') || raw.startsWith('../')) {
+            paths.push(path.resolve(cssDir, raw));
+        }
+    }
+    return paths;
 }
