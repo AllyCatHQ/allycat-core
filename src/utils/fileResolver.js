@@ -18,7 +18,7 @@ import { normalizeForGlob } from './pathUtils.js';
  * Scan method (HTML vs JSX path) is determined at runtime via isJsxFile().
  * No framework configuration required.
  */
-export const SUPPORTED_EXTENSIONS = ['html', 'jsx', 'tsx'];
+export const SUPPORTED_EXTENSIONS = ['html', 'jsx', 'tsx', 'vue'];
 
 /**
  * Resolve the list of files to scan.

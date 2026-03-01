@@ -26,6 +26,7 @@ import { createRtlViolation } from '../../utils/rtlValidator.js';
 import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/violationProcessor.js';
 import { findLineNumber } from '../../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
+import { transformVueToHtml, isVueFile } from '../transformers/vueTransformer.js';
 import { resolvAndInjectCss } from '../../utils/cssResolver.js';
 import path from 'path';
 import pLimit from 'p-limit';
@@ -247,9 +248,14 @@ async function scanSingleFile(browser, filePath, config, cssCache) {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
         const isJsx = isJsxFile(filePath);
+        const isVue = !isJsx && isVueFile(filePath);
+        const isComponent = isJsx || isVue;
+
         const { html: transformedHtml, lineMap, ordinalIndex } = isJsx
             ? transformJsxToHtml(sourceContent)
-            : { html: sourceContent, lineMap: null, ordinalIndex: null };
+            : isVue
+                ? transformVueToHtml(sourceContent)
+                : { html: sourceContent, lineMap: null, ordinalIndex: null };
 
         // Inject imported CSS so Playwright can compute accurate contrast values
         const scanContent = await resolvAndInjectCss(
@@ -271,13 +277,13 @@ async function scanSingleFile(browser, filePath, config, cssCache) {
             filePath,
             axeResults.violations,
             sourceContent,
-            isJsx ? lineMap : null,
-            isJsx ? scanContent : null,
-            isJsx ? ordinalIndex : null
+            isComponent ? lineMap : null,
+            isComponent ? scanContent : null,
+            isComponent ? ordinalIndex : null
         ));
 
         if (config.rules.rtl) {
-            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, isJsx ? ordinalIndex : null);
+            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, isComponent ? ordinalIndex : null, config.selectedStandard);
             if (rtlViolation) violations.push(rtlViolation);
         }
 

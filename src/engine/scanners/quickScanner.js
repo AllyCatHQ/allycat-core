@@ -22,6 +22,7 @@ import { getAxeTags } from '../../utils/axeConfig.js';
 import { checkRtlCompliance, checkJsxRtlCompliance } from '../../utils/rtlValidator.js';
 import { processAxeViolations } from '../../utils/violationProcessor.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
+import { transformVueToHtml, isVueFile } from '../transformers/vueTransformer.js';
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
@@ -148,32 +149,31 @@ async function scanSingleFile(filePath, config) {
         const sourceContent = await fs.readFile(filePath, 'utf8');
 
         const isJsx = isJsxFile(filePath);
+        const isVue = !isJsx && isVueFile(filePath);
+        const isComponent = isJsx || isVue;
 
-        // transformJsxToHtml now returns ordinalIndex alongside html and lineMap
         const { html: scanContent, lineMap, ordinalIndex } = isJsx
             ? transformJsxToHtml(sourceContent)
-            : { html: sourceContent, lineMap: null, ordinalIndex: null };
+            : isVue
+                ? transformVueToHtml(sourceContent)
+                : { html: sourceContent, lineMap: null, ordinalIndex: null };
 
         const window = createJsdomWithAxe(scanContent);
         const axeResults = await executeAxeAnalysis(window, config);
 
-        // Pass all four resolution artifacts:
-        //   lineMap      — for layer B (unique attribute search)
-        //   ordinalIndex — for layer A (primary, handles identical elements)
-        //   domDocument  — for layer A (querySelectorAll position lookup)
         const axeViolations = processAxeViolations(
             filePath,
             axeResults.violations,
             sourceContent,
-            isJsx ? lineMap : null,
-            isJsx ? scanContent : null,
-            isJsx ? ordinalIndex : null,
-            isJsx ? window.document : null
+            isComponent ? lineMap : null,
+            isComponent ? scanContent : null,
+            isComponent ? ordinalIndex : null,
+            isComponent ? window.document : null
         );
         violations.push(...axeViolations);
 
         if (config.rules.rtl) {
-            const rtlViolation = isJsx
+            const rtlViolation = isComponent
                 ? checkJsxRtlCompliance(window.document, filePath, sourceContent, ordinalIndex, config.selectedStandard)
                 : checkRtlCompliance(window.document, filePath, sourceContent, getHtmlOpenTag(window.document), config.selectedStandard);
             if (rtlViolation) violations.push(rtlViolation);
