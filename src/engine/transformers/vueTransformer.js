@@ -39,7 +39,7 @@ export function transformVueToHtml(sourceCode) {
     }
 
     const { content, lineOffset } = extracted;
-    const ast = parse(content);
+    const ast = parse(content, { onWarn: () => {} });
     const { html, lineMap, ordinalIndex } = renderNodesToHtml(ast.children, lineOffset);
 
     return { html: wrapInDocument(html), lineMap, ordinalIndex };
@@ -322,8 +322,10 @@ function renderAttributes(props) {
                     break; // content directives — skip
 
                 case 'bind': {
-                    const attrName = prop.arg?.content;
-                    if (!attrName || SKIP_ATTRS.has(attrName)) break;
+                    // Skip dynamic attribute names: :[dynamicAttr]="val"
+                    if (!prop.arg || !prop.arg.isStatic) break;
+                    const attrName = prop.arg.content;
+                    if (SKIP_ATTRS.has(attrName)) break;
                     const staticVal = tryExtractLiteralString(prop.exp?.content);
                     parts.push(`${attrName}="${escapeAttr(staticVal ?? 'dynamic')}"`);
                     break;
