@@ -1,0 +1,159 @@
+<!-- Angular Edge Cases Fixture
+     Tests every transformer path that could silently fail or produce false results.
+     Each section is labelled with what it verifies. -->
+
+<!-- ─── 1. Angular 17+ control flow — inner HTML must be preserved ─── -->
+@if (a) {
+  <section aria-label="Conditional section">
+    <p>Visible when a is true</p>
+  </section>
+} @else if (b) {
+  <section aria-label="Else-if branch">
+    <p>Visible when b is true</p>
+  </section>
+} @else {
+  <!-- Intentional violation: img without alt inside @else -->
+  <img src="fallback.png">
+}
+
+@for (item of items; track item.id) {
+  <li>{{ item.name }}</li>
+} @empty {
+  <li>No items available</li>
+}
+
+@switch (status) {
+  @case ('active') {
+    <span>Active</span>
+  }
+  @case ('inactive') {
+    <span>Inactive</span>
+  }
+  @default {
+    <span>Unknown</span>
+  }
+}
+
+@defer (on idle) {
+  <app-heavy-widget></app-heavy-widget>
+} @placeholder {
+  <span>Loading…</span>
+} @loading (minimum 200ms) {
+  <span aria-live="polite">Fetching data…</span>
+} @error {
+  <!-- Intentional violation: empty button inside @error block -->
+  <button (click)="retry()"></button>
+}
+
+@let greeting = 'Hello ' + userName;
+<p>{{ greeting }}</p>
+
+<!-- ─── 2. Property bindings — must not produce false "missing attribute" violations ─── -->
+<!-- [alt] bound → transformer emits alt="dynamic" → no false image-alt violation -->
+<img [src]="imgSrc" [alt]="imgAlt">
+
+<!-- [aria-label] bound → aria-label="dynamic" → no false button-name violation -->
+<button [aria-label]="btnLabel" (click)="go()">Go</button>
+
+<!-- [attr.aria-describedby] — attribute binding form -->
+<input type="text" [attr.aria-describedby]="hintId" [attr.aria-label]="inputLabel">
+
+<!-- [attr.role] — dynamic role -->
+<div [attr.role]="dynamicRole">Content</div>
+
+<!-- ─── 3. Two-way binding ─── -->
+<input [(ngModel)]="searchQuery" type="search" aria-label="Search">
+<input [(ngModelGroup)]="formGroup" aria-label="Group">
+
+<!-- ─── 4. Class and style bindings — must be silently removed, not turned into attributes ─── -->
+<div [class.active]="isActive" [class.hidden]="!isVisible">Text</div>
+<div [ngClass]="{'bold': isBold, 'red': isError}">Styled</div>
+<p [style.color]="textColor" [style.font-size]="fontSize">Styled text</p>
+<p [ngStyle]="{'margin': '0'}">Margin zero</p>
+
+<!-- ─── 5. Event bindings — must be stripped completely ─── -->
+<button (click)="onClick()" (keydown.enter)="onEnter()" aria-label="Trigger">Trigger</button>
+<form (submit)="onSubmit($event)" (reset)="onReset()">
+  <input type="text" aria-label="Name" name="name">
+  <button type="submit" aria-label="Submit form">Submit</button>
+</form>
+<!-- Global event binding -->
+<div (document:click)="closeDropdown()" aria-label="Dropdown host">Dropdown</div>
+
+<!-- ─── 6. Structural directives (legacy) ─── -->
+<div *ngIf="show" aria-label="Conditional div">Shown conditionally</div>
+<ul>
+  <li *ngFor="let x of list; trackBy: trackFn" [attr.aria-label]="x.label">{{ x.name }}</li>
+</ul>
+<div [ngSwitch]="view">
+  <p *ngSwitchCase="'A'">View A</p>
+  <p *ngSwitchCase="'B'">View B</p>
+  <p *ngSwitchDefault>Default view</p>
+</div>
+
+<!-- ─── 7. Template reference variables — must be stripped ─── -->
+<input #nameInput type="text" aria-label="Full name">
+<form #myForm="ngForm">
+  <input type="email" aria-label="Email" name="email">
+</form>
+
+<!-- ─── 8. Angular built-in elements ─── -->
+<!-- ng-container: transparent wrapper, children must be scanned -->
+<ng-container *ngFor="let item of items">
+  <span>{{ item }}</span>
+</ng-container>
+
+<!-- ng-template: definition block -->
+<ng-template #loadingTpl>
+  <span aria-live="polite">Loading…</span>
+</ng-template>
+
+<!-- ng-content: slot projection -->
+<ng-content select="[slot=header]"></ng-content>
+<ng-content></ng-content>
+
+<!-- router-outlet: routing placeholder -->
+<router-outlet></router-outlet>
+<router-outlet name="sidebar"></router-outlet>
+
+<!-- ─── 9. Custom components (kebab-case) — must become <div data-component="..."> ─── -->
+<app-header [title]="pageTitle" (menuOpen)="onMenu()"></app-header>
+<app-user-profile [user]="currentUser" aria-label="User profile card"></app-user-profile>
+<mat-button [disabled]="loading" aria-label="Save changes">Save</mat-button>
+<mat-form-field>
+  <mat-label>Email address</mat-label>
+  <input matInput type="email" aria-label="Email" name="email">
+</mat-form-field>
+<cdk-virtual-scroll-viewport itemSize="50" aria-label="Scrollable list">
+  <div *cdkVirtualFor="let item of items">{{ item }}</div>
+</cdk-virtual-scroll-viewport>
+
+<!-- Self-closing custom component -->
+<app-icon name="close" aria-hidden="true" />
+<mat-spinner aria-label="Loading indicator" />
+
+<!-- ─── 10. Mixed bindings on one element ─── -->
+<button
+  class="btn"
+  [class.primary]="isPrimary"
+  [disabled]="isDisabled"
+  [attr.aria-label]="label"
+  (click)="handleClick()"
+  *ngIf="isVisible"
+  #btnRef
+  aria-describedby="hint">
+  {{ buttonText }}
+</button>
+
+<!-- ─── 11. Intentional violations (must be caught) ─── -->
+<!-- Missing alt — static, no binding -->
+<img src="static-no-alt.png">
+
+<!-- Empty button — no text, no aria-label -->
+<button></button>
+
+<!-- Input without label -->
+<input type="text" name="unlabelled">
+
+<!-- Link with no text -->
+<a href="/dashboard"></a>
