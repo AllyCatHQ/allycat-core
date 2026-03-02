@@ -47,6 +47,8 @@ Paste location: <where exactly>
 Commit: type: message
 ```
 
+**After every feature or update, always include a "How to test" section** with the exact commands the user can run to verify the changes manually.
+
 If a design decision is unclear → ask a precise architectural question, not a vague one.
 
 ## Project Overview
