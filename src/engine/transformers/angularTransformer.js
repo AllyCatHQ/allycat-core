@@ -54,13 +54,16 @@ export function isAngularTemplate(sourceCode, filePath) {
 /**
  * Transform an Angular template into scannable HTML.
  *
- * @param {string} sourceCode  - Raw Angular template content
- * @param {number} lineOffset  - Source lines before this content begins (0 for .html files,
- *                               N for inline templates extracted from .component.ts).
- *                               Content line i (0-indexed) maps to source line lineOffset + i + 1.
+ * @param {string} sourceCode       - Raw Angular template content
+ * @param {number} lineOffset       - Source lines before this content begins (0 for .html files,
+ *                                    N for inline templates extracted from .component.ts).
+ *                                    Content line i (0-indexed) maps to source line lineOffset + i + 1.
+ * @param {Map<string,string>} cssModuleBindings - Map<localName, cssPath> from extractCssModuleImports().
+ *                                    Used to resolve [class]="styles.prop" → class="prop".
+ *                                    Pass an empty Map (default) when CSS Modules are not in use.
  * @returns {{ html: string, lineMap: Map<number, number>, ordinalIndex: Map<string, number[]> }}
  */
-export function transformAngularToHtml(sourceCode, lineOffset = 0) {
+export function transformAngularToHtml(sourceCode, lineOffset = 0, cssModuleBindings = new Map()) {
     const sourceLines = sourceCode.split('\n');
 
     // Pass 1: drop control flow lines, preserve (content, sourceLine) pairs
@@ -77,7 +80,7 @@ export function transformAngularToHtml(sourceCode, lineOffset = 0) {
     const ordinalIndex = new Map();
 
     for (const { content, sourceLine } of pass1) {
-        const transformed = transformLine(content);
+        const transformed = transformLine(content, cssModuleBindings);
         htmlLines.push(transformed);
 
         const htmlLineNum = htmlLines.length; // 1-indexed
@@ -151,9 +154,10 @@ const ANGULAR_ELEMENT_MAP = new Map([
  *   4. Angular binding/directive attributes → cleaned or removed
  *
  * @param {string} line
+ * @param {Map<string,string>} cssModuleBindings
  * @returns {string}
  */
-function transformLine(line) {
+function transformLine(line, cssModuleBindings) {
     let result = line;
 
     // 1. Angular built-in elements
@@ -174,7 +178,7 @@ function transformLine(line) {
     result = result.replace(/<\/([a-z][a-z0-9]*(?:-[a-z0-9]+)+)>/g, '</div>');
 
     // 4. Angular attribute syntax
-    result = cleanAngularAttributes(result);
+    result = cleanAngularAttributes(result, cssModuleBindings);
 
     return result;
 }
@@ -210,10 +214,29 @@ function toComponentName(selector) {
  * Regular HTML attributes (class, id, aria-*, role, href, alt, …) are untouched.
  *
  * @param {string} line
+ * @param {Map<string,string>} cssModuleBindings
  * @returns {string}
  */
-function cleanAngularAttributes(line) {
+function cleanAngularAttributes(line, cssModuleBindings = new Map()) {
     let r = line;
+
+    // CSS module class resolution — must run before generic [ngClass] removal and
+    // the generic property binding that would produce class="dynamic".
+    //   [class]="styles.container"    → class="container"
+    //   [ngClass]="styles.container"  → class="container"
+    //   [class]="styles['btn-error']" → class="btn-error"
+    if (cssModuleBindings.size > 0) {
+        const names = [...cssModuleBindings.keys()].join('|');
+        r = r
+            .replace(
+                new RegExp(`\\[(?:class|ngClass)\\]="(${names})\\.([\\w-]+)"`, 'g'),
+                (_m, _obj, prop) => `class="${prop}"`,
+            )
+            .replace(
+                new RegExp(`\\[(?:class|ngClass)\\]="(${names})\\['([^']+)'\\]"`, 'g'),
+                (_m, _obj, prop) => `class="${prop}"`,
+            );
+    }
 
     // Two-way binding — most specific, must come first
     r = r.replace(/\[\(ng\w+\)\]\s*=\s*"[^"]*"/g, 'value="dynamic"');

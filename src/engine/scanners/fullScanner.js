@@ -28,7 +28,7 @@ import { findLineNumber } from '../../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
 import { transformVueToHtml, isVueFile, extractStyleBlocks } from '../transformers/vueTransformer.js';
 import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
-import { isAngularComponentTs, extractInlineTemplate, extractStyleUrls, extractInlineStyles } from '../transformers/angularTsExtractor.js';
+import { isAngularComponentTs, extractInlineTemplate, extractStyleUrls, extractInlineStyles, extractCssModuleImports } from '../transformers/angularTsExtractor.js';
 import { resolvAndInjectCss, resolveCssPaths, loadCssFiles, loadTsconfigAliases } from '../../utils/cssResolver.js';
 import path from 'path';
 import pLimit from 'p-limit';
@@ -260,16 +260,27 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
         const isComponent  = isJsx || isVue || isAngularHtml || isAngularTs;
 
         let transformedHtml, lineMap, ordinalIndex;
+        // CSS module bindings from extractCssModuleImports() — hoisted so both the
+        // transformer call and the extraCss assembly block can share the same Map.
+        let cssModuleBindings = new Map();
         if (isJsx) {
             ({ html: transformedHtml, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
         } else if (isVue) {
             ({ html: transformedHtml, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
         } else if (isAngularHtml) {
-            ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(sourceContent));
+            // Look up the companion .component.ts for CSS module bindings.
+            // Angular naming convention guarantees same directory; try/catch is safe.
+            try {
+                const companionTs = filePath.replace(/\.html$/, '.ts');
+                const tsSource = await fs.readFile(companionTs, 'utf8');
+                cssModuleBindings = extractCssModuleImports(tsSource);
+            } catch { /* no companion .ts — fine */ }
+            ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(sourceContent, 0, cssModuleBindings));
         } else if (isAngularTs) {
             const extracted = extractInlineTemplate(sourceContent);
             if (!extracted) return [];  // templateUrl-only or unextractable — .html scanned separately
-            ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(extracted.content, extracted.lineOffset));
+            cssModuleBindings = extractCssModuleImports(sourceContent);
+            ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(extracted.content, extracted.lineOffset, cssModuleBindings));
         } else {
             transformedHtml = sourceContent; lineMap = null; ordinalIndex = null;
         }
@@ -288,6 +299,15 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
                 extraCss.push(...await loadCssFiles(absPaths, cssCache));
             }
             extraCss.push(...extractInlineStyles(sourceContent));
+            // CSS Module imports: import styles from './comp.module.css'
+            if (cssModuleBindings.size > 0) {
+                const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
+                extraCss.push(...await loadCssFiles(modPaths, cssCache));
+            }
+        } else if (isAngularHtml && cssModuleBindings.size > 0) {
+            // CSS module files detected in companion .ts — load for contrast checking
+            const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
+            extraCss.push(...await loadCssFiles(modPaths, cssCache));
         }
 
         // Inject imported CSS so Playwright can compute accurate contrast values

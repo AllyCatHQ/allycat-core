@@ -158,3 +158,29 @@ export function extractInlineStyles(sourceCode) {
     }
     return css;
 }
+
+/**
+ * Find default-import CSS module bindings in an Angular TypeScript file.
+ *
+ *   import styles from './comp.module.css'
+ *   import s      from '../shared/theme.css'
+ *
+ * Returns Map<localName, relativeCssPath> so the scanner can:
+ *   1. Load the CSS file into extraCss for contrast checking.
+ *   2. Pass the map to transformAngularToHtml() so [class]="styles.prop"
+ *      and [ngClass]="styles.prop" are resolved to class="prop".
+ *
+ * Local/service-specific to Angular TS extraction.
+ *
+ * @param {string} sourceCode
+ * @returns {Map<string, string>}
+ */
+export function extractCssModuleImports(sourceCode) {
+    const bindings = new Map();
+    const re = /^\s*import\s+(\w+)\s+from\s+['"]([^'"]+\.css)['"]/gm;
+    let m;
+    while ((m = re.exec(sourceCode)) !== null) {
+        bindings.set(m[1], m[2]);
+    }
+    return bindings;
+}
