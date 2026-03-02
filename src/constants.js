@@ -73,6 +73,12 @@ export const STANDARD_LABELS = {
 
 export const DEFAULT_HTML_REPORT = 'a11y-report.html';
 
+// ─── Supported File Extensions ────────────────────────────────────────────────
+// Single source of truth for all file types the scanner accepts.
+// Used by fileResolver, scan display, watchMode, and helpContent.
+
+export const SUPPORTED_EXTENSIONS = ['html', 'htm', 'jsx', 'tsx', 'vue', 'component.ts'];
+
 // ─── App Links ────────────────────────────────────────────────────────────────
 
 export const APP_LINKS = {

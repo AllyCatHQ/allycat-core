@@ -16,7 +16,7 @@ import { runQuickAudit } from '../engine/scanners/quickScanner.js';
 import { runFullAudit } from '../engine/scanners/fullScanner.js';
 import { outputResults } from './scanOutputters.js';
 import { watchMode } from './watchMode.js';
-import { SUPPORTED_EXTENSIONS } from '../utils/fileResolver.js';
+import { SUPPORTED_EXTENSIONS } from '../constants.js';
 import { MESSAGES, INSTALL, UI, SCAN_MODES } from '../constants.js';
 import { expandUserPath } from '../utils/pathUtils.js';
 
@@ -191,7 +191,7 @@ function displayScanConfiguration(config, scanMode, options, target) {
         `Standard:  ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Output:    ${chalk.bold(options.output || 'terminal')}\n` +
-        chalk.dim('File types: .html  .jsx  .tsx'),
+        chalk.dim(`File types: ${SUPPORTED_EXTENSIONS.map(e => `.${e}`).join('  ')}`),
         'Scan Configuration'
     );
 }

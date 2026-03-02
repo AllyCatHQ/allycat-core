@@ -12,13 +12,9 @@ import { statSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
 import { normalizeForGlob } from './pathUtils.js';
+import { SUPPORTED_EXTENSIONS } from '../constants.js';
 
-/**
- * All file types the scanner supports.
- * Scan method (HTML / JSX / Vue / Angular) is determined at runtime by each transformer.
- * 'component.ts' matches *.component.ts — Angular inline template files.
- */
-export const SUPPORTED_EXTENSIONS = ['html', 'htm', 'jsx', 'tsx', 'vue', 'component.ts'];
+export { SUPPORTED_EXTENSIONS };
 
 /**
  * Resolve the list of files to scan.
