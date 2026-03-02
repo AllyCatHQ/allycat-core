@@ -79,6 +79,9 @@ export const DEFAULT_HTML_REPORT = 'a11y-report.html';
 
 export const SUPPORTED_EXTENSIONS = ['html', 'htm', 'jsx', 'tsx', 'vue', 'component.ts'];
 
+// Pre-formatted display string derived from the array above — always in sync.
+export const SUPPORTED_EXTENSIONS_DISPLAY = SUPPORTED_EXTENSIONS.map(e => `.${e}`).join(' ');
+
 // ─── App Links ────────────────────────────────────────────────────────────────
 
 export const APP_LINKS = {

@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
 import { scanCommand } from './commands/scan.js';
 import { helpCommand } from './commands/help.js';
-import { UI, APP_LINKS } from './constants.js';
+import { UI, APP_LINKS, SUPPORTED_EXTENSIONS_DISPLAY } from './constants.js';
 
 const program = new Command();
 
@@ -74,7 +74,7 @@ program
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan
             If omitted, scans entire project
-            Supported types: ${chalk.dim('.html .htm .jsx .tsx .vue .component.html .component.ts')}
+            Supported types: ${chalk.dim(SUPPORTED_EXTENSIONS_DISPLAY)}
 
 ${chalk.bold('Scan Modes:')}
   ${chalk.yellow('--quick')}   Uses JSDOM (fast ~1s, no contrast check)

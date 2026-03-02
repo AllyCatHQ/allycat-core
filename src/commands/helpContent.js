@@ -8,7 +8,7 @@
  */
 
 import chalk from 'chalk';
-import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME } from '../constants.js';
+import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME, SUPPORTED_EXTENSIONS_DISPLAY } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // FAQ
@@ -108,7 +108,7 @@ export const FAQ_ITEMS = [
    ${chalk.yellow(`${CLI.SCAN} --watch ./src`)}       ${chalk.dim('# Watch specific folder')}
    ${chalk.yellow(`${CLI.SCAN} --watch --summary`)}   ${chalk.dim('# Counts only — no descriptions')}
 
-   Supports all file types: .html, .jsx, .tsx, .vue, .component.html, .component.ts
+   Supports all file types: ${SUPPORTED_EXTENSIONS_DISPLAY}
    Shows only the delta (NEW / FIXED) after each save — not the full output.
    Press ${chalk.bold('Ctrl+C')} to stop.`
     }
