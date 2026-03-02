@@ -226,6 +226,22 @@ assert(
 );
 
 // -----------------------------------------------------------------------------
+// Feature 8 — Angular CSS Modules (import styles from '*.module.css')
+// Root cause: extractCssModuleImports not called for Angular .ts files;
+//             [class]="styles.prop" resolved to literal class name before scanning.
+// Fix: extractCssModuleImports() in angularTsExtractor + cleanAngularAttributes()
+//      in angularTransformer + fullScanner wires cssModuleBindings for both paths.
+// -----------------------------------------------------------------------------
+
+console.log('\n── Feature 8: Angular CSS Modules ───────────────────────────────────');
+
+assert(
+    "css-modules.component.ts: [class]=\"styles.failGray\" + styles['fail-yellow'] → violations found",
+    runFull(path.join(ANG_DIR, 'css-modules.component.ts')),
+    3
+);
+
+// -----------------------------------------------------------------------------
 // Summary
 // -----------------------------------------------------------------------------
 
