@@ -1,21 +1,15 @@
 <!--
   module-style.vue
 
-  TEST: Vue <style module> extraction — Feature 1, P-2 (PENDING)
+  TEST: Vue <style module> extraction — Feature 1, P-2 (ACTIVE)
 
-  CSS Modules compile class names to unique hashes at build time.
-  Our static scanner extracts the raw CSS, but the :class="$style[...]"
-  binding renders as class="dynamic" in the transformed HTML — so the
-  injected CSS rules never match the element by class name.
+  tryExtractStyleModuleClass() in vueTransformer.js resolves :class="$style['name']"
+  and :class="$style.name" bindings to their literal class names at transform time,
+  so the injected CSS rules match the rendered elements.
 
-  This is a known limitation documented in CSS-DELIVERY-SUPPORT.md.
-  Implementing this would require static analysis of $style[] usage patterns.
-
-  Expected — after P-2 implementation:
-    Violations: mod-fail-gray, mod-fail-yellow (if class matching solved)
+  Expected — full scan (--full --fail-on-any):
+    Violations: mod-fail-gray (~1.6:1), mod-fail-yellow (~1.07:1)
     Exit code:  3
-
-  Current state (PENDING): Exit code 0 — CSS extracted but classes don't match.
 -->
 <template>
   <main>

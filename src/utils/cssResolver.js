@@ -19,6 +19,7 @@
  */
 
 import fs from 'fs/promises';
+import { existsSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
 
@@ -338,8 +339,38 @@ function resolveOnePath(importPath, sourceDir, projectRoot, aliases = new Map())
         }
     }
 
-    // Unrecognized format (e.g. bare module: 'normalize.css')
-    // These would require node_modules resolution — out of current scope
+    // npm bare-specifier (no leading '.', '/', or known alias prefix)
+    // e.g. 'bootstrap/dist/css/bootstrap.min.css', '@scope/pkg/style.css'
+    return resolveNodeModulesCss(importPath, sourceDir, projectRoot);
+}
+
+/**
+ * Resolve a bare npm package CSS import to an absolute file path.
+ *
+ * Handles explicit sub-path imports:
+ *   'bootstrap/dist/css/bootstrap.min.css'  → node_modules/bootstrap/dist/css/bootstrap.min.css
+ *   '@fortawesome/fontawesome-free/css/all.css'
+ *   'test-pkg/contrast-fail.css'
+ *
+ * Resolution order (monorepo-friendly):
+ *   1. <sourceDir>/node_modules/<importPath>  — local (e.g. fixture-level node_modules)
+ *   2. <projectRoot>/node_modules/<importPath> — project root
+ *
+ * Bare package names with no subpath (e.g. 'bootstrap') are not supported —
+ * they require async package.json inspection which is out of scope here.
+ *
+ * @param {string} importPath - Bare specifier (no leading . or /)
+ * @param {string} sourceDir  - Directory of the importing file
+ * @param {string} projectRoot - process.cwd()
+ * @returns {string|null}
+ */
+function resolveNodeModulesCss(importPath, sourceDir, projectRoot) {
+    // Deduplicate when file sits at the project root
+    const dirs = sourceDir !== projectRoot ? [sourceDir, projectRoot] : [projectRoot];
+    for (const dir of dirs) {
+        const candidate = path.join(dir, 'node_modules', importPath);
+        if (existsSync(candidate)) return candidate;
+    }
     return null;
 }
 

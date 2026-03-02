@@ -37,6 +37,7 @@ const ANG_DIR     = path.join(__dirname, '../samples/angular/css-delivery');
 const HTML_DIR    = path.join(__dirname, '../samples/html');
 const JSX_DIR     = path.join(__dirname, '../samples/react/jsx');
 const TSALIAS_DIR = path.join(__dirname, '../samples/tsconfig-alias');
+const NPM_CSS_DIR = path.join(__dirname, '../samples/npm-css');
 
 // -----------------------------------------------------------------------------
 // Runner
@@ -65,7 +66,7 @@ let failed = 0;
 
 function assert(label, actual, expected) {
     const ok   = actual === expected;
-    const icon = ok ? '✓' : '✗';
+    const icon = ok ? '✅' : '❌';
     console.log(`  ${icon}  ${label}`);
     if (!ok) console.log(`       expected exit ${expected}, got ${actual}`);
     ok ? passed++ : failed++;
@@ -203,6 +204,24 @@ console.log('\n── Feature 6: CSS Modules (import s from *.module.css) ──
 assert(
     'CssModulesTest.jsx: className={s.failGray} + {s["fail-yellow"]} → violations found',
     runFull(path.join(JSX_DIR, 'CssModulesTest.jsx')),
+    3
+);
+
+// -----------------------------------------------------------------------------
+// Feature 7 — npm package CSS (bare specifier imports)
+// Root cause: resolveOnePath returned null for any import without a leading
+//             '.', '/', or known alias — bare module specifiers were silently dropped.
+// Fix: resolveNodeModulesCss() checks <sourceDir>/node_modules/ then
+//      <projectRoot>/node_modules/ using a sync existsSync probe.
+// Fixture: tests/samples/npm-css/node_modules/test-fail-colors/fail.css
+//          (committed via .gitignore exception)
+// -----------------------------------------------------------------------------
+
+console.log('\n── Feature 7: npm package CSS (bare specifier imports) ──────────────');
+
+assert(
+    'NpmCssTest.jsx:  import test-fail-colors/fail.css → violations found',
+    runFull(path.join(NPM_CSS_DIR, 'NpmCssTest.jsx')),
     3
 );
 
