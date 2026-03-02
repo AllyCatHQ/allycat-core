@@ -18,6 +18,7 @@ import { outputResults } from './scanOutputters.js';
 import { watchMode } from './watchMode.js';
 import { SUPPORTED_EXTENSIONS } from '../utils/fileResolver.js';
 import { MESSAGES, INSTALL, UI, SCAN_MODES } from '../constants.js';
+import { expandUserPath } from '../utils/pathUtils.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -135,6 +136,8 @@ function validateAndResolveTarget(target) {
     if (!target) {
         return null;
     }
+
+    target = expandUserPath(target);
 
     const absolutePath = path.resolve(process.cwd(), target);
 
