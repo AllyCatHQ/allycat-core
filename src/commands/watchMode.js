@@ -38,7 +38,7 @@ const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
  * @param {Object}      config    - User configuration from a11y-config.json
  * @param {string}      scanMode  - 'quick' | 'full'
  */
-export async function watchMode(target, config, scanMode) {
+export async function watchMode(target, config, scanMode, options = {}) {
     const files = await resolveFiles(config, target || null);
 
     if (files.length === 0) {
@@ -66,7 +66,7 @@ export async function watchMode(target, config, scanMode) {
 
     console.clear();
     printBanner();
-    printBaselineSummary(state);
+    printBaselineSummary(state, options.summary ?? false);
     printStatusLine(files.length, totalViolations(state));
 
     // ── Watcher ──────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ export async function watchMode(target, config, scanMode) {
 
         timers.set(filepath, setTimeout(async () => {
             timers.delete(filepath);
-            await handleChange(filepath, state, config, scanMode, files.length);
+            await handleChange(filepath, state, config, scanMode, files.length, options.summary ?? false);
         }, 300));
     };
 
@@ -130,9 +130,10 @@ export async function watchMode(target, config, scanMode) {
  * @param {Map}     state     - Current violation state (mutated in-place)
  * @param {Object}  config    - User configuration
  * @param {string}  scanMode  - 'quick' | 'full'
- * @param {number}  fileCount - Total watched file count (for status line)
+ * @param {number}  fileCount   - Total watched file count (for status line)
+ * @param {boolean} summaryMode - Show counts only instead of full violation details
  */
-async function handleChange(filepath, state, config, scanMode, fileCount) {
+async function handleChange(filepath, state, config, scanMode, fileCount, summaryMode = false) {
     // Immediate feedback — user sees the tool reacted before the scan finishes
     console.clear();
     printBanner();
@@ -157,7 +158,7 @@ async function handleChange(filepath, state, config, scanMode, fileCount) {
 
     console.clear();
     printBanner();
-    printDelta(filepath, added, fixed);
+    printDelta(filepath, added, fixed, summaryMode);
     printStatusLine(fileCount, totalViolations(state));
 }
 
@@ -192,10 +193,17 @@ function printBanner() {
     console.log('');
 }
 
-function printBaselineSummary(state) {
+function printBaselineSummary(state, summaryMode = false) {
     const total = totalViolations(state);
     if (total === 0) {
         console.log(chalk.green('  ✔  No violations in initial scan'));
+        return;
+    }
+    if (summaryMode) {
+        for (const [file, violations] of state) {
+            const count = violations.length;
+            console.log(`  ${chalk.bold.cyan('◆')}  ${chalk.bold(file)}  ${chalk.red(`${count} violation${count !== 1 ? 's' : ''}`)}  ${chalk.dim('(baseline)')}`);
+        }
         return;
     }
     for (const [file, violations] of state) {
@@ -210,13 +218,27 @@ function printBaselineSummary(state) {
     }
 }
 
-function printDelta(filepath, added, fixed) {
+function printDelta(filepath, added, fixed, summaryMode = false) {
     const time = new Date().toLocaleTimeString();
     console.log(`  ${chalk.bold.cyan('◆')}  ${chalk.bold(filepath)}  ${chalk.dim(time)}`);
     console.log('');
 
     if (added.length === 0 && fixed.length === 0) {
         console.log(chalk.dim('  ─  No change in violations'));
+        return;
+    }
+
+    if (summaryMode) {
+        const parts = [];
+        if (added.length > 0) {
+            const worst = [...added].sort(bySeverity)[0].impact ?? 'unknown';
+            parts.push(chalk.red(`● +${added.length} new`) + chalk.dim(` [${worst.toUpperCase()}]`));
+        }
+        if (fixed.length > 0) {
+            const best = [...fixed].sort(bySeverity)[0].impact ?? 'unknown';
+            parts.push(chalk.green(`✓ -${fixed.length} fixed`) + chalk.dim(` [${best.toUpperCase()}]`));
+        }
+        console.log(`  ${parts.join(chalk.dim('  ·  '))}`);
         return;
     }
 

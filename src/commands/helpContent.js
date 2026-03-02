@@ -104,8 +104,9 @@ export const FAQ_ITEMS = [
     {
         q: 'How does watch mode work?',
         a: `Use ${chalk.cyan('--watch')} to automatically re-scan files whenever they are saved:
-   ${chalk.yellow(`${CLI.SCAN} --watch`)}         ${chalk.dim('# Watch entire project')}
-   ${chalk.yellow(`${CLI.SCAN} --watch ./src`)}   ${chalk.dim('# Watch specific folder')}
+   ${chalk.yellow(`${CLI.SCAN} --watch`)}             ${chalk.dim('# Watch entire project')}
+   ${chalk.yellow(`${CLI.SCAN} --watch ./src`)}       ${chalk.dim('# Watch specific folder')}
+   ${chalk.yellow(`${CLI.SCAN} --watch --summary`)}   ${chalk.dim('# Counts only — no descriptions')}
 
    Supports all file types: .html, .jsx, .tsx, .vue, .component.html, .component.ts
    Shows only the delta (NEW / FIXED) after each save — not the full output.
@@ -158,10 +159,11 @@ export const EXAMPLE_SECTIONS = [
     {
         title: 'Incremental Scanning',
         examples: [
-            { cmd: `${CLI.SCAN} --changed`,        desc: 'Scan only git-changed files' },
-            { cmd: `${CLI.SCAN} --changed ./src`,  desc: 'Changed files scoped to ./src' },
-            { cmd: `${CLI.SCAN} --watch`,          desc: 'Watch and re-scan on save (delta output)' },
-            { cmd: `${CLI.SCAN} --watch ./src`,    desc: 'Watch specific folder' }
+            { cmd: `${CLI.SCAN} --changed`,           desc: 'Scan only git-changed files' },
+            { cmd: `${CLI.SCAN} --changed ./src`,     desc: 'Changed files scoped to ./src' },
+            { cmd: `${CLI.SCAN} --watch`,             desc: 'Watch and re-scan on save (delta output)' },
+            { cmd: `${CLI.SCAN} --watch ./src`,       desc: 'Watch specific folder' },
+            { cmd: `${CLI.SCAN} --watch --summary`,   desc: 'Watch with counts only — no descriptions' }
         ]
     },
     {

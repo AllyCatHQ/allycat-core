@@ -47,7 +47,7 @@ export async function scanCommand(target = null, options = {}) {
 
     // Watch mode: delegate entirely — does not return to the normal scan path
     if (options.watch) {
-        await watchMode(target, config, scanMode);
+        await watchMode(target, config, scanMode, options);
         return;
     }
 
