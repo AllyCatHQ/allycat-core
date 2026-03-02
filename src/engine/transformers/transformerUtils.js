@@ -65,6 +65,42 @@ export function escapeAttr(value) {
  *
  * @type {Set<string>}
  */
+// -----------------------------------------------------------------------------
+// CSS-in-JS detection
+// -----------------------------------------------------------------------------
+
+const CSS_IN_JS_LIBS = [
+    'styled-components',
+    '@emotion/react',
+    '@emotion/styled',
+    '@emotion/css',
+];
+
+const CSS_IN_JS_RE = new RegExp(
+    `from\\s+['"](?:${CSS_IN_JS_LIBS.map(l => l.replace(/\//g, '\\/')).join('|')})['"]`
+);
+
+/**
+ * Detect CSS-in-JS library usage in source code.
+ *
+ * Returns the matched library name, or null if none found.
+ * Used by scanners to emit a warning before scanning JSX/TSX files
+ * that use runtime-generated styles (which cannot be statically injected).
+ *
+ * @param {string} source - File source content
+ * @returns {string|null}
+ */
+export function detectCssInJs(source) {
+    if (!CSS_IN_JS_RE.test(source)) return null;
+    return CSS_IN_JS_LIBS.find(lib =>
+        source.includes(`'${lib}'`) || source.includes(`"${lib}"`)
+    ) ?? 'CSS-in-JS';
+}
+
+// -----------------------------------------------------------------------------
+// HTML tag reference
+// -----------------------------------------------------------------------------
+
 export const HTML_TAGS = new Set([
     'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio',
     'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button',

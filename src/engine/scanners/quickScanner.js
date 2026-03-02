@@ -22,6 +22,7 @@ import { getAxeTags } from '../../utils/axeConfig.js';
 import { checkRtlCompliance, checkJsxRtlCompliance } from '../../utils/rtlValidator.js';
 import { processAxeViolations } from '../../utils/violationProcessor.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
+import { detectCssInJs } from '../transformers/transformerUtils.js';
 import { transformVueToHtml, isVueFile } from '../transformers/vueTransformer.js';
 import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
 import { isAngularComponentTs, extractInlineTemplate } from '../transformers/angularTsExtractor.js';
@@ -158,6 +159,8 @@ async function scanSingleFile(filePath, config) {
 
         let scanContent, lineMap, ordinalIndex;
         if (isJsx) {
+            const cssInJs = detectCssInJs(sourceContent);
+            if (cssInJs) p.log.warn(`CSS-in-JS detected (${cssInJs}) in ${filePath} — contrast checking unavailable. Render to a static HTML snapshot for accurate results.`);
             ({ html: scanContent, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
         } else if (isVue) {
             ({ html: scanContent, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));

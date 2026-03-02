@@ -26,6 +26,7 @@ import { createRtlViolation } from '../../utils/rtlValidator.js';
 import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/violationProcessor.js';
 import { findLineNumber } from '../../utils/sourceMapper.js';
 import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
+import { detectCssInJs } from '../transformers/transformerUtils.js';
 import { transformVueToHtml, isVueFile, extractStyleBlocks } from '../transformers/vueTransformer.js';
 import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
 import { isAngularComponentTs, extractInlineTemplate, extractStyleUrls, extractInlineStyles, extractCssModuleImports } from '../transformers/angularTsExtractor.js';
@@ -264,6 +265,8 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
         // transformer call and the extraCss assembly block can share the same Map.
         let cssModuleBindings = new Map();
         if (isJsx) {
+            const cssInJs = detectCssInJs(sourceContent);
+            if (cssInJs) p.log.warn(`CSS-in-JS detected (${cssInJs}) in ${filePath} — contrast checking unavailable. Render to a static HTML snapshot for accurate results.`);
             ({ html: transformedHtml, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
         } else if (isVue) {
             ({ html: transformedHtml, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
