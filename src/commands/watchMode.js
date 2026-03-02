@@ -82,8 +82,7 @@ export async function watchMode(target, config, scanMode) {
     const timers = new Map(); // debounce: filepath → timeout handle
 
     const scheduleRescan = (filepath) => {
-        const ext = path.extname(filepath).slice(1);
-        if (!SUPPORTED_EXTENSIONS.includes(ext)) return;
+        if (!SUPPORTED_EXTENSIONS.some(ext => filepath.endsWith(`.${ext}`))) return;
 
         if (timers.has(filepath)) clearTimeout(timers.get(filepath));
 

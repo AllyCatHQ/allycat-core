@@ -90,8 +90,7 @@ export const FAQ_ITEMS = [
    1. File has a supported extension:
       ${chalk.yellow('.html')}, ${chalk.yellow('.htm')}, ${chalk.yellow('.jsx')}, ${chalk.yellow('.tsx')}, ${chalk.yellow('.vue')},
       ${chalk.yellow('.component.html')}, ${chalk.yellow('.component.ts')} (Angular)
-   2. Files are not in ${chalk.yellow('node_modules/')}, ${chalk.yellow('dist/')}, or ${chalk.yellow('build/')}
-   3. Framework is set correctly in ${chalk.yellow(CONFIG_FILE_NAME)}`
+   2. File is not inside ${chalk.yellow('node_modules/')}, ${chalk.yellow('dist/')}, or ${chalk.yellow('build/')}`
     },
     {
         q: 'How do I scan only the files I changed in git?',
@@ -105,11 +104,11 @@ export const FAQ_ITEMS = [
     {
         q: 'How does watch mode work?',
         a: `Use ${chalk.cyan('--watch')} to automatically re-scan files whenever they are saved:
-   ${chalk.yellow(`${CLI.SCAN} --watch`)}             ${chalk.dim('# Watch entire project')}
-   ${chalk.yellow(`${CLI.SCAN} --watch ./src`)}       ${chalk.dim('# Watch specific folder')}
-   ${chalk.yellow(`${CLI.SCAN} --watch --summary`)}   ${chalk.dim('# Watch with summary output')}
+   ${chalk.yellow(`${CLI.SCAN} --watch`)}         ${chalk.dim('# Watch entire project')}
+   ${chalk.yellow(`${CLI.SCAN} --watch ./src`)}   ${chalk.dim('# Watch specific folder')}
 
-   Violations are reprinted after every detected change.
+   Supports all file types: .html, .jsx, .tsx, .vue, .component.html, .component.ts
+   Shows only the delta (NEW / FIXED) after each save — not the full output.
    Press ${chalk.bold('Ctrl+C')} to stop.`
     }
 ];
@@ -159,11 +158,10 @@ export const EXAMPLE_SECTIONS = [
     {
         title: 'Incremental Scanning',
         examples: [
-            { cmd: `${CLI.SCAN} --changed`,           desc: 'Scan only git-changed files' },
-            { cmd: `${CLI.SCAN} --changed ./src`,     desc: 'Changed files scoped to ./src' },
-            { cmd: `${CLI.SCAN} --watch`,             desc: 'Watch and re-scan on save' },
-            { cmd: `${CLI.SCAN} --watch ./src`,       desc: 'Watch specific folder' },
-            { cmd: `${CLI.SCAN} --watch --summary`,   desc: 'Watch with summary output' }
+            { cmd: `${CLI.SCAN} --changed`,        desc: 'Scan only git-changed files' },
+            { cmd: `${CLI.SCAN} --changed ./src`,  desc: 'Changed files scoped to ./src' },
+            { cmd: `${CLI.SCAN} --watch`,          desc: 'Watch and re-scan on save (delta output)' },
+            { cmd: `${CLI.SCAN} --watch ./src`,    desc: 'Watch specific folder' }
         ]
     },
     {
