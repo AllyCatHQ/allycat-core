@@ -191,17 +191,19 @@ export function formatViolationForJson(violation) {
 /**
  * Format summary statistics
  *
- * Renders a horizontal-divider summary box:
+ * Renders a full bordered box with per-impact mini bar charts:
  *
- *   ════════════════════════════════════════════════
- *    ✖  Scan Summary · 7 violations in 3 files
- *   ════════════════════════════════════════════════
- *
- *    CRITICAL    4          SERIOUS     2
- *    MODERATE    0          MINOR       1
- *
- *   ════════════════════════════════════════════════
- *    ⚠  Use --full for contrast checking
+ *   ╭──────────────── Scan Summary ────────────────╮
+ *   │                                              │
+ *   │  Total: 7 violations in 3 files              │
+ *   │                                              │
+ *   │  ● CRITICAL   4   ████████████████          │
+ *   │  ● SERIOUS    2   ████████                  │
+ *   │  ● MODERATE   0   —                         │
+ *   │  ● MINOR      1   ████                      │
+ *   │                                              │
+ *   │  ⚠  Use --full for contrast checking        │
+ *   ╰──────────────────────────────────────────────╯
  *
  * @param {Array} violations - All violations
  * @param {string} scanMode - 'quick' or 'full'
@@ -217,37 +219,66 @@ export function formatSummary(violations, scanMode) {
         violations.reduce((acc, v) => { acc[v.file] = 1; return acc; }, {})
     ).length;
 
-    const DIVIDER = chalk.dim('  ' + '═'.repeat(48));
+    // Box dimensions — 2 leading spaces for indentation, INNER chars between the │ borders
+    const INNER   = 48;
+    const MAX_BAR = 18;
 
-    // Each impact cell: colored when count > 0, dimmed when 0
-    const cell = (label, count, colorFn) => {
-        const text = `${label.padEnd(11)}${String(count).padStart(2)}`;
-        return count === 0 ? chalk.dim(text) : colorFn(text);
+    // Box border pieces
+    const titleLabel = ' Scan Summary ';
+    const sideDashes = INNER - titleLabel.length;
+    const BOX_TOP    = chalk.dim('  ╭' + '─'.repeat(Math.floor(sideDashes / 2)) + titleLabel + '─'.repeat(Math.ceil(sideDashes / 2)) + '╮');
+    const BOX_BOTTOM = chalk.dim('  ╰' + '─'.repeat(INNER) + '╯');
+    const BOX_EMPTY  = chalk.dim('  │' + ' '.repeat(INNER) + '│');
+
+    // Wrap a chalk-colored content string inside box borders.
+    // visualLen = number of actual printed characters (no ANSI codes) in coloredContent.
+    const boxRow = (coloredContent, visualLen) => {
+        const pad = ' '.repeat(Math.max(0, INNER - visualLen));
+        return chalk.dim('  │') + coloredContent + pad + chalk.dim('│');
     };
 
-    const vCount  = violations.length;
-    const vLabel  = `violation${vCount > 1 ? 's' : ''}`;
-    const fLabel  = `file${fileCount > 1 ? 's' : ''}`;
+    // Impact row: label + count + proportional bar (or — for zero)
+    const maxCount = Math.max(byImpact.critical, byImpact.serious, byImpact.moderate, byImpact.minor, 1);
+
+    const impactRow = (label, count, colorFn) => {
+        const labelStr = label.padEnd(8);          // CRITICAL=8, SERIOUS→8, MODERATE=8, MINOR→8
+        const countStr = String(count).padStart(2);
+        // Visual prefix = "  ● " (4) + label (8) + "  " (2) + count (2) + "   " (3) = 19 chars
+        const PREFIX_LEN = 19;
+
+        if (count === 0) {
+            return boxRow(chalk.dim(`  ● ${labelStr}  ${countStr}   —`), PREFIX_LEN + 1);
+        }
+
+        const bar     = '█'.repeat(Math.round((count / maxCount) * MAX_BAR));
+        const colored = '  ' + colorFn(`● ${labelStr}`) + '  ' + colorFn(countStr) + '   ' + colorFn(bar);
+        return boxRow(colored, PREFIX_LEN + bar.length);
+    };
+
+    // Total line (plain text measured for padding, then colored)
+    const vCount    = violations.length;
+    const totalText = `  Total: ${vCount} violation${vCount > 1 ? 's' : ''} in ${fileCount} file${fileCount > 1 ? 's' : ''}`;
 
     const lines = [
         '',
-        DIVIDER,
-        chalk.red.bold('   ✖  Scan Summary') +
-            chalk.dim(` · ${vCount} ${vLabel} in ${fileCount} ${fLabel}`),
-        DIVIDER,
-        '',
-        '   ' + cell('CRITICAL',  byImpact.critical,  chalk.red)    + '     ' +
-                cell('SERIOUS',   byImpact.serious,   chalk.red),
-        '   ' + cell('MODERATE',  byImpact.moderate,  chalk.yellow)  + '     ' +
-                cell('MINOR',     byImpact.minor,     chalk.blue),
-        '',
-        DIVIDER,
+        BOX_TOP,
+        BOX_EMPTY,
+        boxRow(chalk.red.bold(totalText), totalText.length),
+        BOX_EMPTY,
+        impactRow('CRITICAL', byImpact.critical,  chalk.red),
+        impactRow('SERIOUS',  byImpact.serious,   chalk.red),
+        impactRow('MODERATE', byImpact.moderate,  chalk.yellow),
+        impactRow('MINOR',    byImpact.minor,     chalk.blue),
+        BOX_EMPTY,
     ];
 
     if (scanMode === SCAN_MODES.QUICK) {
-        lines.push(chalk.dim('   ⚠  Use --full for contrast checking'));
+        const tip = '  ⚠  Use --full for contrast checking';
+        lines.push(boxRow(chalk.dim(tip), tip.length));
+        lines.push(BOX_EMPTY);
     }
 
+    lines.push(BOX_BOTTOM);
     return lines.join('\n');
 }
 
