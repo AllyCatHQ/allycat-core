@@ -190,7 +190,19 @@ export function formatViolationForJson(violation) {
 
 /**
  * Format summary statistics
- * 
+ *
+ * Renders a horizontal-divider summary box:
+ *
+ *   ════════════════════════════════════════════════
+ *    ✖  Scan Summary · 7 violations in 3 files
+ *   ════════════════════════════════════════════════
+ *
+ *    CRITICAL    4          SERIOUS     2
+ *    MODERATE    0          MINOR       1
+ *
+ *   ════════════════════════════════════════════════
+ *    ⚠  Use --full for contrast checking
+ *
  * @param {Array} violations - All violations
  * @param {string} scanMode - 'quick' or 'full'
  * @returns {string} - Formatted summary
@@ -199,38 +211,44 @@ export function formatSummary(violations, scanMode) {
     if (violations.length === 0) {
         return chalk.green('✔ No accessibility issues found!');
     }
-    
-    // Use shared helper
+
     const byImpact = countByImpact(violations);
-    
-    // Group by file
-    const byFile = violations.reduce((acc, v) => {
-        acc[v.file] = (acc[v.file] || 0) + 1;
-        return acc;
-    }, {});
-    
-    const fileCount = Object.keys(byFile).length;
-    
-    let summary = chalk.red.bold(`\n✖ Found ${violations.length} violations`);
-    summary += chalk.dim(` in ${fileCount} file${fileCount > 1 ? 's' : ''}`);
-    
-    // Impact breakdown
-    const parts = [];
-    if (byImpact.critical > 0) parts.push(chalk.red(`${byImpact.critical} critical`));
-    if (byImpact.serious > 0) parts.push(chalk.red(`${byImpact.serious} serious`));
-    if (byImpact.moderate > 0) parts.push(chalk.yellow(`${byImpact.moderate} moderate`));
-    if (byImpact.minor > 0) parts.push(chalk.blue(`${byImpact.minor} minor`));
-    
-    if (parts.length > 0) {
-        summary += `\n   ${parts.join(', ')}`;
-    }
-    
-    // Mode hint
+    const fileCount = Object.keys(
+        violations.reduce((acc, v) => { acc[v.file] = 1; return acc; }, {})
+    ).length;
+
+    const DIVIDER = chalk.dim('  ' + '═'.repeat(48));
+
+    // Each impact cell: colored when count > 0, dimmed when 0
+    const cell = (label, count, colorFn) => {
+        const text = `${label.padEnd(11)}${String(count).padStart(2)}`;
+        return count === 0 ? chalk.dim(text) : colorFn(text);
+    };
+
+    const vCount  = violations.length;
+    const vLabel  = `violation${vCount > 1 ? 's' : ''}`;
+    const fLabel  = `file${fileCount > 1 ? 's' : ''}`;
+
+    const lines = [
+        '',
+        DIVIDER,
+        chalk.red.bold('   ✖  Scan Summary') +
+            chalk.dim(` · ${vCount} ${vLabel} in ${fileCount} ${fLabel}`),
+        DIVIDER,
+        '',
+        '   ' + cell('CRITICAL',  byImpact.critical,  chalk.red)    + '     ' +
+                cell('SERIOUS',   byImpact.serious,   chalk.red),
+        '   ' + cell('MODERATE',  byImpact.moderate,  chalk.yellow)  + '     ' +
+                cell('MINOR',     byImpact.minor,     chalk.blue),
+        '',
+        DIVIDER,
+    ];
+
     if (scanMode === SCAN_MODES.QUICK) {
-        summary += chalk.dim('\n   (use --full for contrast checking)');
+        lines.push(chalk.dim('   ⚠  Use --full for contrast checking'));
     }
-    
-    return summary;
+
+    return lines.join('\n');
 }
 
 /**
