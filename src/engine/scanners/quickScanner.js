@@ -160,7 +160,7 @@ async function scanSingleFile(filePath, config) {
         let scanContent, lineMap, ordinalIndex;
         if (isJsx) {
             const cssInJs = detectCssInJs(sourceContent);
-            if (cssInJs) p.log.warn(`CSS-in-JS detected (${cssInJs}) in ${filePath} — contrast checking unavailable. Render to a static HTML snapshot for accurate results.`);
+            if (cssInJs) p.log.warn(`CSS-in-JS detected (${cssInJs}) in ${filePath} — contrast checking unavailable even with --full. Render to a static HTML snapshot for accurate results.`);
             ({ html: scanContent, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
         } else if (isVue) {
             ({ html: scanContent, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
