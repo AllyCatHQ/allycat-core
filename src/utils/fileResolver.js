@@ -18,7 +18,7 @@ import { normalizeForGlob } from './pathUtils.js';
  * Scan method (HTML / JSX / Vue / Angular) is determined at runtime by each transformer.
  * 'component.ts' matches *.component.ts — Angular inline template files.
  */
-export const SUPPORTED_EXTENSIONS = ['html', 'jsx', 'tsx', 'vue', 'component.ts'];
+export const SUPPORTED_EXTENSIONS = ['html', 'htm', 'jsx', 'tsx', 'vue', 'component.ts'];
 
 /**
  * Resolve the list of files to scan.

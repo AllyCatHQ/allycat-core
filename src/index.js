@@ -65,7 +65,6 @@ program
   .option('-s, --summary', 'Show only violation counts, no details')
   .option('-o, --output <format>', 'Output format: terminal, json', 'terminal')
   .option('--json-file [filename]', 'Save JSON report to file (auto-names if no filename)')
-  .option('--group-by-file', 'Group violations by file (default)', true)
   .option('--fail-on-critical', 'Exit with code 1 if any critical violations are found')
   .option('--fail-on-serious', 'Exit with code 2 if any serious or critical violations are found')
   .option('--fail-on-any', 'Exit with code 3 if any violations are found')
