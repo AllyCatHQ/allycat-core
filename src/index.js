@@ -75,6 +75,7 @@ program
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan
             If omitted, scans entire project
+            Supported types: ${chalk.dim('.html .htm .jsx .tsx .vue .component.html .component.ts')}
 
 ${chalk.bold('Scan Modes:')}
   ${chalk.yellow('--quick')}   Uses JSDOM (fast ~1s, no contrast check)
