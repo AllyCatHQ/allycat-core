@@ -38,9 +38,11 @@ import * as p from '@clack/prompts';
  * Does NOT match JS/TS module imports (no .css extension).
  */
 const CSS_IMPORT_PATTERNS = [
-    // ESM: import '...'  or  import "..."
+    // ESM side-effect: import './Button.css'
     /import\s+['"]([^'"]+\.css)['"]/g,
-    // require('...') 
+    // ESM default / named: import s from './Button.module.css'  |  import { x } from './styles.css'
+    /import\s+(?:\w+|\{[^}]+\})\s+from\s+['"]([^'"]+\.css)['"]/g,
+    // require('...')
     /require\s*\(\s*['"]([^'"]+\.css)['"]\s*\)/g,
 ];
 

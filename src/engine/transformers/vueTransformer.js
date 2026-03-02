@@ -361,6 +361,16 @@ function renderAttributes(props) {
                     if (!prop.arg || !prop.arg.isStatic) break;
                     const attrName = prop.arg.content;
                     if (SKIP_ATTRS.has(attrName)) break;
+
+                    // CSS Modules: :class="$style['name']" or :class="$style.name"
+                    if (attrName === 'class') {
+                        const moduleClass = tryExtractStyleModuleClass(prop.exp?.content);
+                        if (moduleClass !== null) {
+                            parts.push(`class="${escapeAttr(moduleClass)}"`);
+                            break;
+                        }
+                    }
+
                     const staticVal = tryExtractLiteralString(prop.exp?.content);
                     parts.push(`${attrName}="${escapeAttr(staticVal ?? 'dynamic')}"`);
                     break;
@@ -391,6 +401,29 @@ function tryExtractLiteralString(expr) {
     if (!expr) return null;
     const m = expr.match(/^(['"`])([\s\S]*)\1$/);
     return m ? m[2] : null;
+}
+
+/**
+ * Extract a literal class name from a Vue CSS Modules $style binding.
+ *
+ * Handles:
+ *   $style['mod-fail-gray']  → "mod-fail-gray"
+ *   $style.modFailGray       → "modFailGray"
+ *
+ * Returns null for any other expression.
+ *
+ * @param {string|undefined} expr
+ * @returns {string|null}
+ */
+function tryExtractStyleModuleClass(expr) {
+    if (!expr) return null;
+    // bracket notation: $style['name'] or $style["name"]
+    const bracket = expr.match(/^\$style\[(['"])([\s\S]*?)\1\]$/);
+    if (bracket) return bracket[2];
+    // dot notation: $style.name
+    const dot = expr.match(/^\$style\.(\w+)$/);
+    if (dot) return dot[1];
+    return null;
 }
 
 // wrapInDocument, escapeAttr, HTML_TAGS — imported from transformerUtils.js

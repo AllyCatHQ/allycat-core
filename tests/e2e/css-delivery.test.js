@@ -60,9 +60,8 @@ function runFull(filePath) {
 // Assertions
 // -----------------------------------------------------------------------------
 
-let passed  = 0;
-let failed  = 0;
-let pending = 0;
+let passed = 0;
+let failed = 0;
 
 function assert(label, actual, expected) {
     const ok   = actual === expected;
@@ -70,11 +69,6 @@ function assert(label, actual, expected) {
     console.log(`  ${icon}  ${label}`);
     if (!ok) console.log(`       expected exit ${expected}, got ${actual}`);
     ok ? passed++ : failed++;
-}
-
-function markPending(label) {
-    console.log(`  ⏳  ${label}   [PENDING]`);
-    pending++;
 }
 
 // -----------------------------------------------------------------------------
@@ -97,8 +91,10 @@ assert(
     3
 );
 
-markPending(
-    'module-style.vue:   <style module> — P-2, class name mapping not yet solved'
+assert(
+    'module-style.vue:   <style module> $style[] class resolved → violations found',
+    runFull(path.join(VUE_DIR, 'module-style.vue')),
+    3
 );
 
 assert(
@@ -197,9 +193,23 @@ assert(
 );
 
 // -----------------------------------------------------------------------------
+// Feature 6 — CSS Modules (import s from '*.module.css')
+// Root cause: regex only matched side-effect imports; className={s.x} → class="dynamic".
+// Fix: default-import regex in cssResolver + extractCssModuleBindings in jsxTransformer.
+// -----------------------------------------------------------------------------
+
+console.log('\n── Feature 6: CSS Modules (import s from *.module.css) ─────────────');
+
+assert(
+    'CssModulesTest.jsx: className={s.failGray} + {s["fail-yellow"]} → violations found',
+    runFull(path.join(JSX_DIR, 'CssModulesTest.jsx')),
+    3
+);
+
+// -----------------------------------------------------------------------------
 // Summary
 // -----------------------------------------------------------------------------
 
 const total = passed + failed;
-console.log(`\n  ${passed}/${total} active tests passed  |  ${pending} pending\n`);
+console.log(`\n  ${passed}/${total} tests passed\n`);
 if (failed > 0) process.exit(1);

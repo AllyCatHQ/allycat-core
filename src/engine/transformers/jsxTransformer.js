@@ -40,8 +40,9 @@ import { wrapInDocument, escapeAttr, HTML_TAGS } from './transformerUtils.js';
  */
 export function transformJsxToHtml(sourceCode) {
     const ast = parseJsx(sourceCode);
+    const cssModuleBindings = extractCssModuleBindings(ast);
     const jsxNodes = collectJsxRoots(ast);
-    const { html, lineMap, ordinalIndex } = renderNodesToHtml(jsxNodes);
+    const { html, lineMap, ordinalIndex } = renderNodesToHtml(jsxNodes, cssModuleBindings);
 
     return { html: wrapInDocument(html), lineMap, ordinalIndex };
 }
@@ -132,6 +133,33 @@ function collectJsxRoots(ast) {
     return roots;
 }
 
+/**
+ * Walk the AST and collect CSS Modules default-import bindings.
+ *
+ * Returns a Map of localIdentifier → cssFilePath for any import of the form:
+ *   import s from './Button.module.css'
+ *
+ * Used by renderAttributes() to resolve className={s.primary} → class="primary".
+ *
+ * @param {import('@babel/types').File} ast
+ * @returns {Map<string, string>}  e.g. Map { 's' => './Button.module.css' }
+ */
+function extractCssModuleBindings(ast) {
+    const bindings = new Map();
+    traverse(ast, {
+        ImportDeclaration(nodePath) {
+            const src = nodePath.node.source.value;
+            if (!src.endsWith('.css')) return;
+            for (const specifier of nodePath.node.specifiers) {
+                if (t.isImportDefaultSpecifier(specifier)) {
+                    bindings.set(specifier.local.name, src);
+                }
+            }
+        },
+    });
+    return bindings;
+}
+
 // -----------------------------------------------------------------------------
 // HTML Rendering
 // -----------------------------------------------------------------------------
@@ -151,15 +179,16 @@ function collectJsxRoots(ast) {
  *                  This enables O(1) lookup for any nth occurrence of any tag.
  *
  * @param {Array} jsxNodes
+ * @param {Map<string, string>} cssModuleBindings  localName → cssFilePath
  * @returns {{ html: string, lineMap: Map<number, number>, ordinalIndex: Map<string, number[]> }}
  */
-function renderNodesToHtml(jsxNodes) {
+function renderNodesToHtml(jsxNodes, cssModuleBindings) {
     const htmlLines = [];
     const lineMap = new Map();
     const ordinalIndex = new Map();
 
     for (const node of jsxNodes) {
-        const rendered = renderNode(node);
+        const rendered = renderNode(node, 0, cssModuleBindings);
 
         for (const { htmlLine, sourceLine, tag } of rendered) {
             const currentHtmlLineNumber = htmlLines.length + 1;
@@ -196,13 +225,14 @@ function renderNodesToHtml(jsxNodes) {
  *
  * @param {import('@babel/types').Node} node
  * @param {number} depth - Indentation depth
+ * @param {Map<string, string>} cssModuleBindings  localName → cssFilePath
  * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
-function renderNode(node, depth = 0) {
-    if (t.isJSXFragment(node)) return renderChildren(node.children, depth);
-    if (t.isJSXElement(node)) return renderElement(node, depth);
+function renderNode(node, depth = 0, cssModuleBindings = new Map()) {
+    if (t.isJSXFragment(node)) return renderChildren(node.children, depth, cssModuleBindings);
+    if (t.isJSXElement(node)) return renderElement(node, depth, cssModuleBindings);
     if (t.isJSXText(node)) return renderText(node, depth);
-    if (t.isJSXExpressionContainer(node)) return renderExpression(node, depth);
+    if (t.isJSXExpressionContainer(node)) return renderExpression(node, depth, cssModuleBindings);
     return [];
 }
 
@@ -211,13 +241,14 @@ function renderNode(node, depth = 0) {
  *
  * @param {import('@babel/types').JSXElement} node
  * @param {number} depth
+ * @param {Map<string, string>} cssModuleBindings
  * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
-function renderElement(node, depth) {
+function renderElement(node, depth, cssModuleBindings) {
     const indent = '  '.repeat(depth);
     const sourceLine = node.loc?.start?.line ?? null;
     const tagInfo = resolveTag(node.openingElement);
-    const attributes = renderAttributes(node.openingElement.attributes);
+    const attributes = renderAttributes(node.openingElement.attributes, cssModuleBindings);
     const isSelfClosing = node.openingElement.selfClosing;
 
     if (isSelfClosing) {
@@ -234,7 +265,7 @@ function renderElement(node, depth) {
         tag: tagInfo.tag,
     }];
 
-    lines.push(...renderChildren(node.children, depth + 1));
+    lines.push(...renderChildren(node.children, depth + 1, cssModuleBindings));
 
     lines.push({
         htmlLine: `${indent}</${tagInfo.tag}>`,
@@ -250,12 +281,13 @@ function renderElement(node, depth) {
  *
  * @param {Array} children
  * @param {number} depth
+ * @param {Map<string, string>} cssModuleBindings
  * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
-function renderChildren(children, depth) {
+function renderChildren(children, depth, cssModuleBindings) {
     const lines = [];
     for (const child of children) {
-        lines.push(...renderNode(child, depth));
+        lines.push(...renderNode(child, depth, cssModuleBindings));
     }
     return lines;
 }
@@ -280,15 +312,16 @@ function renderText(node, depth) {
  *
  * @param {import('@babel/types').JSXExpressionContainer} node
  * @param {number} depth
+ * @param {Map<string, string>} cssModuleBindings
  * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>}
  */
-function renderExpression(node, depth) {
+function renderExpression(node, depth, cssModuleBindings) {
     if (t.isJSXEmptyExpression(node.expression)) return [];
 
     if (t.isLogicalExpression(node.expression)) {
         const right = node.expression.right;
         if (t.isJSXElement(right) || t.isJSXFragment(right)) {
-            return renderNode(right, depth);
+            return renderNode(right, depth, cssModuleBindings);
         }
     }
 
@@ -296,10 +329,10 @@ function renderExpression(node, depth) {
         const lines = [];
         const { consequent, alternate } = node.expression;
         if (t.isJSXElement(consequent) || t.isJSXFragment(consequent)) {
-            lines.push(...renderNode(consequent, depth));
+            lines.push(...renderNode(consequent, depth, cssModuleBindings));
         }
         if (t.isJSXElement(alternate) || t.isJSXFragment(alternate)) {
-            lines.push(...renderNode(alternate, depth));
+            lines.push(...renderNode(alternate, depth, cssModuleBindings));
         }
         return lines;
     }
@@ -341,9 +374,10 @@ function resolveTag(openingElement) {
  * boolean attributes, dynamic values.
  *
  * @param {Array} attributes - JSX attribute nodes
+ * @param {Map<string, string>} cssModuleBindings  localName → cssFilePath
  * @returns {string} - HTML attribute string
  */
-function renderAttributes(attributes) {
+function renderAttributes(attributes, cssModuleBindings) {
     const parts = [];
 
     for (const attr of attributes) {
@@ -372,6 +406,16 @@ function renderAttributes(attributes) {
                 parts.push(`style="${cssString}"`);
             }
             continue;
+        }
+
+        // CSS Modules: className={s.primary} or className={s['btn-error']}
+        // Resolve member-access on a known CSS module identifier → literal class name.
+        if (htmlAttr === 'class' && t.isJSXExpressionContainer(attr.value)) {
+            const moduleClass = resolveCssModuleClass(attr.value.expression, cssModuleBindings);
+            if (moduleClass !== null) {
+                parts.push(`class="${escapeAttr(moduleClass)}"`);
+                continue;
+            }
         }
 
         // Expression value: alt={getAlt()}, src={imgUrl}
@@ -431,6 +475,36 @@ function resolveExpressionValue(expression, attrName) {
     if (t.isBooleanLiteral(expression) && expression.value) return 'true';
     if (t.isNumericLiteral(expression)) return String(expression.value);
     return 'dynamic';
+}
+
+/**
+ * Resolve a CSS Modules member-access expression to a literal class name.
+ *
+ * Handles:
+ *   s.primary           → "primary"    (identifier property)
+ *   styles['btn-error'] → "btn-error"  (string-literal computed property)
+ *
+ * Returns null if the expression is not a recognised CSS module access
+ * (i.e. the object identifier is not in cssModuleBindings).
+ *
+ * @param {import('@babel/types').Expression} expression
+ * @param {Map<string, string>} cssModuleBindings  localName → cssFilePath
+ * @returns {string|null}
+ */
+function resolveCssModuleClass(expression, cssModuleBindings) {
+    if (!t.isMemberExpression(expression)) return null;
+    if (!t.isIdentifier(expression.object)) return null;
+    if (!cssModuleBindings.has(expression.object.name)) return null;
+
+    // s.primary  (non-computed)
+    if (!expression.computed && t.isIdentifier(expression.property)) {
+        return expression.property.name;
+    }
+    // s['btn-error']  (computed string literal)
+    if (expression.computed && t.isStringLiteral(expression.property)) {
+        return expression.property.value;
+    }
+    return null;
 }
 
 /**

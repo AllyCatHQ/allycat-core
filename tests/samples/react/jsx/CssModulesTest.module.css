@@ -1,0 +1,22 @@
+/* CssModulesTest.module.css — contrast violation fixtures for CSS Modules E2E test */
+
+/* ratio ~1.6:1 — fails WCAG AA */
+.failGray {
+    color: #cccccc;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio ~1.07:1 — fails WCAG AA */
+.fail-yellow {
+    color: #ffff00;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+/* ratio 21:1 — passes */
+.passBlack {
+    color: #000000;
+    background-color: #ffffff;
+    font-size: 16px;
+}
