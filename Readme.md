@@ -1,8 +1,6 @@
 # A11y-Guard
 
->The accessibility tool that works the way developers work — terminal, watch mode, CI gates, and AI fix prompts in one.
-
-> Professional CLI for accessibility compliance testing.
+> The accessibility tool that works the way developers work — terminal, watch mode, CI gates, and AI fix prompts in one.
 
 Fast, developer-friendly accessibility scanning with support for **WCAG 2.1 AA/AAA** and **Israeli Standard IS 5568**.
 
