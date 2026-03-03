@@ -74,6 +74,8 @@ const CSS_IN_JS_LIBS = [
     '@emotion/react',
     '@emotion/styled',
     '@emotion/css',
+    'styled-jsx/css',    // Next.js built-in
+    '@stitches/react',   // runtime CSS-in-JS (deprecated but still in use)
 ];
 
 const CSS_IN_JS_RE = new RegExp(
