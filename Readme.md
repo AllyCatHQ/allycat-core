@@ -107,9 +107,10 @@ a11y-guard scan ./src/pages/Home.tsx
 | `--output <format>` | `-o` | Output format: `terminal` (default) or `json` |
 | `--json-file [name]` | | Save report to a JSON file |
 | `--fail-on-critical` | | Exit code 1 if any critical violations found |
-| `--fail-on-serious` | | Exit code 1 if any serious or critical violations found |
-| `--fail-on-any` | | Exit code 1 if any violations found (strictest gate) |
+| `--fail-on-serious` | | Exit code 2 if any serious or critical violations found |
+| `--fail-on-any` | | Exit code 3 if any violations found (strictest gate) |
 | `--changed` | | Scan only files changed since the last git commit |
+| `--watch` | `-w` | Watch for file changes and re-scan automatically |
 
 #### Examples
 
@@ -354,10 +355,12 @@ a11y-guard scan --summary
 
 ### Exit Codes
 
-| Code | Meaning |
-|---|---|
-| `0` | Scan completed — threshold not met, pipeline continues |
-| `1` | Threshold met — pipeline blocked |
+| Code | Flag | Meaning |
+|---|---|---|
+| `0` | — | Scan completed — no threshold flag used, or threshold not met |
+| `1` | `--fail-on-critical` | Critical violations found |
+| `2` | `--fail-on-serious` | Serious or critical violations found |
+| `3` | `--fail-on-any` | Any violations found (strictest gate) |
 
 Use exit gate flags to control when the pipeline fails:
 
