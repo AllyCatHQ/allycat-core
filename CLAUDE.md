@@ -49,6 +49,10 @@ Commit: type: message
 
 **After every feature or update, always include a "How to test" section** with the exact commands the user can run to verify the changes manually.
 
+**After every feature or update, always check if any documentation needs to be updated or created** — this includes `docs/backlog/`, `docs/Technical Summary/`, `docs/PRE-DEPLOY-CHECKLIST.md`, and any relevant design docs. Update or create docs as needed before considering the task complete.
+
+**After every feature or update, always check if `README.md` needs to be updated** — any new flag, behavior, supported file type, or workflow change visible to end users must be reflected in the README.
+
 If a design decision is unclear → ask a precise architectural question, not a vague one.
 
 ## Project Overview
