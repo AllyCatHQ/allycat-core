@@ -8,7 +8,7 @@
  */
 
 import chalk from 'chalk';
-import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME, SUPPORTED_EXTENSIONS_DISPLAY } from '../constants.js';
+import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME, SUPPORTED_EXTENSIONS, SUPPORTED_EXTENSIONS_DISPLAY } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // FAQ
@@ -88,8 +88,7 @@ export const FAQ_ITEMS = [
         q: 'Why are some files not being scanned?',
         a: `Check these:
    1. File has a supported extension:
-      ${chalk.yellow('.html')}, ${chalk.yellow('.htm')}, ${chalk.yellow('.jsx')}, ${chalk.yellow('.tsx')}, ${chalk.yellow('.vue')},
-      ${chalk.yellow('.component.html')}, ${chalk.yellow('.component.ts')} (Angular)
+      ${SUPPORTED_EXTENSIONS.map(e => chalk.yellow(`.${e}`)).join(', ')}
    2. File is not inside ${chalk.yellow('node_modules/')}, ${chalk.yellow('dist/')}, or ${chalk.yellow('build/')}`
     },
     {
