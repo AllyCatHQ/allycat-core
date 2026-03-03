@@ -105,11 +105,11 @@ a11y-guard scan ./src/pages/Home.tsx
 | `--full` | `-f` | Full scan — includes contrast check via Playwright |
 | `--summary` | `-s` | Show violation counts only, no details |
 | `--output <format>` | `-o` | Output format: `terminal` (default) or `json` |
-| `--json-file [name]` | | Save report to a JSON file |
+| `--json-file [name]` | `-j` | Save report to a JSON file |
 | `--fail-on-critical` | | Exit code 1 if any critical violations found |
 | `--fail-on-serious` | | Exit code 2 if any serious or critical violations found |
 | `--fail-on-any` | | Exit code 3 if any violations found (strictest gate) |
-| `--changed` | | Scan only files changed since the last git commit |
+| `--changed` | `-c` | Scan only files changed since the last git commit |
 | `--watch` | `-w` | Watch for file changes and re-scan automatically |
 
 #### Examples

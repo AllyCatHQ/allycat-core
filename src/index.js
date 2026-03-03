@@ -64,11 +64,11 @@ program
   .option('-f, --full', 'Full scan — slower, includes contrast check')
   .option('-s, --summary', 'Show only violation counts, no details')
   .option('-o, --output <format>', 'Output format: terminal, json', 'terminal')
-  .option('--json-file [filename]', 'Save JSON report to file (auto-names if no filename)')
+  .option('-j, --json-file [filename]', 'Save JSON report to file (auto-names if no filename)')
   .option('--fail-on-critical', 'Exit with code 1 if any critical violations are found')
   .option('--fail-on-serious', 'Exit with code 2 if any serious or critical violations are found')
   .option('--fail-on-any', 'Exit with code 3 if any violations are found')
-  .option('--changed', 'Scan only files changed since the last commit (requires git)')
+  .option('-c, --changed', 'Scan only files changed since the last commit (requires git)')
   .option('-w, --watch', 'Watch files and re-scan incrementally on every change')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
