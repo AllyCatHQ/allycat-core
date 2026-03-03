@@ -80,7 +80,7 @@ Prompts for:
 - Default scan mode (quick or full)
 - AI-powered fix suggestions (enabled/disabled)
 
-> No framework selection is required. The scanner automatically detects `.html`, `.jsx`, and `.tsx` files.
+> No framework selection is required. The scanner automatically detects `.html`, `.jsx`, `.tsx`, `.vue`, and Angular `.component.html` / `.component.ts` files.
 
 ---
 
@@ -218,8 +218,11 @@ No framework configuration is required. A11y-Guard automatically scans all match
 
 | File Type | Extension | Notes |
 |---|---|---|
-| HTML | `.html` | Scanned natively |
+| HTML | `.html`, `.htm` | Scanned natively |
 | React / TSX | `.jsx`, `.tsx` | Transformed to HTML before scanning |
+| Vue | `.vue` | Single-file components — template extracted and scanned |
+| Angular | `.component.html` | External Angular templates — scanned natively |
+| Angular (inline) | `.component.ts` | Inline templates extracted from `template:` and scanned |
 
 > Files inside `node_modules/`, `dist/`, and `build/` are always ignored.
 
@@ -468,7 +471,7 @@ a11y-guard scan --full
 ```
 
 **Files not being scanned**
-Check that files are not inside `node_modules/`, `dist/`, or `build/`, and that they use a supported extension (`.html`, `.jsx`, `.tsx`).
+Check that files are not inside `node_modules/`, `dist/`, or `build/`, and that they use a supported extension (`.html`, `.htm`, `.jsx`, `.tsx`, `.vue`, `.component.html`, `.component.ts`).
 
 **`--changed` returns an error**
 `--changed` requires git and at least two commits. Run from inside a git repository.
@@ -495,7 +498,11 @@ a11y-guard/
 │   │   │   ├── quickScanner.js        # JSDOM-based scanner (parallel, p-limit)
 │   │   │   └── fullScanner.js         # Playwright-based scanner
 │   │   ├── transformers/
-│   │   │   └── jsxTransformer.js      # JSX/TSX → HTML transformer (Babel)
+│   │   │   ├── jsxTransformer.js      # JSX/TSX → HTML transformer (Babel)
+│   │   │   ├── vueTransformer.js      # Vue SFC → HTML transformer
+│   │   │   ├── angularTransformer.js  # Angular .component.html transformer
+│   │   │   ├── angularTsExtractor.js  # Angular inline template extractor
+│   │   │   └── transformerUtils.js    # Shared transformer utilities
 │   │   └── report/
 │   │       ├── generator.js           # HTML report entry point
 │   │       ├── html.js                # HTML assembly
@@ -527,10 +534,11 @@ a11y-guard/
 
 ## Roadmap
 
-These features have partial groundwork in the codebase but are not yet fully implemented or exposed:
+Features planned or in progress:
 
-- **`ai.agent` config option** — The prompt generator supports agent-specific prompt styles (`claude`, `chatgpt`, `cursor`, `gemini`, `copilot`) but the `init` wizard does not yet ask for this, and it is not written to `a11y-config.json`.
-- **Vue and Angular support** — `.vue` and `.component.html` file types are not yet scanned. Only `.html`, `.jsx`, and `.tsx` are currently supported.
+- **`--report` flag** — Expose the HTML report as a standalone CLI flag (`a11y-guard scan --report`) so it can be generated without enabling `ai.enabled` in config.
+- **UI preferences** — Per-project control over summary style and which violation fields are shown in terminal output, configurable via `a11y-guard init ui`.
+- **Config validation** — Warn on unknown or misspelled keys in `a11y-config.json` instead of silently falling back to defaults.
 
 ---
 
