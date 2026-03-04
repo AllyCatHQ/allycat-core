@@ -10,7 +10,7 @@
  * Use for: Development, quick checks, CI fast-fail
  */
 
-import fs from 'fs/promises';
+import { readSourceFile } from '../../utils/fileUtils.js';
 import { readFileSync } from 'fs';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { createRequire } from 'module';
@@ -149,7 +149,7 @@ async function scanSingleFile(filePath, config) {
     const violations = [];
 
     try {
-        const sourceContent = await fs.readFile(filePath, 'utf8');
+        const sourceContent = await readSourceFile(filePath);
 
         const isJsx        = isJsxFile(filePath);
         const isVue        = !isJsx && isVueFile(filePath);

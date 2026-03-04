@@ -17,7 +17,7 @@
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { JSDOM, VirtualConsole } from 'jsdom';
-import fs from 'fs/promises';
+import { readSourceFile } from '../../utils/fileUtils.js';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../../utils/fileResolver.js';
 import { MESSAGES, STANDARDS } from '../../constants.js';
@@ -252,7 +252,7 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
     const violations = [];
 
     try {
-        const sourceContent = await fs.readFile(filePath, 'utf8');
+        const sourceContent = await readSourceFile(filePath);
 
         const isJsx        = isJsxFile(filePath);
         const isVue        = !isJsx && isVueFile(filePath);
@@ -275,7 +275,7 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
             // Angular naming convention guarantees same directory; try/catch is safe.
             try {
                 const companionTs = filePath.replace(/\.html$/, '.ts');
-                const tsSource = await fs.readFile(companionTs, 'utf8');
+                const tsSource = await readSourceFile(companionTs);
                 cssModuleBindings = extractCssModuleImports(tsSource);
             } catch { /* no companion .ts — fine */ }
             ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(sourceContent, 0, cssModuleBindings));
