@@ -310,8 +310,8 @@ async function resolveChangedFiles(target) {
         return files;
     }
 
-    const scope = target.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/$/, '');
-    return files.filter(f => f === scope || f.startsWith(scope + '/'));
+    const absScope = path.resolve(process.cwd(), expandUserPath(target));
+    return files.filter(f => path.resolve(process.cwd(), f).startsWith(absScope));
 }
 
 // -----------------------------------------------------------------------------
