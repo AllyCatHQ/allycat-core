@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { createRequire } from 'module';
 import { initCommand } from './commands/init.js';
 import { scanCommand } from './commands/scan.js';
 import { helpCommand } from './commands/help.js';
 import { UI, APP_LINKS, SUPPORTED_EXTENSIONS_DISPLAY } from './constants.js';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json');
 
 const program = new Command();
 
@@ -18,7 +22,7 @@ ${chalk.bold('A11y-Guard')} — Professional CLI for accessibility compliance te
 Supports ${chalk.cyan('WCAG 2.1 AA/AAA')} and ${chalk.cyan('Israeli Standard IS 5568')}.
 Fast scanning with precise error locations and clickable VS Code links.
     `.trim())
-  .version('1.0.0', '-v, --version', 'Display version number')
+  .version(version, '-v, --version', 'Display version number')
   .helpOption('-h, --help', 'Display help information')
   .addHelpText('after', `
 ${chalk.dim(UI.DIVIDER)}
