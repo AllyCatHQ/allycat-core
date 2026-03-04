@@ -1,7 +1,7 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import { configExists, saveConfig } from '../utils/configLoader.js';
-import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI } from '../constants.js';
+import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS } from '../constants.js';
 
 export async function initCommand() {
     console.log('');
@@ -101,6 +101,12 @@ export async function initCommand() {
         (config.ai.enabled ? `AI Agent:     ${chalk.bold(config.ai.agent)}\n` : '') +
         `Concurrency: ${chalk.bold(config.performance.concurrency)} files in parallel`,
         'Configuration Summary'
+    );
+
+    // Show supported file types
+    p.note(
+        SUPPORTED_FRAMEWORKS.map(f => `${f.extensions.map(e => chalk.cyan(e)).join(', ')} — ${f.label}`).join('\n'),
+        'Supported File Types'
     );
 
     // Show next steps

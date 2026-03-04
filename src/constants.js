@@ -82,6 +82,17 @@ export const SUPPORTED_EXTENSIONS = ['html', 'htm', 'jsx', 'tsx', 'vue', 'compon
 // Pre-formatted display string derived from the array above — always in sync.
 export const SUPPORTED_EXTENSIONS_DISPLAY = SUPPORTED_EXTENSIONS.map(e => `.${e}`).join(' ');
 
+// ─── Supported Frameworks ─────────────────────────────────────────────────────
+// Structured list of framework → extensions used in help FAQ and init wizard.
+// Each consumer applies its own chalk styling.
+
+export const SUPPORTED_FRAMEWORKS = [
+    { label: 'HTML',    extensions: ['.html', '.htm'] },
+    { label: 'React',   extensions: ['.jsx', '.tsx'] },
+    { label: 'Vue',     extensions: ['.vue'] },
+    { label: 'Angular', extensions: ['.component.html', '.component.ts'] },
+];
+
 // ─── App Links ────────────────────────────────────────────────────────────────
 
 export const APP_LINKS = {

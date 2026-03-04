@@ -8,7 +8,7 @@
  */
 
 import chalk from 'chalk';
-import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME, SUPPORTED_EXTENSIONS, SUPPORTED_EXTENSIONS_DISPLAY } from '../constants.js';
+import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME, SUPPORTED_EXTENSIONS, SUPPORTED_EXTENSIONS_DISPLAY, SUPPORTED_FRAMEWORKS } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // FAQ
@@ -83,6 +83,13 @@ export const FAQ_ITEMS = [
         a: `• ${chalk.cyan('WCAG 2.1 AA')} — Industry standard (default)
    • ${chalk.cyan('WCAG 2.1 AAA')} — Strictest level
    • ${chalk.cyan('Israeli IS 5568')} — Israel accessibility law (includes RTL)`
+    },
+    {
+        q: 'Does A11y-Guard support Vue and Angular?',
+        a: `Yes! The scanner automatically detects and handles all major frameworks:
+${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).join(', ')} — ${chalk.bold(f.label)}`).join('\n')}
+
+   No extra configuration needed — just run ${chalk.yellow(CLI.SCAN)} in your project.`
     },
     {
         q: 'Why are some files not being scanned?',
