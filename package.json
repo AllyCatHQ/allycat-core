@@ -37,11 +37,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dotcomico/A11yGuard-Core.git"
+    "url": "https://github.com/A11yGuard/A11yGuard-Core.git"
   },
-  "homepage": "https://github.com/dotcomico/A11yGuard-Core#readme",
+  "homepage": "https://github.com/A11yGuard/A11yGuard-Core#readme",
   "bugs": {
-    "url": "https://github.com/dotcomico/A11yGuard-Core/issues"
+    "url": "https://github.com/A11yGuard/A11yGuard-Core/issues"
   },
   "files": [
     "src/**/*",
