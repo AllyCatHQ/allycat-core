@@ -135,15 +135,28 @@ export async function watchMode(target, config, scanMode, options = {}) {
  * @param {boolean} summaryMode - Show counts only instead of full violation details
  */
 async function handleChange(filepath, state, config, scanMode, fileCount, summaryMode = false) {
-    // Immediate feedback — user sees the tool reacted before the scan finishes
-    console.clear();
-    printBanner();
-    console.log(chalk.dim(`  ◌  Rescanning ${filepath}...`));
-
     const key = normPath(filepath);
     const previous = state.get(key) ?? [];
 
+    // Show existing violations while rescanning — don't blank them out mid-edit
+    console.clear();
+    printBanner();
+    printRescanning(filepath, previous, summaryMode);
+    printStatusLine(fileCount, totalViolations(state));
+
     const current = await scanOneFile(filepath, config, scanMode);
+
+    // Scan failed (parse/syntax error — file may be in a partial edit state).
+    // Keep the previous violations intact so they don't vanish mid-fix.
+    if (current === null) {
+        console.clear();
+        printBanner();
+        console.log(chalk.yellow(`  ⚠  Parse error in ${path.basename(filepath)} — violations unchanged`));
+        console.log('');
+        printRescanning(filepath, previous, summaryMode);
+        printStatusLine(fileCount, totalViolations(state));
+        return;
+    }
 
     // Indexed keys handle duplicates: two violations with the same rule+html
     // but unresolved line numbers get distinct keys (base#0, base#1).
@@ -172,6 +185,13 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
  * @param {string}  scanMode  - 'quick' | 'full'
  * @returns {Promise<Array>}  - Violations for this file only
  */
+/**
+ * Returns violations for a single file, or null if the scan failed
+ * (e.g. syntax error while the file is mid-edit).
+ * Callers must treat null as "keep previous state" — not as "no violations".
+ *
+ * @returns {Promise<Array|null>}
+ */
 async function scanOneFile(filepath, config, scanMode) {
     try {
         const result = scanMode === SCAN_MODES.FULL
@@ -181,7 +201,7 @@ async function scanOneFile(filepath, config, scanMode) {
         // Normalize and filter to this file — scanners return full violation arrays
         return result.violations.filter(v => normPath(v.file) === normPath(filepath));
     } catch {
-        return [];
+        return null;
     }
 }
 
@@ -260,6 +280,35 @@ function printDelta(filepath, added, fixed, summaryMode = false) {
     }
 }
 
+/**
+ * Render existing violations for a file while a rescan is in progress.
+ * Keeps violations visible so users can see what they're fixing.
+ */
+function printRescanning(filepath, violations, summaryMode) {
+    console.log(`  ${chalk.bold.cyan('◌')}  ${chalk.bold(filepath)}  ${chalk.dim('rescanning...')}`);
+    console.log('');
+
+    if (violations.length === 0) {
+        console.log(chalk.dim('  ─  No previous violations'));
+        console.log('');
+        return;
+    }
+
+    if (summaryMode) {
+        const count = violations.length;
+        console.log(chalk.dim(`  ${count} violation${count !== 1 ? 's' : ''} (rescanning...)`));
+        console.log('');
+        return;
+    }
+
+    for (const v of [...violations].sort(bySeverity)) {
+        const impact   = `[${(v.impact || 'unknown').toUpperCase()}]`;
+        const lineHint = v.lineNumber ? `  — Line ${v.lineNumber}` : '';
+        console.log(chalk.dim(`  ○        ${impact} ${v.description}${lineHint}`));
+    }
+    console.log('');
+}
+
 function printStatusLine(fileCount, total) {
     console.log('');
     console.log(chalk.dim('  ─────────────────────────────────────────────────────'));
@@ -276,11 +325,13 @@ function printStatusLine(fileCount, total) {
 // -----------------------------------------------------------------------------
 
 /**
- * Base identity key for a violation (rule + line + html snippet).
- * Used internally by indexedKeys — not compared directly.
+ * Base identity key for a violation: rule id + html snippet only.
+ * Line number is intentionally excluded — inserting/removing lines above a
+ * violation shifts its line number without changing the violation itself, which
+ * would cause false FIXED + NEW pairs on every Enter keypress.
  */
 function violationKey(v) {
-    return `${v.id}|${v.lineNumber ?? ''}|${(v.html ?? '').slice(0, 80)}`;
+    return `${v.id}|${(v.html ?? '').slice(0, 80)}`;
 }
 
 /**
