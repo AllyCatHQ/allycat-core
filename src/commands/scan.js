@@ -311,7 +311,10 @@ async function resolveChangedFiles(target) {
     }
 
     const absScope = path.resolve(process.cwd(), target);
-    return files.filter(f => path.resolve(process.cwd(), f).startsWith(absScope));
+    return files.filter(f => {
+        const abs = path.resolve(process.cwd(), f);
+        return abs === absScope || abs.startsWith(absScope + path.sep);
+    });
 }
 
 // -----------------------------------------------------------------------------
