@@ -141,6 +141,15 @@ a11y-guard scan --changed
 # Scan changed files scoped to a directory
 a11y-guard scan --changed ./src
 
+# Watch mode — auto re-scans on every file save
+a11y-guard scan --watch
+a11y-guard scan --watch ./src
+
+# After each save, watch mode shows a delta:
+#   [NEW]   — violation appeared since the last scan
+#   [FIXED] — violation was present before and is now resolved
+# Violations with no label are unchanged since the last scan.
+
 # Block CI pipeline on critical violations and save report
 a11y-guard scan --fail-on-critical --json-file ci-report
 

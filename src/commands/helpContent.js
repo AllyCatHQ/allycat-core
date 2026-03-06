@@ -115,8 +115,12 @@ ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).j
    ${chalk.yellow(`${CLI.SCAN} --watch --summary`)}   ${chalk.dim('# Counts only — no descriptions')}
 
    Supports all file types: ${SUPPORTED_EXTENSIONS_DISPLAY}
-   Shows only the delta (NEW / FIXED) after each save — not the full output.
-   Press ${chalk.bold('Ctrl+C')} to stop.`
+   Press ${chalk.bold('Ctrl+C')} to stop.
+
+   After each save, watch mode shows a ${chalk.bold('delta')} — only what changed:
+   ${chalk.green('[NEW]')}   — violation appeared since the last scan
+   ${chalk.red('[FIXED]')} — violation was present before and is now resolved
+   No label  — violation is unchanged since the last scan`
     }
 ];
 
