@@ -50,7 +50,7 @@ export async function runFullAudit(config, targetPath = null, files = null) {
 
     if (filesToScan.length === 0) {
         p.log.warn(MESSAGES.NO_FILES_FOUND);
-        return [];
+        return { violations: [], warnings: [] };
     }
 
     p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
@@ -77,13 +77,15 @@ export async function runFullAudit(config, targetPath = null, files = null) {
                         return await scanSingleFile(browser, filePath, config, cssCache, aliases);
                     } catch (err) {
                         p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
-                        return [];
+                        return { violations: [], warning: null };
                     }
                 })
             )
         );
 
-        return results.flat();
+        const warnings = [...new Set(results.map(r => r.warning).filter(Boolean))];
+        warnings.forEach(w => p.log.warn(w));
+        return { violations: results.flatMap(r => r.violations), warnings };
     } finally {
         await browser.close();
     }
@@ -250,6 +252,7 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx
  */
 async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
     const violations = [];
+    let warning = null;
 
     try {
         const sourceContent = await readSourceFile(filePath);
@@ -266,7 +269,7 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
         let cssModuleBindings = new Map();
         if (isJsx) {
             const cssInJs = detectCssInJs(sourceContent);
-            if (cssInJs) p.log.warn(`CSS-in-JS detected (${cssInJs}) in ${filePath} — contrast checking unavailable. Render to a static HTML snapshot for accurate results.`);
+            if (cssInJs) warning = `CSS-in-JS detected (${cssInJs}) - contrast checking unavailable`;
             ({ html: transformedHtml, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
         } else if (isVue) {
             ({ html: transformedHtml, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
@@ -351,5 +354,5 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
         p.log.error(`Error scanning ${filePath}: ${error.message}`);
     }
 
-    return violations;
+    return { violations, warning };
 }

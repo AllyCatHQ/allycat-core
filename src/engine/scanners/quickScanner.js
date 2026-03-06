@@ -46,7 +46,7 @@ export async function runQuickAudit(config, targetPath = null, files = null) {
 
     if (filesToScan.length === 0) {
         p.log.warn(MESSAGES.NO_FILES_FOUND);
-        return [];
+        return { violations: [], warnings: [] };
     }
 
     p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
@@ -61,13 +61,15 @@ export async function runQuickAudit(config, targetPath = null, files = null) {
                     return await scanSingleFile(filePath, config);
                 } catch (err) {
                     p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
-                    return [];
+                    return { violations: [], warning: null };
                 }
             })
         )
     );
 
-    return results.flat();
+    const warnings = [...new Set(results.map(r => r.warning).filter(Boolean))];
+    warnings.forEach(w => p.log.warn(w));
+    return { violations: results.flatMap(r => r.violations), warnings };
 }
 
 // -----------------------------------------------------------------------------
@@ -147,6 +149,7 @@ function getHtmlOpenTag(document) {
  */
 async function scanSingleFile(filePath, config) {
     const violations = [];
+    let warning = null;
 
     try {
         const sourceContent = await readSourceFile(filePath);
@@ -160,7 +163,7 @@ async function scanSingleFile(filePath, config) {
         let scanContent, lineMap, ordinalIndex;
         if (isJsx) {
             const cssInJs = detectCssInJs(sourceContent);
-            if (cssInJs) p.log.warn(`CSS-in-JS detected (${cssInJs}) in ${filePath} — contrast checking unavailable even with --full. Render to a static HTML snapshot for accurate results.`);
+            if (cssInJs) warning = `CSS-in-JS detected (${cssInJs}) - contrast checking unavailable even with --full`;
             ({ html: scanContent, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
         } else if (isVue) {
             ({ html: scanContent, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
@@ -201,5 +204,5 @@ async function scanSingleFile(filePath, config) {
         p.log.error(`Error scanning ${filePath}: ${error.message}`);
     }
 
-    return violations;
+    return { violations, warning };
 }

@@ -29,13 +29,13 @@ import { openInBrowser } from '../utils/browserOpener.js';
  * @param {string} scanMode - Current scan mode
  * @param {Object} options - CLI options
  */
-export function outputResults(violations, config, scanMode, options) {
+export function outputResults(violations, config, scanMode, options, warnings = []) {
     if (options.jsonFile) {
-        outputJsonFile(violations, config, scanMode, options.jsonFile);
+        outputJsonFile(violations, config, scanMode, options.jsonFile, warnings);
     } else if (options.output === 'json') {
-        outputJson(violations, config, scanMode);
+        outputJson(violations, config, scanMode, warnings);
     } else if (options.summary) {
-        outputSummaryOnly(violations, scanMode);
+        outputSummaryOnly(violations, scanMode, warnings);
     } else {
         outputTerminal(violations, scanMode);
     }
@@ -60,13 +60,17 @@ export function outputResults(violations, config, scanMode, options) {
  * @param {Array} violations - Scan violations
  * @param {string} scanMode - Current scan mode
  */
-function outputSummaryOnly(violations, scanMode) {
+function outputSummaryOnly(violations, scanMode, warnings = []) {
     const summary = formatSummary(violations, scanMode);
     console.log(summary);
 
     if (violations.length > 0) {
         console.log('');
         console.log(chalk.dim('Use without --summary to see full details.'));
+    }
+
+    for (const w of warnings) {
+        process.stderr.write(`[WARNING] ${w}\n`);
     }
 
     console.log('');
@@ -132,8 +136,8 @@ function displayTerminalTips(scanMode) {
  * @param {Object} config - User configuration
  * @param {string} scanMode - Current scan mode
  */
-function outputJson(violations, config, scanMode) {
-    const report = buildJsonReport(violations, config, scanMode);
+function outputJson(violations, config, scanMode, warnings = []) {
+    const report = buildJsonReport(violations, config, scanMode, warnings);
     console.log(JSON.stringify(report, null, 2));
 }
 
@@ -145,13 +149,14 @@ function outputJson(violations, config, scanMode) {
  * @param {string} scanMode - Current scan mode
  * @returns {Object} - Complete JSON report
  */
-function buildJsonReport(violations, config, scanMode) {
+function buildJsonReport(violations, config, scanMode, warnings = []) {
     return {
         timestamp: new Date().toISOString(),
         scanMode: scanMode,
         standard: config.selectedStandard,
         rtlEnabled: config.rules.rtl,
         contrastChecked: scanMode === SCAN_MODES.FULL,
+        warnings: warnings,
         totalViolations: violations.length,
         summary: countByImpact(violations),
         byFile: groupByFile(violations),
@@ -197,9 +202,9 @@ function generateJsonFilename(userFilename) {
  * @param {string} scanMode - Current scan mode
  * @param {string|boolean} filenameOption - Filename or true for auto-generate
  */
-function outputJsonFile(violations, config, scanMode, filenameOption) {
+function outputJsonFile(violations, config, scanMode, filenameOption, warnings = []) {
     const filename = generateJsonFilename(filenameOption);
-    const report = buildJsonReport(violations, config, scanMode);
+    const report = buildJsonReport(violations, config, scanMode, warnings);
 
     fs.writeFileSync(filename, JSON.stringify(report, null, 2));
 

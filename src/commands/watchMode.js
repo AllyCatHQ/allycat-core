@@ -55,11 +55,11 @@ export async function watchMode(target, config, scanMode, options = {}) {
 
     const state = new Map(); // Map<normalizedPath, violation[]>
 
-    const initial = scanMode === SCAN_MODES.FULL
+    const initialResult = scanMode === SCAN_MODES.FULL
         ? await runFullAudit(config, target || null, null)
         : await runQuickAudit(config, target || null, null);
 
-    for (const v of initial) {
+    for (const v of initialResult.violations) {
         const key = normPath(v.file);
         if (!state.has(key)) state.set(key, []);
         state.get(key).push(v);
@@ -174,12 +174,12 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
  */
 async function scanOneFile(filepath, config, scanMode) {
     try {
-        const violations = scanMode === SCAN_MODES.FULL
+        const result = scanMode === SCAN_MODES.FULL
             ? await runFullAudit(config, null, [filepath])
             : await runQuickAudit(config, null, [filepath]);
 
         // Normalize and filter to this file — scanners return full violation arrays
-        return violations.filter(v => normPath(v.file) === normPath(filepath));
+        return result.violations.filter(v => normPath(v.file) === normPath(filepath));
     } catch {
         return [];
     }

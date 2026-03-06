@@ -76,12 +76,13 @@ export async function scanCommand(target = null, options = {}) {
 
     displayScanConfiguration(config, scanMode, options, target);
 
-    const violations = await executeScan(config, scanMode, targetPath, preResolvedFiles);
-    if (violations === null) {
+    const result = await executeScan(config, scanMode, targetPath, preResolvedFiles);
+    if (result === null) {
         return;
     }
 
-    outputResults(violations, config, scanMode, options);
+    const { violations, warnings } = result;
+    outputResults(violations, config, scanMode, options, warnings);
     exitOnThreshold(violations, options);
 }
 
@@ -212,16 +213,12 @@ async function executeScan(config, scanMode, targetPath, files = null) {
     spinner.start(MESSAGES.ANALYZING);
 
     try {
-        let violations;
-
-        if (scanMode === SCAN_MODES.FULL) {
-            violations = await runFullAudit(config, targetPath, files);
-        } else {
-            violations = await runQuickAudit(config, targetPath, files);
-        }
+        const result = scanMode === SCAN_MODES.FULL
+            ? await runFullAudit(config, targetPath, files)
+            : await runQuickAudit(config, targetPath, files);
 
         spinner.stop(chalk.green(MESSAGES.ANALYSIS_COMPLETE));
-        return violations;
+        return result;
 
     } catch (error) {
         spinner.stop(chalk.red(MESSAGES.ANALYSIS_FAILED));
