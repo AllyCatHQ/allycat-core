@@ -33,6 +33,8 @@ export async function scanCommand(target = null, options = {}) {
     console.log('');
     p.intro(`${chalk.bgMagenta.white(UI.INTRO_SCAN)}`);
 
+    if (target) target = expandUserPath(target);
+
     // Pass 1: Load with preliminary mode to read defaultMode from config
     const preliminaryConfig = await loadConfiguration(SCAN_MODES.QUICK);
     if (!preliminaryConfig) {
@@ -135,8 +137,6 @@ function validateAndResolveTarget(target) {
     if (!target) {
         return null;
     }
-
-    target = expandUserPath(target);
 
     const absolutePath = path.resolve(process.cwd(), target);
 
@@ -310,7 +310,7 @@ async function resolveChangedFiles(target) {
         return files;
     }
 
-    const absScope = path.resolve(process.cwd(), expandUserPath(target));
+    const absScope = path.resolve(process.cwd(), target);
     return files.filter(f => path.resolve(process.cwd(), f).startsWith(absScope));
 }
 
