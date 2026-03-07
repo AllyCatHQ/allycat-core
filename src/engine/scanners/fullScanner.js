@@ -45,16 +45,16 @@ import pLimit from 'p-limit';
  * @param {string|null} targetPath - Optional specific file/folder to scan
  * @returns {Promise<Array>} - Array of violation objects
  */
-export async function runFullAudit(config, targetPath = null, files = null) {
+export async function runFullAudit(config, targetPath = null, files = null, silent = false) {
     const filesToScan = files ?? await resolveFiles(config, targetPath);
 
     if (filesToScan.length === 0) {
-        p.log.warn(MESSAGES.NO_FILES_FOUND);
+        if (!silent) p.log.warn(MESSAGES.NO_FILES_FOUND);
         return { violations: [], warnings: [] };
     }
 
-    p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
-    p.log.info('Using Playwright for full accessibility audit (including contrast)...');
+    if (!silent) p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
+    if (!silent) p.log.info('Using Playwright for full accessibility audit (including contrast)...');
 
     const browser = await chromium.launch({ headless: true });
 

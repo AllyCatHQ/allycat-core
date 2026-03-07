@@ -48,7 +48,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
     }
 
     // ── Initial scan ─────────────────────────────────────────────────────────
-    console.clear();
+    clearScreen();
     printBanner();
     console.log(chalk.dim(`  Scanning ${files.length} file${files.length !== 1 ? 's' : ''} for baseline...`));
     console.log('');
@@ -65,7 +65,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
         state.get(key).push(v);
     }
 
-    console.clear();
+    clearScreen();
     printBanner();
     // Default: compact count-per-file. With --existing (-e): full detail list.
     printBaselineSummary(state, !(options.existing ?? false), files.length);
@@ -99,7 +99,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
 
     watcher.on('unlink', (filepath) => {
         state.delete(normPath(filepath));
-        console.clear();
+        clearScreen();
         printBanner();
         console.log(chalk.dim(`  ○  ${filepath} removed`));
         printStatusLine(files.length, totalViolations(state));
@@ -140,7 +140,7 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
     const previous = state.get(key) ?? [];
 
     // Show existing violations while rescanning — don't blank them out mid-edit
-    console.clear();
+    clearScreen();
     printBanner();
     printRescanning(filepath, previous, summaryMode);
     printStatusLine(fileCount, totalViolations(state));
@@ -150,7 +150,7 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
     // Scan failed (parse/syntax error — file may be in a partial edit state).
     // Keep the previous violations intact so they don't vanish mid-fix.
     if (current === null) {
-        console.clear();
+        clearScreen();
         printBanner();
         console.log(chalk.yellow(`  ⚠  Parse error in ${path.basename(filepath)} — violations unchanged`));
         console.log('');
@@ -171,7 +171,7 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
 
     state.set(key, current);
 
-    console.clear();
+    clearScreen();
     printBanner();
     printDelta(filepath, added, fixed, summaryMode);
     printCurrent(current, summaryMode);
@@ -197,8 +197,8 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
 async function scanOneFile(filepath, config, scanMode) {
     try {
         const result = scanMode === SCAN_MODES.FULL
-            ? await runFullAudit(config, null, [filepath])
-            : await runQuickAudit(config, null, [filepath]);
+            ? await runFullAudit(config, null, [filepath], true)
+            : await runQuickAudit(config, null, [filepath], true);
 
         // Normalize and filter to this file — scanners return full violation arrays
         return result.violations.filter(v => normPath(v.file) === normPath(filepath));
@@ -210,6 +210,18 @@ async function scanOneFile(filepath, config, scanMode) {
 // -----------------------------------------------------------------------------
 // Rendering
 // -----------------------------------------------------------------------------
+
+/**
+ * Clear the terminal reliably across platforms.
+ * console.clear() is unreliable in VSCode's integrated terminal on Windows.
+ * \x1Bc (ESC c) is the full terminal reset sequence used by Vite, Next.js, and
+ * other modern dev tools. It clears the visible screen, scrollback buffer, and
+ * resets any active clack/ANSI session state — giving a truly blank slate.
+ */
+function clearScreen() {
+    console.clear();
+    process.stdout.write('\x1Bc');
+}
 
 function printBanner() {
     console.log(chalk.bold.magenta('  ◈  A11y-Guard  —  Watch Mode'));
