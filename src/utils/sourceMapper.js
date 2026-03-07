@@ -174,6 +174,36 @@ function escapeRegex(string) {
 }
 
 /**
+ * Build an ordinal index from raw HTML source: tagName → [line1, line2, ...].
+ *
+ * Mirrors the ordinalIndex produced by JSX/Vue/Angular transformers so the
+ * same Layer A resolver (resolveViaOrdinalIndex) works for plain HTML files.
+ * Without this, multiple identical elements (e.g. four bare <button></button>)
+ * all resolve to the first occurrence in the file.
+ *
+ * @param {string} sourceContent - Raw HTML source
+ * @returns {Map<string, number[]>}
+ */
+export function buildHtmlOrdinalIndex(sourceContent) {
+    const index = new Map();
+    const lines = sourceContent.split('\n');
+    // Match opening tags only — skip </tag>, <!--, <!DOCTYPE
+    const openTagRe = /<(?!\/)([a-zA-Z][a-zA-Z0-9]*)/g;
+
+    for (let i = 0; i < lines.length; i++) {
+        openTagRe.lastIndex = 0;
+        let match;
+        while ((match = openTagRe.exec(lines[i])) !== null) {
+            const tag = match[1].toLowerCase();
+            if (!index.has(tag)) index.set(tag, []);
+            index.get(tag).push(i + 1); // 1-indexed line number
+        }
+    }
+
+    return index;
+}
+
+/**
  * Generate a terminal-clickable file link
  * Works in VS Code, iTerm2, and most modern terminals
  * 

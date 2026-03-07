@@ -26,6 +26,7 @@ import { detectCssInJs } from '../transformers/transformerUtils.js';
 import { transformVueToHtml, isVueFile } from '../transformers/vueTransformer.js';
 import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
 import { isAngularComponentTs, extractInlineTemplate } from '../transformers/angularTsExtractor.js';
+import { buildHtmlOrdinalIndex } from '../../utils/sourceMapper.js';
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
@@ -174,7 +175,7 @@ async function scanSingleFile(filePath, config) {
             if (!extracted) return [];  // templateUrl-only or unextractable — .html scanned separately
             ({ html: scanContent, lineMap, ordinalIndex } = transformAngularToHtml(extracted.content, extracted.lineOffset));
         } else {
-            scanContent = sourceContent; lineMap = null; ordinalIndex = null;
+            scanContent = sourceContent; lineMap = null; ordinalIndex = buildHtmlOrdinalIndex(sourceContent);
         }
 
         const window = createJsdomWithAxe(scanContent);
@@ -186,8 +187,8 @@ async function scanSingleFile(filePath, config) {
             sourceContent,
             isComponent ? lineMap : null,
             isComponent ? scanContent : null,
-            isComponent ? ordinalIndex : null,
-            isComponent ? window.document : null
+            ordinalIndex,
+            window.document
         );
         violations.push(...axeViolations);
 

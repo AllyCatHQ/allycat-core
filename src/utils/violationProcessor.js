@@ -185,7 +185,15 @@ function resolveLineNumber(
         );
     }
 
-    // HTML file — use existing sourceMapper directly
+    // HTML file with ordinal index: try Layer A (DOM ordinal position) first.
+    // This correctly resolves identical elements like multiple <button></button>
+    // that share the same HTML snippet and would otherwise all map to line 1.
+    if (ordinalIndex && domDocument) {
+        const layerA = resolveViaOrdinalIndex(cssSelector, domDocument, ordinalIndex);
+        if (layerA !== null) return layerA;
+    }
+
+    // Fallback — text-based first-occurrence search
     return findLineNumber(sourceContent, htmlSnippet);
 }
 
