@@ -12,6 +12,6 @@
     "agent": "claude"
   },
   "performance": {
-    "concurrency": 5
+    "concurrency": null
   }
 }

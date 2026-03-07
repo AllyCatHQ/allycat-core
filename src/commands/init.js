@@ -58,6 +58,21 @@ export async function initCommand() {
                         { value: 'generic',  label: '⚪ Other / Skip', hint: 'Generic prompt' },
                     ],
                 }),
+            advancedOpts: () => p.confirm({
+                message: 'Configure advanced options? (concurrency override)',
+                initialValue: false,
+            }),
+            concurrency: ({ results }) => !results.advancedOpts
+                ? Promise.resolve('auto')
+                : p.select({
+                    message: 'Max files scanned in parallel:',
+                    options: [
+                        { value: 'auto', label: '🔄 Auto (recommended)', hint: 'Detected from your system RAM' },
+                        { value: '3',    label: '3 files',               hint: 'Conservative — slow machines or --full scans' },
+                        { value: '5',    label: '5 files',               hint: 'Default' },
+                        { value: '10',   label: '10 files',              hint: 'For high-RAM machines' },
+                    ],
+                }),
         },
         {
             onCancel: () => {
@@ -82,7 +97,7 @@ export async function initCommand() {
             agent: group.aiAgent,
         },
         performance: {
-            concurrency: 5
+            concurrency: group.concurrency === 'auto' ? null : parseInt(group.concurrency, 10)
         }
     };
 
@@ -99,7 +114,9 @@ export async function initCommand() {
         `Default Mode: ${chalk.bold(config.scan.defaultMode === SCAN_MODES.FULL ? UI.SCAN_LABEL_FULL : UI.SCAN_LABEL_QUICK_FAST)}\n` +
         `AI Suggestions: ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         (config.ai.enabled ? `AI Agent:     ${chalk.bold(config.ai.agent)}\n` : '') +
-        `Concurrency: ${chalk.bold(config.performance.concurrency)} files in parallel`,
+        `Concurrency: ${config.performance.concurrency != null
+            ? chalk.bold(config.performance.concurrency) + ' files in parallel'
+            : chalk.bold('Auto') + chalk.dim(' (detected from RAM)')}`,
         'Configuration Summary'
     );
 

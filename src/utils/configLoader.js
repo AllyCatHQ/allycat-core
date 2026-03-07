@@ -51,12 +51,10 @@ export function getSafeConcurrencyCeiling(scanMode = SCAN_MODES.QUICK) {
  * @returns {number}
  */
 function clampConcurrency(raw, scanMode) {
-    const ceiling  = getSafeConcurrencyCeiling(scanMode);
-    const defaults = { [SCAN_MODES.QUICK]: 5, [SCAN_MODES.FULL]: 3 };
-    const fallback = defaults[scanMode] ?? 5;
-    const parsed   = parseInt(raw, 10);
-    const valid    = !isNaN(parsed) && parsed >= ABSOLUTE_MIN;
-    const clamped  = valid ? Math.min(parsed, ceiling) : fallback;
+    const ceiling = getSafeConcurrencyCeiling(scanMode);
+    const parsed  = parseInt(raw, 10);
+    const valid   = !isNaN(parsed) && parsed >= ABSOLUTE_MIN;
+    const clamped = valid ? Math.min(parsed, ceiling) : ceiling;
 
     if (valid && parsed > ceiling) {
         console.warn(
