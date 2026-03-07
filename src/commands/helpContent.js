@@ -110,9 +110,10 @@ ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).j
     {
         q: 'How does watch mode work?',
         a: `Use ${chalk.cyan('--watch')} to automatically re-scan files whenever they are saved:
-   ${chalk.yellow(`${CLI.SCAN} --watch`)}             ${chalk.dim('# Watch entire project')}
-   ${chalk.yellow(`${CLI.SCAN} --watch ./src`)}       ${chalk.dim('# Watch specific folder')}
-   ${chalk.yellow(`${CLI.SCAN} --watch --summary`)}   ${chalk.dim('# Counts only — no descriptions')}
+   ${chalk.yellow(`${CLI.SCAN} --watch`)}              ${chalk.dim('# Watch entire project (pre-existing shown as counts)')}
+   ${chalk.yellow(`${CLI.SCAN} --watch ./src`)}        ${chalk.dim('# Watch specific folder')}
+   ${chalk.yellow(`${CLI.SCAN} --watch --existing`)}   ${chalk.dim('# Show full details of pre-existing violations on startup')}
+   ${chalk.yellow(`${CLI.SCAN} --watch --summary`)}    ${chalk.dim('# Counts only — no descriptions for delta output')}
 
    Supports all file types: ${SUPPORTED_EXTENSIONS_DISPLAY}
    Press ${chalk.bold('Ctrl+C')} to stop.
@@ -171,9 +172,10 @@ export const EXAMPLE_SECTIONS = [
         examples: [
             { cmd: `${CLI.SCAN} --changed`,           desc: 'Scan only git-changed files' },
             { cmd: `${CLI.SCAN} --changed ./src`,     desc: 'Changed files scoped to ./src' },
-            { cmd: `${CLI.SCAN} --watch`,             desc: 'Watch and re-scan on save (delta output)' },
-            { cmd: `${CLI.SCAN} --watch ./src`,       desc: 'Watch specific folder' },
-            { cmd: `${CLI.SCAN} --watch --summary`,   desc: 'Watch with counts only — no descriptions' }
+            { cmd: `${CLI.SCAN} --watch`,              desc: 'Watch and re-scan on save (pre-existing shown as counts)' },
+            { cmd: `${CLI.SCAN} --watch ./src`,        desc: 'Watch specific folder' },
+            { cmd: `${CLI.SCAN} --watch --existing`,   desc: 'Watch — show full details of pre-existing violations on startup' },
+            { cmd: `${CLI.SCAN} --watch --summary`,    desc: 'Watch with counts only — no descriptions for delta output' }
         ]
     },
     {

@@ -74,6 +74,7 @@ program
   .option('--fail-on-any', 'Exit with code 3 if any violations are found')
   .option('-c, --changed', 'Scan only files changed since the last commit (requires git)')
   .option('-w, --watch', 'Watch files and re-scan incrementally on every change')
+  .option('-e, --existing', 'In watch mode: show full details of pre-existing violations on startup (default: counts only)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan
@@ -105,6 +106,7 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} a11y-guard scan --changed ./src    ${chalk.dim('# Changed files scoped to ./src')}
   ${chalk.cyan('$')} a11y-guard scan --watch            ${chalk.dim('# Watch and re-scan on file change')}
   ${chalk.cyan('$')} a11y-guard scan --watch ./src      ${chalk.dim('# Watch specific folder')}
+  ${chalk.cyan('$')} a11y-guard scan --watch --existing ${chalk.dim('# Watch — show full pre-existing violation details on startup')}
 `)
   .action((target, options) => scanCommand(target, options));
 

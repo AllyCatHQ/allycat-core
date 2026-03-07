@@ -111,6 +111,7 @@ a11y-guard scan ./src/pages/Home.tsx
 | `--fail-on-any` | | Exit code 3 if any violations found (strictest gate) |
 | `--changed` | `-c` | Scan only files changed since the last git commit |
 | `--watch` | `-w` | Watch for file changes and re-scan automatically |
+| `--existing` | `-e` | In watch mode: show full details of pre-existing violations on startup (default: counts only) |
 
 #### Examples
 
@@ -141,9 +142,11 @@ a11y-guard scan --changed
 # Scan changed files scoped to a directory
 a11y-guard scan --changed ./src
 
-# Watch mode — auto re-scans on every file save
+# Watch mode — auto re-scans on every file save (pre-existing shown as counts only)
 a11y-guard scan --watch
 a11y-guard scan --watch ./src
+# Watch mode — show full details of pre-existing violations on startup
+a11y-guard scan --watch --existing
 
 # After each save, watch mode shows a delta:
 #   [NEW]   — violation appeared since the last scan

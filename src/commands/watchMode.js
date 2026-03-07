@@ -67,7 +67,8 @@ export async function watchMode(target, config, scanMode, options = {}) {
 
     console.clear();
     printBanner();
-    printBaselineSummary(state, options.summary ?? false);
+    // Default: compact count-per-file. With --existing (-e): full detail list.
+    printBaselineSummary(state, !(options.existing ?? false));
     printStatusLine(files.length, totalViolations(state));
 
     // ── Watcher ──────────────────────────────────────────────────────────────
