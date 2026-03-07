@@ -68,7 +68,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
     console.clear();
     printBanner();
     // Default: compact count-per-file. With --existing (-e): full detail list.
-    printBaselineSummary(state, !(options.existing ?? false));
+    printBaselineSummary(state, !(options.existing ?? false), files.length);
     printStatusLine(files.length, totalViolations(state));
 
     // ── Watcher ──────────────────────────────────────────────────────────────
@@ -216,12 +216,25 @@ function printBanner() {
     console.log('');
 }
 
-function printBaselineSummary(state, summaryMode = false) {
+function printBaselineSummary(state, summaryMode = false, fileCount = 0) {
     const total = totalViolations(state);
     if (total === 0) {
         console.log(chalk.green('  ✔  No violations in initial scan'));
         return;
     }
+
+    // Clean-files overview: shown once at startup to orient the user
+    const filesWithViolations = state.size;
+    const cleanFiles = fileCount - filesWithViolations;
+    if (cleanFiles > 0) {
+        console.log(
+            chalk.green(`  ✔  ${cleanFiles} file${cleanFiles !== 1 ? 's' : ''} clean`) +
+            chalk.dim('  ·  ') +
+            chalk.red(`${filesWithViolations} file${filesWithViolations !== 1 ? 's' : ''} with violations`)
+        );
+        console.log('');
+    }
+
     if (summaryMode) {
         for (const [file, violations] of state) {
             const count = violations.length;
