@@ -173,6 +173,7 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
     console.clear();
     printBanner();
     printDelta(filepath, added, fixed, summaryMode);
+    printCurrent(current, summaryMode);
     printStatusLine(fileCount, totalViolations(state));
 }
 
@@ -277,6 +278,37 @@ function printDelta(filepath, added, fixed, summaryMode = false) {
         } else {
             console.log(`  ${chalk.red('● NEW  ')}  ${chalk.bold.red(impact)} ${v.description}${lineHint}`);
         }
+    }
+}
+
+/**
+ * Render the full current violations for a file after showing the delta.
+ * This ensures users always know what still needs fixing, not just what changed.
+ *
+ * @param {Array}   violations  - Current violations after rescan
+ * @param {boolean} summaryMode
+ */
+function printCurrent(violations, summaryMode) {
+    console.log('');
+
+    if (violations.length === 0) {
+        console.log(chalk.green('  ✔  All violations cleared'));
+        return;
+    }
+
+    const label = `Still open (${violations.length})`;
+
+    if (summaryMode) {
+        const worst = [...violations].sort(bySeverity)[0].impact ?? 'unknown';
+        console.log(chalk.dim(`  ─  ${label}`) + chalk.dim(`  [${worst.toUpperCase()}]`));
+        return;
+    }
+
+    console.log(chalk.dim(`  ─  ${label}:`));
+    for (const v of [...violations].sort(bySeverity)) {
+        const impact   = `[${(v.impact || 'unknown').toUpperCase()}]`;
+        const lineHint = v.lineNumber ? chalk.dim(`  — Line ${v.lineNumber}`) : '';
+        console.log(`  ${chalk.cyan('○')}  ${chalk.dim(impact)} ${v.description}${lineHint}`);
     }
 }
 
