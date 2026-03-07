@@ -137,8 +137,7 @@ export const EXAMPLE_SECTIONS = [
             { cmd: `${CLI.SCAN} ./src`,                             desc: 'Scan specific folder' },
             { cmd: `${CLI.SCAN} ./src/App.tsx`,                     desc: 'Scan a React/TSX file' },
             { cmd: `${CLI.SCAN} ./src/App.vue`,                     desc: 'Scan a Vue component' },
-            { cmd: `${CLI.SCAN} ./src/app.component.html`,          desc: 'Scan an Angular template' },
-            { cmd: `${CLI.SCAN} ./src ./public`,                    desc: 'Scan multiple paths' }
+            { cmd: `${CLI.SCAN} ./src/app.component.html`,          desc: 'Scan an Angular template' }
         ]
     },
     {

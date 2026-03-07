@@ -31,7 +31,7 @@ export async function initCommand() {
                 ],
             }),
             checkRTL: ({ results }) => results.standard !== STANDARDS.ISRAEL ? p.confirm({
-                message: 'Check for RTL support? (For left to right lengusches ex Hebrew, Arabic, Persian)',
+                message: 'Check for RTL support? (For right-to-left languages, e.g. Hebrew, Arabic, Persian)',
                 initialValue: false,
             }) : Promise.resolve(true),
             scanMode: () => p.select({
