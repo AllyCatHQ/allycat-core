@@ -1,7 +1,39 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
-import { configExists, saveConfig } from '../utils/configLoader.js';
+import { configExists, saveConfig, getSafeConcurrencyCeiling } from '../utils/configLoader.js';
 import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS } from '../constants.js';
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+/**
+ * Build deduplicated concurrency preset options from a computed ceiling.
+ * Produces up to 3 presets: conservative (ceil/4), moderate (ceil/2), maximum.
+ * Duplicates are removed automatically (can occur on low-ceiling machines).
+ *
+ * @param {number} ceiling
+ * @returns {{ value: string, label: string, hint: string }[]}
+ */
+function buildConcurrencyPresets(ceiling) {
+    const raw = [
+        Math.max(1, Math.floor(ceiling / 4)),
+        Math.max(1, Math.floor(ceiling / 2)),
+        ceiling,
+    ];
+    const unique = [...new Set(raw)];
+    return unique.map((v, i) => ({
+        value: String(v),
+        label: `${v} files`,
+        hint: i === 0 && unique.length > 1 ? 'Conservative'
+            : i === unique.length - 1       ? 'Maximum for your machine'
+            :                                 'Moderate',
+    }));
+}
+
+// -----------------------------------------------------------------------------
+// Command
+// -----------------------------------------------------------------------------
 
 export async function initCommand() {
     console.log('');
@@ -50,11 +82,11 @@ export async function initCommand() {
                 : p.select({
                     message: 'Which AI agent do you use?',
                     options: [
-                        { value: 'claude',   label: '🟣 Claude',   hint: 'Anthropic — Claude 3/4' },
-                        { value: 'cursor',   label: '🔵 Cursor',   hint: 'Cursor IDE AI' },
-                        { value: 'chatgpt',  label: '🟢 ChatGPT',  hint: 'OpenAI — GPT-4o' },
-                        { value: 'gemini',   label: '🔴 Gemini',   hint: 'Google Gemini' },
-                        { value: 'copilot',  label: '⚫ Copilot',  hint: 'GitHub Copilot' },
+                        { value: 'claude',   label: '🟣 Claude',      hint: 'Anthropic — Claude 3/4' },
+                        { value: 'cursor',   label: '🔵 Cursor',      hint: 'Cursor IDE AI' },
+                        { value: 'chatgpt',  label: '🟢 ChatGPT',     hint: 'OpenAI — GPT-4o' },
+                        { value: 'gemini',   label: '🔴 Gemini',      hint: 'Google Gemini' },
+                        { value: 'copilot',  label: '⚫ Copilot',     hint: 'GitHub Copilot' },
                         { value: 'generic',  label: '⚪ Other / Skip', hint: 'Generic prompt' },
                     ],
                 }),
@@ -62,17 +94,41 @@ export async function initCommand() {
                 message: 'Configure advanced options? (concurrency override)',
                 initialValue: false,
             }),
-            concurrency: ({ results }) => !results.advancedOpts
-                ? Promise.resolve('auto')
-                : p.select({
+            concurrency: ({ results }) => {
+                if (!results.advancedOpts) return Promise.resolve('auto');
+                const ceiling = getSafeConcurrencyCeiling(results.scanMode);
+                const presets = buildConcurrencyPresets(ceiling);
+                return p.select({
                     message: 'Max files scanned in parallel:',
                     options: [
-                        { value: 'auto', label: '🔄 Auto (recommended)', hint: 'Detected from your system RAM' },
-                        { value: '3',    label: '3 files',               hint: 'Conservative — slow machines or --full scans' },
-                        { value: '5',    label: '5 files',               hint: 'Default' },
-                        { value: '10',   label: '10 files',              hint: 'For high-RAM machines' },
+                        { value: 'auto',   label: '🔄 Auto (recommended)', hint: `~${ceiling} files on your machine` },
+                        ...presets,
+                        { value: 'custom', label: '✏️  Custom...',           hint: 'Enter your own value' },
                     ],
-                }),
+                });
+            },
+            concurrencyCustom: ({ results }) => {
+                if (results.concurrency !== 'custom') return Promise.resolve(null);
+                const ceiling = getSafeConcurrencyCeiling(results.scanMode);
+                return p.text({
+                    message: `Max parallel files (safe ceiling: ${ceiling}):`,
+                    placeholder: String(ceiling),
+                    validate: (val) => {
+                        const n = parseInt(val, 10);
+                        if (isNaN(n) || n < 1) return 'Must be a positive integer';
+                    },
+                });
+            },
+            concurrencyOverrideConfirm: ({ results }) => {
+                if (results.concurrency !== 'custom' || results.concurrencyCustom == null) return Promise.resolve(null);
+                const ceiling = getSafeConcurrencyCeiling(results.scanMode);
+                const val = parseInt(results.concurrencyCustom, 10);
+                if (val <= ceiling) return Promise.resolve(null);
+                return p.confirm({
+                    message: `${val} exceeds the safe limit (${ceiling}) for your machine. This may cause slowdowns or crashes. Continue anyway?`,
+                    initialValue: false,
+                });
+            },
         },
         {
             onCancel: () => {
@@ -81,6 +137,19 @@ export async function initCommand() {
             },
         }
     );
+
+    // Resolve final concurrency value
+    let finalConcurrency;
+    if (group.concurrency === 'auto') {
+        finalConcurrency = null;
+    } else if (group.concurrency === 'custom') {
+        // User rejected the override warning → fall back to auto
+        finalConcurrency = group.concurrencyOverrideConfirm === false
+            ? null
+            : parseInt(group.concurrencyCustom, 10);
+    } else {
+        finalConcurrency = parseInt(group.concurrency, 10);
+    }
 
     // Build configuration object
     const config = {
@@ -97,7 +166,7 @@ export async function initCommand() {
             agent: group.aiAgent,
         },
         performance: {
-            concurrency: group.concurrency === 'auto' ? null : parseInt(group.concurrency, 10)
+            concurrency: finalConcurrency
         }
     };
 
@@ -107,6 +176,13 @@ export async function initCommand() {
     saveConfig(config);
     s.stop(chalk.green('Configuration saved successfully!'));
 
+    // Build concurrency summary line
+    const ceiling = getSafeConcurrencyCeiling(group.scanMode);
+    const fellBack = group.concurrency === 'custom' && group.concurrencyOverrideConfirm === false;
+    const concurrencySummary = config.performance.concurrency != null
+        ? chalk.bold(config.performance.concurrency) + ' files in parallel'
+        : chalk.bold('Auto') + chalk.dim(` (→ ~${ceiling} on your machine)`) + (fellBack ? chalk.yellow(' (fell back from custom)') : '');
+
     // Show summary
     p.note(
         `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
@@ -114,9 +190,7 @@ export async function initCommand() {
         `Default Mode: ${chalk.bold(config.scan.defaultMode === SCAN_MODES.FULL ? UI.SCAN_LABEL_FULL : UI.SCAN_LABEL_QUICK_FAST)}\n` +
         `AI Suggestions: ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         (config.ai.enabled ? `AI Agent:     ${chalk.bold(config.ai.agent)}\n` : '') +
-        `Concurrency: ${config.performance.concurrency != null
-            ? chalk.bold(config.performance.concurrency) + ' files in parallel'
-            : chalk.bold('Auto') + chalk.dim(' (detected from RAM)')}`,
+        `Concurrency: ${concurrencySummary}`,
         'Configuration Summary'
     );
 
