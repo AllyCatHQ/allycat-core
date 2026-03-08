@@ -1,6 +1,6 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
-import { configExists, saveConfig, getSafeConcurrencyCeiling } from '../utils/configLoader.js';
+import { configExists, loadConfig, saveConfig, getSafeConcurrencyCeiling } from '../utils/configLoader.js';
 import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS } from '../constants.js';
 
 // -----------------------------------------------------------------------------
@@ -38,6 +38,11 @@ function buildConcurrencyPresets(ceiling) {
 export async function initCommand() {
     console.log('');
     p.intro(`${chalk.bgBlue.white(UI.INTRO_SETUP)}`);
+
+    // Read existing concurrency before overwrite — used as fallback if user rejects a custom override
+    const existingConcurrency = configExists()
+        ? (loadConfig(SCAN_MODES.QUICK)?.performance?.concurrency ?? null)
+        : null;
 
     // Check if config exists
     if (configExists()) {
@@ -143,9 +148,9 @@ export async function initCommand() {
     if (group.concurrency === 'auto') {
         finalConcurrency = null;
     } else if (group.concurrency === 'custom') {
-        // User rejected the override warning → fall back to auto
+        // User rejected the override warning → fall back to previous value (or auto if none)
         finalConcurrency = group.concurrencyOverrideConfirm === false
-            ? null
+            ? existingConcurrency
             : parseInt(group.concurrencyCustom, 10);
     } else {
         finalConcurrency = parseInt(group.concurrency, 10);
@@ -179,9 +184,14 @@ export async function initCommand() {
     // Build concurrency summary line
     const ceiling = getSafeConcurrencyCeiling(group.scanMode);
     const fellBack = group.concurrency === 'custom' && group.concurrencyOverrideConfirm === false;
+    const fellBackNote = fellBack
+        ? chalk.yellow(existingConcurrency != null
+            ? ` (fell back to previous value: ${existingConcurrency})`
+            : ' (fell back to Auto)')
+        : '';
     const concurrencySummary = config.performance.concurrency != null
         ? chalk.bold(config.performance.concurrency) + ' files in parallel'
-        : chalk.bold('Auto') + chalk.dim(` (→ ~${ceiling} on your machine)`) + (fellBack ? chalk.yellow(' (fell back from custom)') : '');
+        : chalk.bold('Auto') + chalk.dim(` (→ ~${ceiling} on your machine)`) + fellBackNote;
 
     // Show summary
     p.note(
