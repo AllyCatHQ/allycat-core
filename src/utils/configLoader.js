@@ -17,8 +17,8 @@ import { CONFIG_FILE_NAME, SCAN_MODES } from '../constants.js';
 // -----------------------------------------------------------------------------
 
 const MEMORY_PER_SLOT = {
-    [SCAN_MODES.QUICK]: 150 * 1024 * 1024,  // ~150MB per JSDOM instance
-    [SCAN_MODES.FULL]:  500 * 1024 * 1024   // ~500MB per Playwright/Chromium instance
+    [SCAN_MODES.QUICK]: 200 * 1024 * 1024,  // ~200MB per JSDOM instance (benchmarked: 163MB worst-case + 23% margin)
+    [SCAN_MODES.FULL]:  500 * 1024 * 1024   // ~500MB per Playwright/Chromium instance (benchmarked: 413MB worst-case + 21% margin)
 };
 
 const SAFE_RAM_RATIO = 0.6; // Never use more than 60% of system RAM
