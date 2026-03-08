@@ -10,7 +10,8 @@
  *   npm install playwright @axe-core/playwright
  *   npx playwright install chromium
  *
- ** Concurrency is capped at 3 for full scan mode due to Playwright memory overhead.
+ * Concurrency is RAM- and CPU-aware (via configLoader.getSafeConcurrencyCeiling).
+ * Full mode is additionally capped at 8 due to Playwright CPU/IO overhead.
  * Per-file failures are caught and logged — other files continue scanning.
  */
 
@@ -18,9 +19,10 @@ import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { readSourceFile } from '../../utils/fileUtils.js';
+import { getSafeConcurrencyCeiling } from '../../utils/configLoader.js';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../../utils/fileResolver.js';
-import { MESSAGES, STANDARDS } from '../../constants.js';
+import { MESSAGES, STANDARDS, SCAN_MODES } from '../../constants.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
 import { createRtlViolation } from '../../utils/rtlValidator.js';
 import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/violationProcessor.js';
@@ -65,8 +67,7 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
     // Loaded once per scan run; empty Map if tsconfig.json is absent or has no paths
     const aliases = await loadTsconfigAliases(process.cwd());
 
-    const rawConcurrency = config?.performance?.concurrency ?? 5;
-    const concurrency = Math.min(rawConcurrency, 3); // Hard cap: Playwright memory overhead
+    const concurrency = config?.performance?.concurrency ?? getSafeConcurrencyCeiling(SCAN_MODES.FULL);
     const limit = pLimit(concurrency);
 
     try {

@@ -23,6 +23,7 @@ const MEMORY_PER_SLOT = {
 
 const SAFE_RAM_RATIO             = 0.6; // Never use more than 60% of system RAM
 const CPU_CONCURRENCY_MULTIPLIER = 4;   // logical cores × 4 for async/IO-interleaved JSDOM work
+const FULL_SCAN_MAX              = 8;   // Playwright: CPU/IO bound regardless of RAM (benchmarked)
 const ABSOLUTE_MIN               = 1;
 
 /**
@@ -30,7 +31,8 @@ const ABSOLUTE_MIN               = 1;
  *
  * Uses the minimum of:
  *   - 60% of total RAM divided by memory cost per slot (prevents OOM)
- *   - logical CPU cores × 4 (prevents event-loop thrashing)
+ *   - logical CPU cores × 4 (prevents event-loop thrashing for JSDOM)
+ *   - FULL_SCAN_MAX = 8 for full mode (Playwright CPU/IO bound — benchmark-backed)
  * Result is never below 1 regardless of machine state.
  *
  * @param {'quick'|'full'} scanMode
@@ -42,7 +44,8 @@ export function getSafeConcurrencyCeiling(scanMode = SCAN_MODES.QUICK) {
     const memPerSlot = MEMORY_PER_SLOT[scanMode] ?? MEMORY_PER_SLOT[SCAN_MODES.QUICK];
     const fromRam    = Math.floor(usableRam / memPerSlot);
     const fromCpu    = os.cpus().length * CPU_CONCURRENCY_MULTIPLIER;
-    return Math.max(ABSOLUTE_MIN, Math.min(fromRam, fromCpu));
+    const hardMax    = scanMode === SCAN_MODES.FULL ? FULL_SCAN_MAX : Infinity;
+    return Math.max(ABSOLUTE_MIN, Math.min(fromRam, fromCpu, hardMax));
 }
 
 /**
