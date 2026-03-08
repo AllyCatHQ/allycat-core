@@ -145,7 +145,10 @@ export async function initCommand() {
 
     // Resolve final concurrency value
     let finalConcurrency;
-    if (group.concurrency === 'auto') {
+    if (!group.advancedOpts) {
+        // User skipped advanced options — preserve existing value so a re-init doesn't wipe it
+        finalConcurrency = existingConcurrency;
+    } else if (group.concurrency === 'auto') {
         finalConcurrency = null;
     } else if (group.concurrency === 'custom') {
         // User rejected the override warning → fall back to previous value (or auto if none)
