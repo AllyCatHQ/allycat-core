@@ -21,15 +21,17 @@ const MEMORY_PER_SLOT = {
     [SCAN_MODES.FULL]:  500 * 1024 * 1024   // ~500MB per Playwright/Chromium instance (benchmarked: 413MB worst-case + 21% margin)
 };
 
-const SAFE_RAM_RATIO = 0.6; // Never use more than 60% of system RAM
-const ABSOLUTE_MAX   = 50;  // Hard ceiling regardless of RAM
-const ABSOLUTE_MIN   = 1;
+const SAFE_RAM_RATIO             = 0.6; // Never use more than 60% of system RAM
+const CPU_CONCURRENCY_MULTIPLIER = 4;   // logical cores × 4 for async/IO-interleaved JSDOM work
+const ABSOLUTE_MIN               = 1;
 
 /**
- * Compute a safe concurrency ceiling based on available system RAM.
- * 
- * Uses 60% of total RAM divided by memory cost per slot for the given mode.
- * Result is clamped between 1 and 50 regardless of machine size.
+ * Compute a safe concurrency ceiling based on available system RAM and CPU count.
+ *
+ * Uses the minimum of:
+ *   - 60% of total RAM divided by memory cost per slot (prevents OOM)
+ *   - logical CPU cores × 4 (prevents event-loop thrashing)
+ * Result is never below 1 regardless of machine state.
  *
  * @param {'quick'|'full'} scanMode
  * @returns {number}
@@ -38,8 +40,9 @@ export function getSafeConcurrencyCeiling(scanMode = SCAN_MODES.QUICK) {
     const totalRam   = os.totalmem();
     const usableRam  = totalRam * SAFE_RAM_RATIO;
     const memPerSlot = MEMORY_PER_SLOT[scanMode] ?? MEMORY_PER_SLOT[SCAN_MODES.QUICK];
-    const computed   = Math.floor(usableRam / memPerSlot);
-    return Math.min(Math.max(computed, ABSOLUTE_MIN), ABSOLUTE_MAX);
+    const fromRam    = Math.floor(usableRam / memPerSlot);
+    const fromCpu    = os.cpus().length * CPU_CONCURRENCY_MULTIPLIER;
+    return Math.max(ABSOLUTE_MIN, Math.min(fromRam, fromCpu));
 }
 
 /**
