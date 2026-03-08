@@ -85,7 +85,8 @@ function sanitizeConfig(raw, scanMode) {
         ...raw,
         performance: {
             ...raw?.performance,
-            concurrency: clampConcurrency(raw?.performance?.concurrency, scanMode)
+            concurrency:       clampConcurrency(raw?.performance?.concurrency, scanMode),
+            concurrencyIsAuto: raw?.performance?.concurrency == null,
         }
     };
 }

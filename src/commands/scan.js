@@ -191,6 +191,7 @@ function displayScanConfiguration(config, scanMode, options, target) {
         `Standard:  ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Output:    ${chalk.bold(options.output || 'terminal')}\n` +
+        `Parallel:  ${config.performance.concurrencyIsAuto ? `Auto → ${chalk.bold(config.performance.concurrency)} files` : `${chalk.bold(config.performance.concurrency)} files`}\n` +
         chalk.dim(`File types: ${SUPPORTED_EXTENSIONS_DISPLAY}`),
         'Scan Configuration'
     );
