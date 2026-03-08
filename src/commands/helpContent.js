@@ -40,6 +40,17 @@ export const FAQ_ITEMS = [
    • Best for CI/CD and final checks`
     },
     {
+        q: 'What does "Auto → X files" mean in the scan panel?',
+        a: `The scanner runs files in parallel. ${chalk.bold('Auto')} means the limit is calculated
+   from your machine's available RAM and CPU — no manual tuning needed.
+
+   Formula (quick mode):  min(60% RAM ÷ 200 MB, CPU cores × 4)
+   Formula (full mode):   min(60% RAM ÷ 500 MB, CPU cores × 4, 8)
+
+   The number after "→" is the resolved limit for this run.
+   To override it, run ${chalk.cyan(CLI.INIT)} and enable ${chalk.bold('advanced options')}.`
+    },
+    {
         q: 'Why do I see "No configuration found"?',
         a: `Run ${chalk.cyan(CLI.INIT)} first to create the config file.
    This creates ${chalk.yellow(CONFIG_FILE_NAME)} in your project root.`
