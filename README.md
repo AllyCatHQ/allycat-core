@@ -17,7 +17,7 @@ Fast, developer-friendly accessibility scanning with support for **WCAG 2.1 AA/A
 | 📊 Multiple Outputs | Terminal, JSON (stdout), and JSON file export |
 | 🤖 AI Report | Auto-generated HTML report with per-file AI fix prompts |
 | ⚡ CI/CD Ready | Exit gates, JSON export, and git-diff scoping for pipelines |
-| ⚙️ Parallel Scanning | Concurrent file scanning with RAM-aware concurrency control |
+| ⚙️ Parallel Scanning | Auto-computed from RAM + CPU — no manual tuning needed |
 | 📖 Built-in Help | FAQ, examples, CI guides, and standards explained |
 
 ---
@@ -205,7 +205,7 @@ Running `a11y-guard init` creates `a11y-config.json` in your project root. You c
     "enabled": true
   },
   "performance": {
-    "concurrency": 5
+    "concurrency": null
   }
 }
 ```
@@ -219,7 +219,7 @@ Running `a11y-guard init` creates `a11y-config.json` in your project root. You c
 | `rules.level` | `AA`, `AAA` | WCAG conformance level |
 | `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |
 | `ai.enabled` | `true`, `false` | Generate HTML report with AI fix prompts after each scan |
-| `performance.concurrency` | integer (default: `5`) | Number of files scanned in parallel |
+| `performance.concurrency` | integer or `null` (default: `null`) | Files to scan in parallel. `null` = Auto (computed from RAM + CPU). Configure via `a11y-guard init` |
 
 ---
 
@@ -239,32 +239,35 @@ No framework configuration is required. A11y-Guard automatically scans all match
 
 ---
 
-## Parallel Scanning & RAM Management
+## Parallel Scanning & Performance
 
-A11y-Guard scans multiple files concurrently using `performance.concurrency` from your config. The default is **5 files in parallel** for quick mode and **3** for full mode.
+A11y-Guard scans multiple files concurrently. By default, the parallel limit is computed automatically from your machine's RAM and CPU — no manual tuning needed.
 
-The engine enforces a **RAM-aware ceiling** — even if you set a high concurrency value, it will be automatically clamped to a safe limit based on your machine's available memory:
+**Formula:**
+- Quick mode: `min(60% RAM ÷ 200 MB, CPU cores × 4)`
+- Full mode: `min(60% RAM ÷ 500 MB, CPU cores × 4, 8)` — capped at 8 due to Playwright CPU overhead
 
-- Quick scan: ~150 MB per concurrent file slot
-- Full scan: ~500 MB per concurrent file slot (Playwright/Chromium)
-- Maximum: 60% of total system RAM, hard cap at 50
+**Example ceilings by machine:**
 
-```json
-{
-  "performance": {
-    "concurrency": 10
-  }
-}
+| RAM | Cores | Quick limit | Full limit |
+|-----|-------|-------------|------------|
+| 4 GB | 4 | 12 | 4 |
+| 8 GB | 8 | 24 | 8 |
+| 16 GB | 8 | 32 | 8 |
+| 32 GB | 16 | 64 | 8 |
+
+The resolved limit is shown in the scan panel on every run:
+```
+│ Parallel:  Auto → 24 files
 ```
 
-If your value exceeds the safe ceiling for your machine, A11y-Guard will warn you and clamp automatically:
+To override, run `a11y-guard init`, enable **advanced options**, and choose a preset or enter a custom value. If your value exceeds the safe ceiling, A11y-Guard will warn and ask for confirmation before saving.
 
+If you set a value manually and it exceeds the safe ceiling at scan time, it is clamped automatically with a warning:
 ```
-[a11y-guard] performance.concurrency "10" exceeds safe limit for your system
-in quick mode. Clamped to 7.
+[a11y-guard] performance.concurrency "40" exceeds safe limit for your system
+in quick mode. Clamped to 24.
 ```
-
-> On a 16 GB machine: quick mode ceiling ≈ 64, full mode ceiling ≈ 19.
 
 ---
 
