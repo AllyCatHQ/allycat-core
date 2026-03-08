@@ -4,7 +4,7 @@
  * Fast scanning using JSDOM + axe-core.
  * Does NOT check color contrast (requires real browser).
  *
- * Concurrency is controlled via config.performance.concurrency (default: 5).
+ * Concurrency is RAM- and CPU-aware (via configLoader.getSafeConcurrencyCeiling).
  * Each file scan is isolated — failures are caught and logged without stopping others.
  *
  * Use for: Development, quick checks, CI fast-fail
@@ -17,7 +17,8 @@ import { createRequire } from 'module';
 import * as p from '@clack/prompts';
 import pLimit from 'p-limit';
 import { resolveFiles } from '../../utils/fileResolver.js';
-import { MESSAGES } from '../../constants.js';
+import { getSafeConcurrencyCeiling } from '../../utils/configLoader.js';
+import { MESSAGES, SCAN_MODES } from '../../constants.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
 import { checkRtlCompliance, checkJsxRtlCompliance } from '../../utils/rtlValidator.js';
 import { processAxeViolations } from '../../utils/violationProcessor.js';
@@ -52,7 +53,7 @@ export async function runQuickAudit(config, targetPath = null, files = null, sil
 
     if (!silent) p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
 
-    const concurrency = config?.performance?.concurrency ?? 5;
+    const concurrency = config?.performance?.concurrency ?? getSafeConcurrencyCeiling(SCAN_MODES.QUICK);
     const limit = pLimit(concurrency);
 
     const results = await Promise.all(
