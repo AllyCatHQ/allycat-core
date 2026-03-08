@@ -1,6 +1,7 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
-import { configExists, loadConfig, saveConfig, getSafeConcurrencyCeiling } from '../utils/configLoader.js';
+import fs from 'fs';
+import { configExists, saveConfig, getSafeConcurrencyCeiling, getConfigPath } from '../utils/configLoader.js';
 import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS } from '../constants.js';
 
 // -----------------------------------------------------------------------------
@@ -39,9 +40,10 @@ export async function initCommand() {
     console.log('');
     p.intro(`${chalk.bgBlue.white(UI.INTRO_SETUP)}`);
 
-    // Read existing concurrency before overwrite — used as fallback if user rejects a custom override
+    // Read existing concurrency before overwrite — used as fallback if user rejects a custom override.
+    // Must read raw JSON (not loadConfig) to preserve null for "auto" — loadConfig sanitizes null → ceiling number.
     const existingConcurrency = configExists()
-        ? (loadConfig(SCAN_MODES.QUICK)?.performance?.concurrency ?? null)
+        ? (JSON.parse(fs.readFileSync(getConfigPath(), 'utf-8'))?.performance?.concurrency ?? null)
         : null;
 
     // Check if config exists
