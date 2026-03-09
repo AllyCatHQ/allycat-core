@@ -56,15 +56,45 @@ export function escapeAttr(value) {
 }
 
 // -----------------------------------------------------------------------------
-// HTML tag reference
+// HTML wrapper offset
 // -----------------------------------------------------------------------------
 
 /**
- * Complete set of known HTML element names (lowercase).
- * Used by all transformers to distinguish native HTML from custom components.
+ * Number of lines added before body content by wrapInDocument.
+ * All transformers export this value so violationProcessor can subtract it
+ * from axe's reported line numbers to recover the original source line.
  *
- * @type {Set<string>}
+ * Matches the structure of wrapInDocument() — count lines before ${bodyContent}:
+ *   line 1: <!DOCTYPE html>
+ *   line 2: <html lang="en">
+ *   line 3: <head>...</head>
+ *   line 4: <body>
+ *   line 5: ${bodyContent} starts here → offset = 4
+ *
+ * @type {number}
  */
+export const HTML_WRAPPER_OFFSET = 4;
+
+// -----------------------------------------------------------------------------
+// Ordinal index tracking
+// -----------------------------------------------------------------------------
+
+/**
+ * Append a source line to the ordinalIndex for the given tag.
+ * Creates the tag entry if it does not already exist.
+ *
+ * Shared by all transformers — JSX, Vue, and Angular build the same
+ * ordinalIndex structure during their rendering passes.
+ *
+ * @param {Map<string, number[]>} ordinalIndex
+ * @param {string} tag
+ * @param {number} sourceLine
+ */
+export function registerOrdinalEntry(ordinalIndex, tag, sourceLine) {
+    if (!ordinalIndex.has(tag)) ordinalIndex.set(tag, []);
+    ordinalIndex.get(tag).push(sourceLine);
+}
+
 // -----------------------------------------------------------------------------
 // CSS-in-JS detection
 // -----------------------------------------------------------------------------

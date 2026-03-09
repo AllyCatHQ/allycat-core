@@ -10,7 +10,7 @@
  */
 
 import * as t from '@babel/types';
-import { HTML_TAGS } from './transformerUtils.js';
+import { HTML_TAGS, registerOrdinalEntry } from './transformerUtils.js';
 import { renderAttributes } from './jsxAttributeMapper.js';
 
 // -----------------------------------------------------------------------------
@@ -64,22 +64,7 @@ export function renderNodesToHtml(jsxNodes, cssModuleBindings) {
     };
 }
 
-// -----------------------------------------------------------------------------
-// Ordinal Index
-// -----------------------------------------------------------------------------
-
-/**
- * Append a source line to the ordinalIndex for the given tag.
- * Creates the tag entry if it does not already exist.
- *
- * @param {Map<string, number[]>} ordinalIndex
- * @param {string} tag
- * @param {number} sourceLine
- */
-function registerOrdinalEntry(ordinalIndex, tag, sourceLine) {
-    if (!ordinalIndex.has(tag)) ordinalIndex.set(tag, []);
-    ordinalIndex.get(tag).push(sourceLine);
-}
+// registerOrdinalEntry — imported from transformerUtils.js
 
 // -----------------------------------------------------------------------------
 // Node Rendering

@@ -18,7 +18,7 @@ import { parse } from '@babel/parser';
 import _traverse from '@babel/traverse';
 const traverse = _traverse.default ?? _traverse;
 import * as t from '@babel/types';
-import { wrapInDocument } from './transformerUtils.js';
+import { wrapInDocument, HTML_WRAPPER_OFFSET } from './transformerUtils.js';
 import { renderNodesToHtml } from './jsxRenderer.js';
 
 // -----------------------------------------------------------------------------
@@ -58,25 +58,8 @@ export function isJsxFile(filePath) {
     return /\.(jsx|tsx)$/.test(filePath);
 }
 
-// -----------------------------------------------------------------------------
-// Constants
-// -----------------------------------------------------------------------------
-
-/**
- * Number of lines added before body content by wrapInDocument.
- * Used by scannerUtils to correctly offset lineMap lookups.
- *
- * Matches the structure of wrapInDocument() — count the lines
- * before ${bodyContent} starts:
- *   line 1: <!DOCTYPE html>
- *   line 2: <html lang="en">
- *   line 3: <head>...</head>
- *   line 4: <body>
- *   line 5: ${bodyContent} starts here → offset = 4
- *
- * @type {number}
- */
-export const HTML_WRAPPER_OFFSET = 4;
+// HTML_WRAPPER_OFFSET — re-exported from transformerUtils for backward compatibility
+export { HTML_WRAPPER_OFFSET };
 
 // -----------------------------------------------------------------------------
 // Parsing

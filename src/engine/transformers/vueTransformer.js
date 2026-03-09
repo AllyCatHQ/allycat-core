@@ -16,7 +16,7 @@
  */
 
 import { parse, NodeTypes } from '@vue/compiler-dom';
-import { wrapInDocument, escapeAttr, HTML_TAGS } from './transformerUtils.js';
+import { wrapInDocument, escapeAttr, HTML_TAGS, HTML_WRAPPER_OFFSET, registerOrdinalEntry } from './transformerUtils.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -83,13 +83,8 @@ export function extractStyleBlocks(sourceCode) {
     return blocks;
 }
 
-/**
- * Number of lines added before body content by wrapInDocument.
- * Matches HTML_WRAPPER_OFFSET in jsxTransformer — same document shell.
- *
- * @type {number}
- */
-export const HTML_WRAPPER_OFFSET = 4;
+// HTML_WRAPPER_OFFSET — re-exported from transformerUtils for backward compatibility
+export { HTML_WRAPPER_OFFSET };
 
 // -----------------------------------------------------------------------------
 // Template Extraction
@@ -176,8 +171,7 @@ function renderNodesToHtml(nodes, lineOffset) {
             lineMap.set(lineNum, sourceLine);
 
             if (tag) {
-                if (!ordinalIndex.has(tag)) ordinalIndex.set(tag, []);
-                ordinalIndex.get(tag).push(sourceLine);
+                registerOrdinalEntry(ordinalIndex, tag, sourceLine);
             }
         }
     }

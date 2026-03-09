@@ -15,19 +15,14 @@
  * @module engine/transformers/angularTransformer
  */
 
-import { wrapInDocument, HTML_TAGS } from './transformerUtils.js';
+import { wrapInDocument, HTML_TAGS, HTML_WRAPPER_OFFSET, registerOrdinalEntry } from './transformerUtils.js';
 
 // -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------
 
-/**
- * Number of lines added before body content by wrapInDocument.
- * Must equal 4 — violationProcessor subtracts this from axe's reported line number.
- *
- * @type {number}
- */
-export const HTML_WRAPPER_OFFSET = 4;
+// HTML_WRAPPER_OFFSET — re-exported from transformerUtils for backward compatibility
+export { HTML_WRAPPER_OFFSET };
 
 /**
  * Detect whether a file is an Angular component template.
@@ -88,8 +83,7 @@ export function transformAngularToHtml(sourceCode, lineOffset = 0, cssModuleBind
         if (tagMatch) {
             const tag = tagMatch[1].toLowerCase();
             lineMap.set(htmlLineNum, sourceLine);
-            if (!ordinalIndex.has(tag)) ordinalIndex.set(tag, []);
-            ordinalIndex.get(tag).push(sourceLine);
+            registerOrdinalEntry(ordinalIndex, tag, sourceLine);
         }
     }
 
