@@ -18,6 +18,7 @@
 
 import path from 'path';
 import { IMPACT_ORDER } from '../constants.js';
+import { normalizePathSeparators } from '../utils/pathUtils.js';
 
 // -----------------------------------------------------------------------------
 // Violation identity
@@ -105,7 +106,7 @@ export function computeDelta(previous, current) {
  * @returns {string}
  */
 export function normalizePath(rawPath) {
-    return path.normalize(rawPath).replace(/\\/g, '/');
+    return normalizePathSeparators(path.normalize(rawPath));
 }
 
 /**
