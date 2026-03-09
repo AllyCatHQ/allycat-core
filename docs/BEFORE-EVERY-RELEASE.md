@@ -55,42 +55,29 @@ All strings visible to users — printed to terminal, written to reports, shown 
 
 ## 3. Test Gate
 
-### E2E Tests — must all pass before publishing
-```bash
-node tests/e2e/thresholds.test.js
-node tests/e2e/concurrency.test.js
-node tests/e2e/css-delivery.test.js
-```
-- [ ] `thresholds.test.js` — all exit code assertions pass
-- [ ] `concurrency.test.js` — concurrency limits respected
-- [ ] `css-delivery.test.js` — CSS-in-JS warnings emitted correctly
+Full functional test checklist (all features, all file types, all output modes):
+**→ [`docs/private/functional-testing.md`](../private/functional-testing.md)**
 
-### Edge Case Fixtures — scan each manually and confirm expected output
+Quick summary of what must pass before release:
+
+### E2E Tests — automated, must all pass
+```bash
+node tests/e2e/thresholds.test.js    # exit codes — expect 8/8 passed
+node tests/e2e/concurrency.test.js   # RAM-aware ceilings — expect no crash
+node tests/e2e/css-delivery.test.js  # CSS features — expect 15/15 passed
+```
+
+### Minimum manual spot-check
 ```bash
 node src/index.js scan tests/fixtures/sample.html
 node src/index.js scan tests/fixtures/sample.vue
 node src/index.js scan tests/fixtures/sample.component.html
-node src/index.js scan tests/fixtures/vue-edge-cases.vue
-node src/index.js scan tests/fixtures/angular-edge-cases.component.html
 node src/index.js scan tests/fixtures/fail-on-critical.html --fail-on-critical
 node src/index.js scan tests/fixtures/fail-on-clean.html
 ```
-- [ ] HTML fixture reports violations (real issues caught, no false positives)
-- [ ] Vue fixture reports violations from `<template>` elements (CSS from `<style>` blocks informs contrast analysis — violations come from elements, not the style block itself)
-- [ ] Angular fixture: nested elements and dynamic bindings don't produce false positives; intentional violations are caught
-- [ ] `fail-on-critical.html` exits with code 1 when `--fail-on-critical` is passed
-- [ ] `fail-on-clean.html` exits with code 0
-- [ ] Line numbers in output point to the correct source lines
-
-### Output Modes — verify each still works
-```bash
-node src/index.js scan tests/fixtures/sample.html --summary
-node src/index.js scan tests/fixtures/sample.html --output json
-node src/index.js scan tests/fixtures/sample.html --json-file
-```
-- [ ] `--summary` prints clean table, no stack traces
-- [ ] `--output json` output is valid JSON (pipe to `node -e "process.stdin.resume(); let d=''; process.stdin.on('data',c=>d+=c); process.stdin.on('end',()=>JSON.parse(d))"` to verify)
-- [ ] `--json-file` creates a `.json` file with the correct structure (open and inspect it)
+- [ ] Violations reported for the first three files (see `functional-testing.md` for exact expected output)
+- [ ] `fail-on-critical.html --fail-on-critical` → exit code 1
+- [ ] `fail-on-clean.html` → exit code 0 and no violations
 
 ---
 
