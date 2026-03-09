@@ -240,6 +240,74 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx
 }
 
 // -----------------------------------------------------------------------------
+// File Scanning — Helpers
+// -----------------------------------------------------------------------------
+
+/**
+ * Classify the file type for a given source file.
+ *
+ * Evaluated in priority order: JSX → Vue → Angular HTML → Angular TS → plain HTML.
+ * Returns boolean flags plus a convenience `isComponent` flag that is true for
+ * any non-plain-HTML file that requires a transformer step.
+ *
+ * @param {string} filePath
+ * @param {string} sourceContent
+ * @returns {{ isJsx: boolean, isVue: boolean, isAngularHtml: boolean, isAngularTs: boolean, isComponent: boolean }}
+ */
+function detectFileContext(filePath, sourceContent) {
+    const isJsx         = isJsxFile(filePath);
+    const isVue         = !isJsx && isVueFile(filePath);
+    const isAngularHtml = !isJsx && !isVue && isAngularTemplate(sourceContent, filePath);
+    const isAngularTs   = !isJsx && !isVue && !isAngularHtml && isAngularComponentTs(sourceContent, filePath);
+    const isComponent   = isJsx || isVue || isAngularHtml || isAngularTs;
+    return { isJsx, isVue, isAngularHtml, isAngularTs, isComponent };
+}
+
+/**
+ * Build the extra CSS array for a given file.
+ *
+ * "Extra CSS" is framework-specific CSS that lives outside the normal
+ * import/link pipeline (e.g. Vue <style> blocks, Angular styleUrls, CSS Modules).
+ * It is passed directly to resolvAndInjectCss so Playwright can compute
+ * accurate contrast values.
+ *
+ * @param {string} filePath
+ * @param {string} sourceContent
+ * @param {boolean} isVue
+ * @param {boolean} isAngularTs
+ * @param {boolean} isAngularHtml
+ * @param {Map<string,string>} cssModuleBindings
+ * @param {Map<string,string>} cssCache
+ * @param {Map<string,string>} aliases
+ * @returns {Promise<string[]>}
+ */
+async function buildExtraCss(filePath, sourceContent, isVue, isAngularTs, isAngularHtml, cssModuleBindings, cssCache, aliases) {
+    let extraCss = [];
+    if (isVue) {
+        // Vue SFC: extract <style>, <style scoped>, <style module> block contents
+        extraCss = extractStyleBlocks(sourceContent);
+    } else if (isAngularTs) {
+        // Angular component: load styleUrls files + collect inline styles[] strings
+        const rawUrls = extractStyleUrls(sourceContent);
+        if (rawUrls.length > 0) {
+            const absPaths = resolveCssPaths(rawUrls, path.resolve(filePath));
+            extraCss.push(...await loadCssFiles(absPaths, cssCache));
+        }
+        extraCss.push(...extractInlineStyles(sourceContent));
+        // CSS Module imports: import styles from './comp.module.css'
+        if (cssModuleBindings.size > 0) {
+            const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
+            extraCss.push(...await loadCssFiles(modPaths, cssCache));
+        }
+    } else if (isAngularHtml && cssModuleBindings.size > 0) {
+        // CSS module files detected in companion .ts — load for contrast checking
+        const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
+        extraCss.push(...await loadCssFiles(modPaths, cssCache));
+    }
+    return extraCss;
+}
+
+// -----------------------------------------------------------------------------
 // File Scanning
 // -----------------------------------------------------------------------------
 
@@ -258,11 +326,7 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
     try {
         const sourceContent = await readSourceFile(filePath);
 
-        const isJsx        = isJsxFile(filePath);
-        const isVue        = !isJsx && isVueFile(filePath);
-        const isAngularHtml = !isJsx && !isVue && isAngularTemplate(sourceContent, filePath);
-        const isAngularTs  = !isJsx && !isVue && !isAngularHtml && isAngularComponentTs(sourceContent, filePath);
-        const isComponent  = isJsx || isVue || isAngularHtml || isAngularTs;
+        const { isJsx, isVue, isAngularHtml, isAngularTs, isComponent } = detectFileContext(filePath, sourceContent);
 
         let transformedHtml, lineMap, ordinalIndex;
         // CSS module bindings from extractCssModuleImports() — hoisted so both the
@@ -292,30 +356,7 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
             transformedHtml = sourceContent; lineMap = null; ordinalIndex = null;
         }
 
-        // Build extraCss: framework-specific CSS that lives outside the normal
-        // import/link pipeline and must be passed directly to the HTML injector.
-        let extraCss = [];
-        if (isVue) {
-            // Vue SFC: extract <style>, <style scoped>, <style module> block contents
-            extraCss = extractStyleBlocks(sourceContent);
-        } else if (isAngularTs) {
-            // Angular component: load styleUrls files + collect inline styles[] strings
-            const rawUrls = extractStyleUrls(sourceContent);
-            if (rawUrls.length > 0) {
-                const absPaths = resolveCssPaths(rawUrls, path.resolve(filePath));
-                extraCss.push(...await loadCssFiles(absPaths, cssCache));
-            }
-            extraCss.push(...extractInlineStyles(sourceContent));
-            // CSS Module imports: import styles from './comp.module.css'
-            if (cssModuleBindings.size > 0) {
-                const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
-                extraCss.push(...await loadCssFiles(modPaths, cssCache));
-            }
-        } else if (isAngularHtml && cssModuleBindings.size > 0) {
-            // CSS module files detected in companion .ts — load for contrast checking
-            const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
-            extraCss.push(...await loadCssFiles(modPaths, cssCache));
-        }
+        const extraCss = await buildExtraCss(filePath, sourceContent, isVue, isAngularTs, isAngularHtml, cssModuleBindings, cssCache, aliases);
 
         // Inject imported CSS so Playwright can compute accurate contrast values
         const scanContent = await resolvAndInjectCss(
