@@ -69,12 +69,12 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
     const aliases = await loadTsconfigAliases(process.cwd());
 
     const concurrency = config?.performance?.concurrency ?? getSafeConcurrencyCeiling(SCAN_MODES.FULL);
-    const limit = pLimit(concurrency);
+    const limiter = pLimit(concurrency);
 
     try {
         const results = await Promise.all(
             filesToScan.map(filePath =>
-                limit(async () => {
+                limiter(async () => {
                     try {
                         return await scanSingleFile(browser, filePath, config, cssCache, aliases);
                     } catch (err) {
@@ -180,22 +180,22 @@ function processFullScanViolations(
 ) {
     const isComponentContext = lineMap && transformedHtml;
     const domDocument = isComponentContext ? buildQueryDocument(transformedHtml) : null;
-    const results = [];
+    const processed = [];
 
     for (const violation of violations) {
         // Skip document-level rules for component files (JSX/TSX/Vue/Angular).
         if (isComponentContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
 
         for (const node of violation.nodes) {
-            const base = createViolationFromNode(
+            const baseViolation = createViolationFromNode(
                 filePath, violation, node, sourceContent,
                 lineMap, transformedHtml, ordinalIndex, domDocument
             );
-            results.push(enhanceWithContrastData(base, violation, node));
+            processed.push(enhanceWithContrastData(baseViolation, violation, node));
         }
     }
 
-    return results;
+    return processed;
 }
 
 // -----------------------------------------------------------------------------

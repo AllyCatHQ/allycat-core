@@ -35,19 +35,19 @@ export async function buildExtraCss(filePath, sourceContent, { isVue, isAngularT
         // Angular component: load styleUrls files + collect inline styles[] strings
         const rawUrls = extractStyleUrls(sourceContent);
         if (rawUrls.length > 0) {
-            const absPaths = resolveCssPaths(rawUrls, path.resolve(filePath));
-            extraCss.push(...await loadCssFiles(absPaths, cssCache));
+            const resolvedPaths = resolveCssPaths(rawUrls, path.resolve(filePath));
+            extraCss.push(...await loadCssFiles(resolvedPaths, cssCache));
         }
         extraCss.push(...extractInlineStyles(sourceContent));
         // CSS Module imports: import styles from './comp.module.css'
         if (cssModuleBindings.size > 0) {
-            const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
-            extraCss.push(...await loadCssFiles(modPaths, cssCache));
+            const modulePaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
+            extraCss.push(...await loadCssFiles(modulePaths, cssCache));
         }
     } else if (isAngularHtml && cssModuleBindings.size > 0) {
         // CSS module files detected in companion .ts — load for contrast checking
-        const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
-        extraCss.push(...await loadCssFiles(modPaths, cssCache));
+        const modulePaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
+        extraCss.push(...await loadCssFiles(modulePaths, cssCache));
     }
     return extraCss;
 }

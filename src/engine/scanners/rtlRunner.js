@@ -37,14 +37,14 @@ export async function checkRtlCompliancePlaywright(page, filePath, sourceContent
             ? sourceLines[0]
             : findLineNumber(sourceContent, `<${rootInfo.tag}`);
 
-        const help = selectedStandard === STANDARDS.ISRAEL
+        const helpText = selectedStandard === STANDARDS.ISRAEL
             ? 'Add dir="rtl" to your root element or to the <html> tag in index.html.'
             : 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
 
-        return createRtlViolation(selectedStandard, filePath, rootInfo.html, lineNumber, rootInfo.tag, help);
+        return createRtlViolation(selectedStandard, filePath, rootInfo.html, lineNumber, rootInfo.tag, helpText);
     }
 
-    // HTML file path
+    // Plain HTML file — check <html> element directly
     const hasRtl = await page.evaluate(() => document.documentElement.getAttribute('dir') === 'rtl');
     if (hasRtl) return null;
 
