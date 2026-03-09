@@ -1,5 +1,5 @@
 {
-  "name": "a11yguard-core",
+  "name": "a11y-guard",
   "version": "1.0.0",
   "description": "Professional CLI for accessibility compliance testing — WCAG 2.1 AA/AAA and Israeli Standard IS 5568",
   "main": "src/index.js",

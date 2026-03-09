@@ -34,7 +34,7 @@ Fast, developer-friendly accessibility scanning with support for **WCAG 2.1 AA/A
 ## Installation
 
 ```bash
-npm install -g a11yguard-core
+npm install -g a11y-guard
 ```
 
 For full scan mode (contrast checking), download the Chromium browser once:
@@ -413,7 +413,7 @@ jobs:
         run: npm ci
 
       - name: Install A11y-Guard
-        run: npm install -g a11yguard-core
+        run: npm install -g a11y-guard
 
       - name: Run accessibility scan
         run: a11y-guard scan --fail-on-critical --json-file a11y-report
@@ -432,7 +432,7 @@ accessibility:
   image: node:20
   script:
     - npm ci
-    - npm install -g a11yguard-core
+    - npm install -g a11y-guard
     - a11y-guard scan --fail-on-critical --json-file a11y-report
   artifacts:
     paths:
@@ -444,7 +444,7 @@ accessibility:
 ```groovy
 stage('Accessibility') {
   steps {
-    sh 'npm install -g a11yguard-core'
+    sh 'npm install -g a11y-guard'
     sh 'a11y-guard scan --fail-on-critical --json-file a11y-report'
     archiveArtifacts artifacts: 'a11y-report.json'
   }

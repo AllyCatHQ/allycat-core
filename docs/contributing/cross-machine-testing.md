@@ -149,10 +149,10 @@ Run this from inside the project root on any OS:
 ```bash
 # 1. Pack
 npm pack
-# → a11yguard-core-1.0.0.tgz
+# → a11y-guard-1.0.0.tgz
 
 # 2. Install globally from tarball
-npm install -g a11yguard-core-1.0.0.tgz
+npm install -g a11y-guard-1.0.0.tgz
 
 # 3. Test in a separate directory (no local node_modules)
 mkdir /tmp/a11y-test-project
@@ -161,8 +161,8 @@ a11y-guard --version
 a11y-guard init
 
 # 4. Cleanup
-npm uninstall -g a11yguard-core
-rm ~/A11yGuard-Core/a11yguard-core-1.0.0.tgz
+npm uninstall -g a11y-guard
+rm ~/A11yGuard-Core/a11y-guard-1.0.0.tgz
 ```
 
 ---
@@ -189,10 +189,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy the packed tarball (run npm pack first)
-COPY a11yguard-core-*.tgz ./
+COPY a11y-guard-*.tgz ./
 
 # Install globally from tarball
-RUN npm install -g a11yguard-core-*.tgz
+RUN npm install -g a11y-guard-*.tgz
 
 # Install Playwright Chromium inside the container
 RUN npx playwright install chromium --with-deps
@@ -215,10 +215,10 @@ CMD ["bash"]
 npm pack
 
 # Step 2: Build the Docker image
-docker build -f Dockerfile.crosstest -t a11yguard-crosstest .
+docker build -f Dockerfile.crosstest -t a11y-guard-crosstest .
 
 # Step 3: Run interactive shell
-docker run --rm -it a11yguard-crosstest bash
+docker run --rm -it a11y-guard-crosstest bash
 
 # Inside the container — run the full test suite:
 a11y-guard --version
@@ -231,7 +231,7 @@ a11y-guard init   # (non-interactive — Ctrl+C after confirming it launches)
 
 ```bash
 # Run a one-liner smoke test (no interactive shell needed):
-docker run --rm a11yguard-crosstest \
+docker run --rm a11y-guard-crosstest \
   bash -c "a11y-guard --version && \
            a11y-guard scan /test-project/sample.html && \
            a11y-guard scan /test-project/fail-on-critical.html --fail-on-critical; \
@@ -519,11 +519,11 @@ Run after `npm pack` before publishing:
 ```bash
 # 1. Pack
 npm pack
-# → a11yguard-core-1.0.0.tgz
+# → a11y-guard-1.0.0.tgz
 
 # 2. Install globally from tarball into a different directory
 cd /tmp
-npm install -g ~/path/to/A11yGuard-Core/a11yguard-core-1.0.0.tgz
+npm install -g ~/path/to/A11yGuard-Core/a11y-guard-1.0.0.tgz
 
 # 3. Run in a clean test project
 mkdir /tmp/smoke-project && cd /tmp/smoke-project
@@ -536,8 +536,8 @@ a11y-guard scan /path/to/tests/fixtures/sample.html -o json
 a11y-guard scan /path/to/tests/fixtures/fail-on-critical.html --fail-on-critical; echo "Exit: $?"
 
 # 4. Clean up
-npm uninstall -g a11yguard-core
-rm ~/path/to/A11yGuard-Core/a11yguard-core-1.0.0.tgz
+npm uninstall -g a11y-guard
+rm ~/path/to/A11yGuard-Core/a11y-guard-1.0.0.tgz
 ```
 
 - ⬜ Tarball smoke test passes on Windows

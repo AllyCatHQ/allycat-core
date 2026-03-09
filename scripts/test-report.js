@@ -59,7 +59,7 @@ const demoViolations = [
 ];
 
 // ---------------------------------------------------------------------------
-// Demo config — mirrors the shape read from a11yguard.config.js
+// Demo config — mirrors the shape read from a11y-config.json
 // ---------------------------------------------------------------------------
 
 const demoConfig = {

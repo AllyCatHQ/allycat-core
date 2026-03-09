@@ -32,7 +32,7 @@ Because `src/index.js` reads `version` from `package.json` at runtime (ISSUE-005
 
 Uploads the package to [npmjs.com](https://npmjs.com) so anyone can install it:
 ```bash
-npm install -g a11yguard-core
+npm install -g a11y-guard
 ```
 
 Only uploads the files listed in `"files"` in `package.json`:
@@ -63,12 +63,12 @@ npm pack --dry-run
 npm publish --access public
 
 # 6. Verify it's live
-npm info a11yguard-core version
+npm info a11y-guard version
 
 # 7. Smoke test from a clean install
-npm install -g a11yguard-core
+npm install -g a11y-guard
 a11y-guard --version   # must match the bumped version
-npm uninstall -g a11yguard-core
+npm uninstall -g a11y-guard
 ```
 
 ---

@@ -28,7 +28,7 @@ Verify that what the tool **tells** users matches what it **does**.
 - [ ] All flags in the README exist and behave as described
 - [ ] All examples actually work (run at least one end-to-end)
 - [ ] Supported file types section is current
-- [ ] Installation command is correct (`npm install -g a11yguard-core`)
+- [ ] Installation command is correct (`npm install -g a11y-guard`)
 - [ ] Version referenced anywhere matches `package.json`
 
 ---
@@ -125,7 +125,7 @@ npm pack --dry-run
 
 ```bash
 npm pack
-npm install -g a11yguard-core-<version>.tgz
+npm install -g a11y-guard-<version>.tgz
 
 cd /tmp/smoke-test   # or any directory outside this project
 a11y-guard --version                  # must match package.json version
@@ -133,8 +133,8 @@ a11y-guard --help                     # must render without errors
 a11y-guard init                       # run through wizard, accept defaults
 a11y-guard scan .                     # must complete without crash
 
-npm uninstall -g a11yguard-core
-rm a11yguard-core-<version>.tgz
+npm uninstall -g a11y-guard
+rm a11y-guard-<version>.tgz
 ```
 
 - [ ] `--version` matches expected version
@@ -149,9 +149,9 @@ rm a11yguard-core-<version>.tgz
 ```bash
 npm whoami                   # confirm logged in
 npm publish --access public
-npm info a11yguard-core version   # confirm live version updated
+npm info a11y-guard version   # confirm live version updated
 ```
 
 - [ ] Published successfully
 - [ ] Live version on npmjs.com matches expected version
-- [ ] Post-publish: fresh install test (`npm install -g a11yguard-core && a11y-guard --version`)
+- [ ] Post-publish: fresh install test (`npm install -g a11y-guard && a11y-guard --version`)
