@@ -103,7 +103,7 @@ function parseJsx(sourceCode) {
 }
 
 // -----------------------------------------------------------------------------
-// AST Traversal — Collect Root JSX Nodes
+// AST Traversal
 // -----------------------------------------------------------------------------
 
 /**
@@ -188,22 +188,17 @@ function renderNodesToHtml(jsxNodes, cssModuleBindings) {
     const ordinalIndex = new Map();
 
     for (const node of jsxNodes) {
-        const rendered = renderNode(node, 0, cssModuleBindings);
+        const renderedLines = renderNode(node, 0, cssModuleBindings);
 
-        for (const { htmlLine, sourceLine, tag } of rendered) {
+        for (const { htmlLine, sourceLine, tag } of renderedLines) {
             const currentHtmlLineNumber = htmlLines.length + 1;
             htmlLines.push(htmlLine);
 
             if (sourceLine !== null) {
-                // lineMap: html line → source line
                 lineMap.set(currentHtmlLineNumber, sourceLine);
 
-                // ordinalIndex: tag → [sourceLine in document order]
                 if (tag) {
-                    if (!ordinalIndex.has(tag)) {
-                        ordinalIndex.set(tag, []);
-                    }
-                    ordinalIndex.get(tag).push(sourceLine);
+                    registerOrdinalEntry(ordinalIndex, tag, sourceLine);
                 }
             }
         }
@@ -214,6 +209,19 @@ function renderNodesToHtml(jsxNodes, cssModuleBindings) {
         lineMap,
         ordinalIndex,
     };
+}
+
+/**
+ * Append a source line to the ordinalIndex for the given tag.
+ * Creates the tag entry if it does not already exist.
+ *
+ * @param {Map<string, number[]>} ordinalIndex
+ * @param {string} tag
+ * @param {number} sourceLine
+ */
+function registerOrdinalEntry(ordinalIndex, tag, sourceLine) {
+    if (!ordinalIndex.has(tag)) ordinalIndex.set(tag, []);
+    ordinalIndex.get(tag).push(sourceLine);
 }
 
 /**
@@ -318,27 +326,54 @@ function renderText(node, depth) {
 function renderExpression(node, depth, cssModuleBindings) {
     if (t.isJSXEmptyExpression(node.expression)) return [];
 
-    if (t.isLogicalExpression(node.expression)) {
-        const right = node.expression.right;
-        if (t.isJSXElement(right) || t.isJSXFragment(right)) {
-            return renderNode(right, depth, cssModuleBindings);
-        }
-    }
+    const logicalLines = renderLogicalExpression(node.expression, depth, cssModuleBindings);
+    if (logicalLines !== null) return logicalLines;
 
-    if (t.isConditionalExpression(node.expression)) {
-        const lines = [];
-        const { consequent, alternate } = node.expression;
-        if (t.isJSXElement(consequent) || t.isJSXFragment(consequent)) {
-            lines.push(...renderNode(consequent, depth, cssModuleBindings));
-        }
-        if (t.isJSXElement(alternate) || t.isJSXFragment(alternate)) {
-            lines.push(...renderNode(alternate, depth, cssModuleBindings));
-        }
-        return lines;
-    }
+    const conditionalLines = renderConditionalExpression(node.expression, depth, cssModuleBindings);
+    if (conditionalLines !== null) return conditionalLines;
 
     const indent = '  '.repeat(depth);
     return [{ htmlLine: `${indent}placeholder`, sourceLine: null, tag: null }];
+}
+
+/**
+ * Render the right-hand side of a logical expression if it is JSX.
+ * Returns null if the expression is not logical, or its right side is not JSX.
+ *
+ * @param {import('@babel/types').Expression} expression
+ * @param {number} depth
+ * @param {Map<string, string>} cssModuleBindings
+ * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>|null}
+ */
+function renderLogicalExpression(expression, depth, cssModuleBindings) {
+    if (!t.isLogicalExpression(expression)) return null;
+    const right = expression.right;
+    if (t.isJSXElement(right) || t.isJSXFragment(right)) {
+        return renderNode(right, depth, cssModuleBindings);
+    }
+    return null;
+}
+
+/**
+ * Render both branches of a conditional (ternary) expression.
+ * Returns null if the expression is not a conditional expression.
+ *
+ * @param {import('@babel/types').Expression} expression
+ * @param {number} depth
+ * @param {Map<string, string>} cssModuleBindings
+ * @returns {Array<{ htmlLine: string, sourceLine: number|null, tag: string|null }>|null}
+ */
+function renderConditionalExpression(expression, depth, cssModuleBindings) {
+    if (!t.isConditionalExpression(expression)) return null;
+    const lines = [];
+    const { consequent, alternate } = expression;
+    if (t.isJSXElement(consequent) || t.isJSXFragment(consequent)) {
+        lines.push(...renderNode(consequent, depth, cssModuleBindings));
+    }
+    if (t.isJSXElement(alternate) || t.isJSXFragment(alternate)) {
+        lines.push(...renderNode(alternate, depth, cssModuleBindings));
+    }
+    return lines;
 }
 
 // -----------------------------------------------------------------------------
@@ -378,7 +413,7 @@ function resolveTag(openingElement) {
  * @returns {string} - HTML attribute string
  */
 function renderAttributes(attributes, cssModuleBindings) {
-    const parts = [];
+    const attrParts = [];
 
     for (const attr of attributes) {
         if (t.isJSXSpreadAttribute(attr)) continue;
@@ -389,21 +424,22 @@ function renderAttributes(attributes, cssModuleBindings) {
         if (isEventHandler(name)) continue;
 
         if (attr.value === null) {
-            parts.push(htmlAttr);
+            attrParts.push(htmlAttr);
             continue;
         }
 
         if (t.isStringLiteral(attr.value)) {
-            parts.push(`${htmlAttr}="${escapeAttr(attr.value.value)}"`);
+            attrParts.push(`${htmlAttr}="${escapeAttr(attr.value.value)}"`);
             continue;
         }
+
         // Style object: style={{ color: '#fff', backgroundColor: '#000' }}
         // Must be handled before the generic expression resolver,
         // because ObjectExpression → "dynamic" by default.
         if (htmlAttr === 'style' && t.isJSXExpressionContainer(attr.value)) {
             const cssString = resolveStyleObject(attr.value.expression);
             if (cssString) {
-                parts.push(`style="${cssString}"`);
+                attrParts.push(`style="${cssString}"`);
             }
             continue;
         }
@@ -413,20 +449,20 @@ function renderAttributes(attributes, cssModuleBindings) {
         if (htmlAttr === 'class' && t.isJSXExpressionContainer(attr.value)) {
             const moduleClass = resolveCssModuleClass(attr.value.expression, cssModuleBindings);
             if (moduleClass !== null) {
-                parts.push(`class="${escapeAttr(moduleClass)}"`);
+                attrParts.push(`class="${escapeAttr(moduleClass)}"`);
                 continue;
             }
         }
 
         // Expression value: alt={getAlt()}, src={imgUrl}
         if (t.isJSXExpressionContainer(attr.value)) {
-            const resolved = resolveExpressionValue(attr.value.expression, htmlAttr);
+            const resolved = resolveExpressionValue(attr.value.expression);
             if (resolved === null) continue;
-            parts.push(`${htmlAttr}="${resolved}"`);
+            attrParts.push(`${htmlAttr}="${resolved}"`);
         }
     }
 
-    return parts.length > 0 ? ' ' + parts.join(' ') : '';
+    return attrParts.length > 0 ? ' ' + attrParts.join(' ') : '';
 }
 
 /**
@@ -466,10 +502,9 @@ function isEventHandler(name) {
  * Resolve a JSX expression value to a string for HTML output.
  *
  * @param {import('@babel/types').Expression} expression
- * @param {string} attrName
  * @returns {string|null}
  */
-function resolveExpressionValue(expression, attrName) {
+function resolveExpressionValue(expression) {
     if (t.isStringLiteral(expression)) return escapeAttr(expression.value);
     if (t.isBooleanLiteral(expression) && !expression.value) return null;
     if (t.isBooleanLiteral(expression) && expression.value) return 'true';
@@ -532,33 +567,55 @@ function resolveStyleObject(expression) {
         // Skip computed keys: { [key]: value }
         if (prop.computed) continue;
 
-        const key = t.isIdentifier(prop.key)
-            ? prop.key.name
-            : t.isStringLiteral(prop.key)
-                ? prop.key.value
-                : null;
-
+        const key = resolveStylePropertyKey(prop);
         if (!key) continue;
 
-        // Only serialize string and numeric literal values —
-        // variables and expressions are unknowable statically.
-        let value = null;
-        if (t.isStringLiteral(prop.value)) {
-            value = prop.value.value;
-        } else if (t.isNumericLiteral(prop.value)) {
-            value = String(prop.value.value);
-        }
-
+        const value = resolveStylePropertyValue(prop);
         if (!value) continue;
 
-        // camelCase → kebab-case: backgroundColor → background-color
-        const cssProperty = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-        declarations.push(`${cssProperty}: ${value}`);
+        declarations.push(`${camelToKebab(key)}: ${value}`);
     }
 
     return declarations.length > 0 ? declarations.join('; ') : null;
 }
-// wrapInDocument, escapeAttr, HTML_TAGS — imported from transformerUtils.js
+
+/**
+ * Extract the CSS property key from a style object property node.
+ * Returns null for computed keys or unrecognised node types.
+ *
+ * @param {import('@babel/types').ObjectProperty} prop
+ * @returns {string|null}
+ */
+function resolveStylePropertyKey(prop) {
+    if (t.isIdentifier(prop.key)) return prop.key.name;
+    if (t.isStringLiteral(prop.key)) return prop.key.value;
+    return null;
+}
+
+/**
+ * Extract the CSS property value from a style object property node.
+ * Only string and numeric literals are serializable statically.
+ * Returns null for dynamic/unknown values.
+ *
+ * @param {import('@babel/types').ObjectProperty} prop
+ * @returns {string|null}
+ */
+function resolveStylePropertyValue(prop) {
+    if (t.isStringLiteral(prop.value)) return prop.value.value;
+    if (t.isNumericLiteral(prop.value)) return String(prop.value.value);
+    return null;
+}
+
+/**
+ * Convert a camelCase CSS property name to kebab-case.
+ * e.g. backgroundColor → background-color
+ *
+ * @param {string} key
+ * @returns {string}
+ */
+function camelToKebab(key) {
+    return key.replace(/([A-Z])/g, '-$1').toLowerCase();
+}
 
 /**
  * Check if a tag name is a native HTML element.
