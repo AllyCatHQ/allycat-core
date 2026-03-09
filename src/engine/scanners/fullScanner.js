@@ -361,11 +361,11 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
         const { isJsx, isVue, isAngularHtml, isAngularTs, isComponent } = detectFileContext(filePath, sourceContent);
 
         const transformResult = await transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAngularHtml, isAngularTs });
-        if (!transformResult) return [];  // templateUrl-only Angular TS — .html scanned separately
+        if (!transformResult) return { violations: [], warning: null };  // templateUrl-only Angular TS — .html scanned separately
         const { transformedHtml, lineMap, ordinalIndex, cssModuleBindings } = transformResult;
         warning = transformResult.warning;
 
-        const extraCss = await buildExtraCss(filePath, sourceContent, isVue, isAngularTs, isAngularHtml, cssModuleBindings, cssCache, aliases);
+        const extraCss = await buildExtraCss(filePath, sourceContent, { isVue, isAngularTs, isAngularHtml }, cssModuleBindings, cssCache, aliases);
 
         // Inject imported CSS so Playwright can compute accurate contrast values
         const scanContent = await resolvAndInjectCss(
