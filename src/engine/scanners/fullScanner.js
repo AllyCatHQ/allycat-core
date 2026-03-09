@@ -123,6 +123,12 @@ function buildQueryDocument(transformedHtml) {
 // Contrast Data
 // -----------------------------------------------------------------------------
 
+/**
+ * Extract contrast ratio and color data from an axe node.
+ *
+ * @param {Object} node - Axe node data
+ * @returns {{ contrastRatio, expectedRatio, fgColor, bgColor, fontSize, fontWeight }}
+ */
 function extractContrastData(node) {
     const data = node.any?.[0]?.data || {};
     return {
@@ -191,6 +197,7 @@ function processFullScanViolations(
 
     return results;
 }
+
 // -----------------------------------------------------------------------------
 // RTL Compliance (Playwright path)
 // -----------------------------------------------------------------------------
@@ -201,9 +208,11 @@ function processFullScanViolations(
  * @param {Object} page - Playwright page object
  * @param {string} filePath - Source file path
  * @param {string} sourceContent - Original source code
+ * @param {boolean} isComponent - True for JSX/Vue/Angular files (checks body root, not <html>)
+ * @param {Map<string,number[]>|null} ordinalIndex - Tag→line map for component root lookup
+ * @param {string} selectedStandard - Accessibility standard (e.g. STANDARDS.ISRAEL)
  * @returns {Promise<Object|null>} - RTL violation object or null
  */
-
 async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, ordinalIndex, selectedStandard) {
     if (isComponent) {
         const hasRtl = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
@@ -298,15 +307,13 @@ async function transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAn
  *
  * @param {string} filePath
  * @param {string} sourceContent
- * @param {boolean} isVue
- * @param {boolean} isAngularTs
- * @param {boolean} isAngularHtml
+ * @param {{ isVue: boolean, isAngularTs: boolean, isAngularHtml: boolean }} fileContext
  * @param {Map<string,string>} cssModuleBindings
  * @param {Map<string,string>} cssCache
  * @param {Map<string,string>} aliases
  * @returns {Promise<string[]>}
  */
-async function buildExtraCss(filePath, sourceContent, isVue, isAngularTs, isAngularHtml, cssModuleBindings, cssCache, aliases) {
+async function buildExtraCss(filePath, sourceContent, { isVue, isAngularTs, isAngularHtml }, cssModuleBindings, cssCache, aliases) {
     let extraCss = [];
     if (isVue) {
         // Vue SFC: extract <style>, <style scoped>, <style module> block contents
