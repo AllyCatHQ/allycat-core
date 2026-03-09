@@ -244,6 +244,50 @@ async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isCom
 // -----------------------------------------------------------------------------
 
 /**
+ * Transform a source file to HTML ready for axe scanning.
+ *
+ * Dispatches to the appropriate transformer based on file type flags from
+ * detectFileContext(). Returns null for Angular TS files that have no inline
+ * template (templateUrl-only) — those are scanned via their companion .html.
+ *
+ * @param {string} filePath
+ * @param {string} sourceContent
+ * @param {{ isJsx: boolean, isVue: boolean, isAngularHtml: boolean, isAngularTs: boolean }} fileContext
+ * @returns {Promise<{ transformedHtml: string, lineMap: Map|null, ordinalIndex: Map|null, cssModuleBindings: Map, warning: string|null }|null>}
+ */
+async function transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAngularHtml, isAngularTs }) {
+    let transformedHtml, lineMap, ordinalIndex;
+    let cssModuleBindings = new Map();
+    let warning = null;
+
+    if (isJsx) {
+        const cssInJs = detectCssInJs(sourceContent);
+        if (cssInJs) warning = `CSS-in-JS detected (${cssInJs}) - contrast checking unavailable`;
+        ({ html: transformedHtml, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
+    } else if (isVue) {
+        ({ html: transformedHtml, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
+    } else if (isAngularHtml) {
+        // Look up the companion .component.ts for CSS module bindings.
+        // Angular naming convention guarantees same directory; try/catch is safe.
+        try {
+            const companionTs = filePath.replace(/\.html$/, '.ts');
+            const tsSource = await readSourceFile(companionTs);
+            cssModuleBindings = extractCssModuleImports(tsSource);
+        } catch { /* no companion .ts — fine */ }
+        ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(sourceContent, 0, cssModuleBindings));
+    } else if (isAngularTs) {
+        const extracted = extractInlineTemplate(sourceContent);
+        if (!extracted) return null;  // templateUrl-only or unextractable — .html scanned separately
+        cssModuleBindings = extractCssModuleImports(sourceContent);
+        ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(extracted.content, extracted.lineOffset, cssModuleBindings));
+    } else {
+        transformedHtml = sourceContent; lineMap = null; ordinalIndex = null;
+    }
+
+    return { transformedHtml, lineMap, ordinalIndex, cssModuleBindings, warning };
+}
+
+/**
  * Classify the file type for a given source file.
  *
  * Evaluated in priority order: JSX → Vue → Angular HTML → Angular TS → plain HTML.
@@ -328,33 +372,10 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
 
         const { isJsx, isVue, isAngularHtml, isAngularTs, isComponent } = detectFileContext(filePath, sourceContent);
 
-        let transformedHtml, lineMap, ordinalIndex;
-        // CSS module bindings from extractCssModuleImports() — hoisted so both the
-        // transformer call and the extraCss assembly block can share the same Map.
-        let cssModuleBindings = new Map();
-        if (isJsx) {
-            const cssInJs = detectCssInJs(sourceContent);
-            if (cssInJs) warning = `CSS-in-JS detected (${cssInJs}) - contrast checking unavailable`;
-            ({ html: transformedHtml, lineMap, ordinalIndex } = transformJsxToHtml(sourceContent));
-        } else if (isVue) {
-            ({ html: transformedHtml, lineMap, ordinalIndex } = transformVueToHtml(sourceContent));
-        } else if (isAngularHtml) {
-            // Look up the companion .component.ts for CSS module bindings.
-            // Angular naming convention guarantees same directory; try/catch is safe.
-            try {
-                const companionTs = filePath.replace(/\.html$/, '.ts');
-                const tsSource = await readSourceFile(companionTs);
-                cssModuleBindings = extractCssModuleImports(tsSource);
-            } catch { /* no companion .ts — fine */ }
-            ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(sourceContent, 0, cssModuleBindings));
-        } else if (isAngularTs) {
-            const extracted = extractInlineTemplate(sourceContent);
-            if (!extracted) return [];  // templateUrl-only or unextractable — .html scanned separately
-            cssModuleBindings = extractCssModuleImports(sourceContent);
-            ({ html: transformedHtml, lineMap, ordinalIndex } = transformAngularToHtml(extracted.content, extracted.lineOffset, cssModuleBindings));
-        } else {
-            transformedHtml = sourceContent; lineMap = null; ordinalIndex = null;
-        }
+        const transformResult = await transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAngularHtml, isAngularTs });
+        if (!transformResult) return [];  // templateUrl-only Angular TS — .html scanned separately
+        const { transformedHtml, lineMap, ordinalIndex, cssModuleBindings } = transformResult;
+        warning = transformResult.warning;
 
         const extraCss = await buildExtraCss(filePath, sourceContent, isVue, isAngularTs, isAngularHtml, cssModuleBindings, cssCache, aliases);
 
