@@ -94,7 +94,10 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
 }
 
 // -----------------------------------------------------------------------------
-// Query Document (Playwright path)
+// Violation Processing
+//
+// buildQueryDocument, extractContrastData, and enhanceWithContrastData are
+// private helpers used exclusively by processFullScanViolations.
 // -----------------------------------------------------------------------------
 
 /**
@@ -119,10 +122,6 @@ function buildQueryDocument(transformedHtml) {
     return new JSDOM(transformedHtml, { virtualConsole }).window.document;
 }
 
-// -----------------------------------------------------------------------------
-// Contrast Data
-// -----------------------------------------------------------------------------
-
 /**
  * Extract contrast ratio and color data from an axe node.
  *
@@ -144,21 +143,17 @@ function extractContrastData(node) {
 /**
  * Enhance violation with contrast data if applicable
  *
- * @param {Object} violation - Base violation object
+ * @param {Object} baseViolation - Base violation object
  * @param {Object} axeViolation - Original axe violation
  * @param {Object} node - Axe node data
  * @returns {Object} - Enhanced violation object
  */
-function enhanceWithContrastData(violation, axeViolation, node) {
+function enhanceWithContrastData(baseViolation, axeViolation, node) {
     if (axeViolation.id.includes('contrast')) {
-        return { ...violation, contrastData: extractContrastData(node) };
+        return { ...baseViolation, contrastData: extractContrastData(node) };
     }
-    return violation;
+    return baseViolation;
 }
-
-// -----------------------------------------------------------------------------
-// Violation Processing
-// -----------------------------------------------------------------------------
 
 /**
  * Process full-scan violations with ordinal-index resolution and contrast data.
