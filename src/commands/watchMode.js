@@ -56,7 +56,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
         ? await runFullAudit(config, target || null, null)
         : await runQuickAudit(config, target || null, null);
 
-    populateStateFromResult(state, initialResult.violations);
+    groupViolationsByFile(state, initialResult.violations);
 
     clearScreen();
     printBanner();
@@ -74,16 +74,16 @@ export async function watchMode(target, config, scanMode, options = {}) {
         awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },
     });
 
-    const timers = new Map(); // debounce: filepath → timeout handle
+    const debounceTimers = new Map(); // debounce: filepath → timeout handle
 
     const scheduleRescan = (filepath) => {
         if (!SUPPORTED_EXTENSIONS.some(ext => filepath.endsWith(`.${ext}`))) return;
 
-        if (timers.has(filepath)) clearTimeout(timers.get(filepath));
+        if (debounceTimers.has(filepath)) clearTimeout(debounceTimers.get(filepath));
 
-        timers.set(filepath, setTimeout(async () => {
-            timers.delete(filepath);
-            await handleChange(filepath, state, config, scanMode, files.length, options.summary ?? false);
+        debounceTimers.set(filepath, setTimeout(async () => {
+            debounceTimers.delete(filepath);
+            await processFileChange(filepath, state, config, scanMode, files.length, options.summary ?? false);
         }, 300));
     };
 
@@ -91,7 +91,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
     watcher.on('add',    scheduleRescan);
 
     watcher.on('unlink', (filepath) => {
-        state.delete(normPath(filepath));
+        state.delete(normalizePath(filepath));
         clearScreen();
         printBanner();
         console.log(chalk.dim(`  ○  ${filepath} removed`));
@@ -128,8 +128,8 @@ export async function watchMode(target, config, scanMode, options = {}) {
  * @param {number}  fileCount   - Total watched file count (for status line)
  * @param {boolean} summaryMode - Show counts only instead of full violation details
  */
-async function handleChange(filepath, state, config, scanMode, fileCount, summaryMode = false) {
-    const key = normPath(filepath);
+async function processFileChange(filepath, state, config, scanMode, fileCount, summaryMode = false) {
+    const key = normalizePath(filepath);
     const previous = state.get(key) ?? [];
 
     // Show existing violations while rescanning — don't blank them out mid-edit
@@ -183,7 +183,7 @@ async function scanOneFile(filepath, config, scanMode) {
             : await runQuickAudit(config, null, [filepath], true);
 
         // Normalize and filter to this file — scanners return full violation arrays
-        return result.violations.filter(v => normPath(v.file) === normPath(filepath));
+        return result.violations.filter(v => normalizePath(v.file) === normalizePath(filepath));
     } catch {
         return null;
     }
@@ -398,9 +398,9 @@ function indexedKeys(violations) {
  * @param {Map}   state      - Shared state map (mutated in-place)
  * @param {Array} violations - Flat violation array from a scan result
  */
-function populateStateFromResult(state, violations) {
+function groupViolationsByFile(state, violations) {
     for (const v of violations) {
-        const key = normPath(v.file);
+        const key = normalizePath(v.file);
         if (!state.has(key)) state.set(key, []);
         state.get(key).push(v);
     }
@@ -427,8 +427,8 @@ function computeDelta(previous, current) {
     };
 }
 
-function normPath(p_) {
-    return path.normalize(p_).replace(/\\/g, '/');
+function normalizePath(rawPath) {
+    return path.normalize(rawPath).replace(/\\/g, '/');
 }
 
 function totalViolations(state) {
