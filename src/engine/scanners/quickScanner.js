@@ -170,7 +170,7 @@ async function scanSingleFile(filePath, config) {
             ({ html: scanContent, lineMap, ordinalIndex } = transformAngularToHtml(sourceContent));
         } else if (isAngularTs) {
             const extracted = extractInlineTemplate(sourceContent);
-            if (!extracted) return [];  // templateUrl-only or unextractable — .html scanned separately
+            if (!extracted) return { violations: [], warning: null };  // templateUrl-only or unextractable — .html scanned separately
             ({ html: scanContent, lineMap, ordinalIndex } = transformAngularToHtml(extracted.content, extracted.lineOffset));
         } else {
             scanContent = sourceContent; lineMap = null; ordinalIndex = buildHtmlOrdinalIndex(sourceContent);
