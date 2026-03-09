@@ -12,6 +12,11 @@
  *  - 300 ms debounce prevents scan storms on editors that auto-save on every keystroke
  *  - Terminal is cleared before each delta render for a clean rolling display
  *
+ * Module boundaries:
+ *  - watchState.js     — pure state helpers (keys, delta, path normalization)
+ *  - watchOutputter.js — all terminal rendering
+ *  - watchMode.js      — orchestration only (chokidar, scan dispatch, event loop)
+ *
  * @module commands/watchMode
  */
 

@@ -159,6 +159,10 @@ export function printCurrent(violations, summaryMode) {
     }
 }
 
+// -----------------------------------------------------------------------------
+// In-progress state
+// -----------------------------------------------------------------------------
+
 /**
  * Render existing violations for a file while a rescan is in progress.
  * Keeps violations visible so users can see what they're fixing.
