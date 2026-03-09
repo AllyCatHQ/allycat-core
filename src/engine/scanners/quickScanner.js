@@ -22,11 +22,12 @@ import { MESSAGES, SCAN_MODES } from '../../constants.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
 import { checkRtlCompliance, checkJsxRtlCompliance } from '../../utils/rtlValidator.js';
 import { processAxeViolations } from '../../utils/violationProcessor.js';
-import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
+import { transformJsxToHtml } from '../transformers/jsxTransformer.js';
 import { detectCssInJs } from '../transformers/transformerUtils.js';
-import { transformVueToHtml, isVueFile } from '../transformers/vueTransformer.js';
-import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
-import { isAngularComponentTs, extractInlineTemplate } from '../transformers/angularTsExtractor.js';
+import { transformVueToHtml } from '../transformers/vueTransformer.js';
+import { transformAngularToHtml } from '../transformers/angularTransformer.js';
+import { extractInlineTemplate } from '../transformers/angularTsExtractor.js';
+import { detectFileContext } from './scannerUtils.js';
 import { buildHtmlOrdinalIndex } from '../../utils/sourceMapper.js';
 
 const require = createRequire(import.meta.url);
@@ -156,11 +157,7 @@ async function scanSingleFile(filePath, config) {
     try {
         const sourceContent = await readSourceFile(filePath);
 
-        const isJsx        = isJsxFile(filePath);
-        const isVue        = !isJsx && isVueFile(filePath);
-        const isAngularHtml = !isJsx && !isVue && isAngularTemplate(sourceContent, filePath);
-        const isAngularTs  = !isJsx && !isVue && !isAngularHtml && isAngularComponentTs(sourceContent, filePath);
-        const isComponent  = isJsx || isVue || isAngularHtml || isAngularTs;
+        const { isJsx, isVue, isAngularHtml, isAngularTs, isComponent } = detectFileContext(filePath, sourceContent);
 
         let scanContent, lineMap, ordinalIndex;
         if (isJsx) {

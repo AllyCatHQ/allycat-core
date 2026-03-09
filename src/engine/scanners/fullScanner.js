@@ -27,11 +27,12 @@ import { getAxeTags } from '../../utils/axeConfig.js';
 import { createRtlViolation } from '../../utils/rtlValidator.js';
 import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/violationProcessor.js';
 import { findLineNumber } from '../../utils/sourceMapper.js';
-import { transformJsxToHtml, isJsxFile } from '../transformers/jsxTransformer.js';
+import { transformJsxToHtml } from '../transformers/jsxTransformer.js';
 import { detectCssInJs } from '../transformers/transformerUtils.js';
-import { transformVueToHtml, isVueFile, extractStyleBlocks } from '../transformers/vueTransformer.js';
-import { transformAngularToHtml, isAngularTemplate } from '../transformers/angularTransformer.js';
-import { isAngularComponentTs, extractInlineTemplate, extractStyleUrls, extractInlineStyles, extractCssModuleImports } from '../transformers/angularTsExtractor.js';
+import { transformVueToHtml, extractStyleBlocks } from '../transformers/vueTransformer.js';
+import { transformAngularToHtml } from '../transformers/angularTransformer.js';
+import { extractInlineTemplate, extractStyleUrls, extractInlineStyles, extractCssModuleImports } from '../transformers/angularTsExtractor.js';
+import { detectFileContext } from './scannerUtils.js';
 import { resolvAndInjectCss, resolveCssPaths, loadCssFiles, loadTsconfigAliases } from '../../utils/cssResolver.js';
 import path from 'path';
 import pLimit from 'p-limit';
@@ -285,26 +286,6 @@ async function transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAn
     }
 
     return { transformedHtml, lineMap, ordinalIndex, cssModuleBindings, warning };
-}
-
-/**
- * Classify the file type for a given source file.
- *
- * Evaluated in priority order: JSX → Vue → Angular HTML → Angular TS → plain HTML.
- * Returns boolean flags plus a convenience `isComponent` flag that is true for
- * any non-plain-HTML file that requires a transformer step.
- *
- * @param {string} filePath
- * @param {string} sourceContent
- * @returns {{ isJsx: boolean, isVue: boolean, isAngularHtml: boolean, isAngularTs: boolean, isComponent: boolean }}
- */
-function detectFileContext(filePath, sourceContent) {
-    const isJsx         = isJsxFile(filePath);
-    const isVue         = !isJsx && isVueFile(filePath);
-    const isAngularHtml = !isJsx && !isVue && isAngularTemplate(sourceContent, filePath);
-    const isAngularTs   = !isJsx && !isVue && !isAngularHtml && isAngularComponentTs(sourceContent, filePath);
-    const isComponent   = isJsx || isVue || isAngularHtml || isAngularTs;
-    return { isJsx, isVue, isAngularHtml, isAngularTs, isComponent };
 }
 
 /**
