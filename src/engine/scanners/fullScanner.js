@@ -171,13 +171,13 @@ function processFullScanViolations(
     filePath, violations, sourceContent,
     lineMap = null, transformedHtml = null, ordinalIndex = null
 ) {
-    const isJsxContext = lineMap && transformedHtml;
-    const domDocument = isJsxContext ? buildQueryDocument(transformedHtml) : null;
+    const isComponentContext = lineMap && transformedHtml;
+    const domDocument = isComponentContext ? buildQueryDocument(transformedHtml) : null;
     const results = [];
 
     for (const violation of violations) {
-        // Skip document-level rules for JSX/TSX component files.
-        if (isJsxContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
+        // Skip document-level rules for component files (JSX/TSX/Vue/Angular).
+        if (isComponentContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
 
         for (const node of violation.nodes) {
             const base = createViolationFromNode(
@@ -203,8 +203,8 @@ function processFullScanViolations(
  * @returns {Promise<Object|null>} - RTL violation object or null
  */
 
-async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isJsx, ordinalIndex, selectedStandard) {
-    if (isJsx) {
+async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, ordinalIndex, selectedStandard) {
+    if (isComponent) {
         const hasRtl = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
         if (hasRtl) return null;
 
@@ -368,8 +368,8 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
             aliases
         );
 
-        const context = await browser.newContext();
-        const page = await context.newPage();
+        const browserContext = await browser.newContext();
+        const page = await browserContext.newPage();
         await page.setContent(scanContent, { waitUntil: 'domcontentloaded' });
 
         const axeResults = await new AxeBuilder({ page })
@@ -390,7 +390,7 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
             if (rtlViolation) violations.push(rtlViolation);
         }
 
-        await context.close();
+        await browserContext.close();
 
     } catch (error) {
         p.log.error(`Error scanning ${filePath}: ${error.message}`);
