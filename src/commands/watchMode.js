@@ -180,19 +180,14 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
 }
 
 /**
- * Scan a single file.
+ * Returns violations for a single file, or null if the scan failed
+ * (e.g. syntax error while the file is mid-edit).
  * Passes [filepath] directly to the scanner — no glob resolution needed.
+ * Callers must treat null as "keep previous state" — not as "no violations".
  *
  * @param {string}  filepath  - File to scan
  * @param {Object}  config    - User configuration
  * @param {string}  scanMode  - 'quick' | 'full'
- * @returns {Promise<Array>}  - Violations for this file only
- */
-/**
- * Returns violations for a single file, or null if the scan failed
- * (e.g. syntax error while the file is mid-edit).
- * Callers must treat null as "keep previous state" — not as "no violations".
- *
  * @returns {Promise<Array|null>}
  */
 async function scanOneFile(filepath, config, scanMode) {
