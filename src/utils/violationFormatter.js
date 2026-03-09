@@ -118,13 +118,13 @@ function formatImpact(impact) {
  */
 function formatLocation(violation) {
     const { file, lineNumber } = violation;
-   const displyedLocation = chalk.cyan(`   File: ${file}`);
-    
+    const displayedLocation = chalk.cyan(`   File: ${file}`);
+
     if (lineNumber) {
-        return displyedLocation+chalk.green(`:${lineNumber}`);
+        return displayedLocation + chalk.green(`:${lineNumber}`);
     }
-    
-    return displyedLocation;
+
+    return displayedLocation;
 }
 
 // -----------------------------------------------------------------------------
@@ -300,9 +300,22 @@ export function formatSummary(violations, scanMode) {
     return lines.join('\n');
 }
 
+const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
+
+/**
+ * Sort comparator: line number ascending, then impact severity ascending.
+ * Violations without a line number sort after those that have one.
+ */
+function compareByPosition(a, b) {
+    if (a.lineNumber && b.lineNumber) return a.lineNumber - b.lineNumber;
+    if (a.lineNumber) return -1;
+    if (b.lineNumber) return 1;
+    return (IMPACT_ORDER[a.impact] || 4) - (IMPACT_ORDER[b.impact] || 4);
+}
+
 /**
  * Format violations grouped by file
- * 
+ *
  * @param {Array} violations - All violations
  * @param {Object} options - Formatting options
  * @returns {string} - Formatted output
@@ -329,16 +342,7 @@ export function formatByFile(violations, options = {}) {
         output.push('');
         
         // Sort by line number (if available), then by impact
-        const sorted = fileViolations.sort((a, b) => {
-            if (a.lineNumber && b.lineNumber) {
-                return a.lineNumber - b.lineNumber;
-            }
-            if (a.lineNumber) return -1;
-            if (b.lineNumber) return 1;
-            
-            const impactOrder = { critical: 0, serious: 1, moderate: 2, minor: 3 };
-            return (impactOrder[a.impact] || 4) - (impactOrder[b.impact] || 4);
-        });
+        const sorted = fileViolations.sort(compareByPosition);
         
         for (const violation of sorted) {
             output.push(formatViolation(violation, options));
