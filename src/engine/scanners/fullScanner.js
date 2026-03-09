@@ -194,7 +194,7 @@ function processFullScanViolations(
 }
 
 // -----------------------------------------------------------------------------
-// File Scanning — Helpers
+// File Transformation
 // -----------------------------------------------------------------------------
 
 /**
@@ -251,7 +251,9 @@ async function transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAn
  * @param {Object} browser - Playwright browser instance
  * @param {string} filePath - File path to scan
  * @param {Object} config - User configuration
- * @returns {Promise<Array>} - Array of violation objects
+ * @param {Map<string,string>} cssCache - Shared CSS file cache for this scan run
+ * @param {Map<string,string>} aliases - Resolved tsconfig path aliases
+ * @returns {Promise<{ violations: Array, warning: string|null }>}
  */
 async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
     const violations = [];
