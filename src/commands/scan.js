@@ -53,26 +53,12 @@ export async function scanCommand(target = null, options = {}) {
         return;
     }
 
-    let targetPath = null;
-    let preResolvedFiles = null;
-
-    if (options.changed) {
-        preResolvedFiles = await resolveChangedFiles(target);
-        if (preResolvedFiles === null) {
-            return;
-        }
-        if (preResolvedFiles.length === 0) {
-            p.log.info('No changed scannable files found. Nothing to scan.');
-            p.outro(chalk.dim('Done.'));
-            return;
-        }
-        p.log.info(`${chalk.cyan(preResolvedFiles.length)} changed file${preResolvedFiles.length > 1 ? 's' : ''} found.`);
-    } else {
-        targetPath = validateAndResolveTarget(target);
-        if (target && targetPath === null) {
-            return;
-        }
+    const input = await resolveInputFiles(target, options);
+    if (input === null) {
+        return;
     }
+
+    const { targetPath, preResolvedFiles } = input;
 
     displayScanConfiguration(config, scanMode, options, target);
 
@@ -155,6 +141,36 @@ function validateAndResolveTarget(target) {
     return target;
 }
 
+/**
+ * Resolve the scan input: either a list of git-changed files or a validated target path.
+ *
+ * @param {string|null} target - Target path from CLI
+ * @param {Object} options - CLI options
+ * @returns {Promise<{targetPath: string|null, preResolvedFiles: string[]|null}|null>}
+ *   - null signals the caller to abort
+ */
+async function resolveInputFiles(target, options) {
+    if (options.changed) {
+        const preResolvedFiles = await resolveChangedFiles(target);
+        if (preResolvedFiles === null) {
+            return null;
+        }
+        if (preResolvedFiles.length === 0) {
+            p.log.info('No changed scannable files found. Nothing to scan.');
+            p.outro(chalk.dim('Done.'));
+            return null;
+        }
+        p.log.info(`${chalk.cyan(preResolvedFiles.length)} changed file${preResolvedFiles.length > 1 ? 's' : ''} found.`);
+        return { targetPath: null, preResolvedFiles };
+    }
+
+    const targetPath = validateAndResolveTarget(target);
+    if (target && targetPath === null) {
+        return null;
+    }
+    return { targetPath, preResolvedFiles: null };
+}
+
 // -----------------------------------------------------------------------------
 // Display Helpers
 // -----------------------------------------------------------------------------
@@ -206,17 +222,18 @@ function displayScanConfiguration(config, scanMode, options, target) {
  *
  * @param {Object} config - User configuration
  * @param {string} scanMode - 'quick' or 'full'
- * @param {string|null} resolvedTarget - Target path to scan
- * @returns {Promise<Array|null>} - Violations array or null on error
+ * @param {string|null} targetPath - Target path to scan
+ * @param {string[]|null} preResolvedFiles - Pre-resolved file list (--changed mode)
+ * @returns {Promise<{violations: Array, warnings: Array}|null>} - Scan result or null on error
  */
-async function executeScan(config, scanMode, targetPath, files = null) {
+async function executeScan(config, scanMode, targetPath, preResolvedFiles = null) {
     const spinner = p.spinner();
     spinner.start(MESSAGES.ANALYZING);
 
     try {
         const result = scanMode === SCAN_MODES.FULL
-            ? await runFullAudit(config, targetPath, files)
-            : await runQuickAudit(config, targetPath, files);
+            ? await runFullAudit(config, targetPath, preResolvedFiles)
+            : await runQuickAudit(config, targetPath, preResolvedFiles);
 
         spinner.stop(chalk.green(MESSAGES.ANALYSIS_COMPLETE));
         return result;
@@ -308,10 +325,10 @@ async function resolveChangedFiles(target) {
         return files;
     }
 
-    const absScope = path.resolve(process.cwd(), target);
+    const absoluteScope = path.resolve(process.cwd(), target);
     return files.filter(f => {
-        const abs = path.resolve(process.cwd(), f);
-        return abs === absScope || abs.startsWith(absScope + path.sep);
+        const absoluteFilePath = path.resolve(process.cwd(), f);
+        return absoluteFilePath === absoluteScope || absoluteFilePath.startsWith(absoluteScope + path.sep);
     });
 }
 
