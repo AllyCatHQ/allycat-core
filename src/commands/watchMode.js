@@ -258,8 +258,8 @@ function printBaselineSummary(state, summaryMode = false, fileCount = 0) {
         console.log(`  ${chalk.bold.cyan('◆')}  ${chalk.bold(file)}  ${chalk.dim('(baseline)')}`);
         console.log('');
         for (const v of [...violations].sort(bySeverity)) {
-            const impact   = `[${(v.impact || 'unknown').toUpperCase()}]`;
-            const lineHint = v.lineNumber ? chalk.dim(`  — Line ${v.lineNumber}`) : '';
+            const impact   = formatImpactLabel(v.impact);
+            const lineHint = formatLineHint(v.lineNumber);
             console.log(`  ${chalk.cyan('○ EXISTS')}  ${chalk.dim(impact)} ${v.description}${lineHint}`);
         }
         console.log('');
@@ -296,8 +296,8 @@ function printDelta(filepath, added, fixed, summaryMode = false) {
     ];
 
     for (const { v, type } of sorted) {
-        const impact  = `[${(v.impact || 'unknown').toUpperCase()}]`;
-        const lineHint = v.lineNumber ? chalk.dim(`  — Line ${v.lineNumber}`) : '';
+        const impact   = formatImpactLabel(v.impact);
+        const lineHint = formatLineHint(v.lineNumber);
 
         if (type === 'fixed') {
             console.log(`  ${chalk.green('✓ FIXED')}  ${chalk.dim(impact)} ${v.description}${lineHint}`);
@@ -332,8 +332,8 @@ function printCurrent(violations, summaryMode) {
 
     console.log(chalk.dim(`  ─  ${label}:`));
     for (const v of [...violations].sort(bySeverity)) {
-        const impact   = `[${(v.impact || 'unknown').toUpperCase()}]`;
-        const lineHint = v.lineNumber ? chalk.dim(`  — Line ${v.lineNumber}`) : '';
+        const impact   = formatImpactLabel(v.impact);
+        const lineHint = formatLineHint(v.lineNumber);
         console.log(`  ${chalk.cyan('○')}  ${chalk.dim(impact)} ${v.description}${lineHint}`);
     }
 }
@@ -360,7 +360,7 @@ function printRescanning(filepath, violations, summaryMode) {
     }
 
     for (const v of [...violations].sort(bySeverity)) {
-        const impact   = `[${(v.impact || 'unknown').toUpperCase()}]`;
+        const impact   = formatImpactLabel(v.impact);
         const lineHint = v.lineNumber ? `  — Line ${v.lineNumber}` : '';
         console.log(chalk.dim(`  ○        ${impact} ${v.description}${lineHint}`));
     }
@@ -381,6 +381,24 @@ function printStatusLine(fileCount, total) {
 // -----------------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------------
+
+/**
+ * Format impact label string for display.
+ * @param {string} impact - Violation impact level
+ * @returns {string}
+ */
+function formatImpactLabel(impact) {
+    return `[${(impact || 'unknown').toUpperCase()}]`;
+}
+
+/**
+ * Format line hint string for display.
+ * @param {number|null} lineNumber - Source line number
+ * @returns {string}
+ */
+function formatLineHint(lineNumber) {
+    return lineNumber ? chalk.dim(`  — Line ${lineNumber}`) : '';
+}
 
 /**
  * Base identity key for a violation: rule id + html snippet only.
