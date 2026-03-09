@@ -54,7 +54,7 @@ export function generateFilePrompt(file, violations, config) {
 // -----------------------------------------------------------------------------
 
 function buildFilePrompt(file, violations, config, agentKey) {
-    const standard = resolveStandardLabel(config?.selectedStandard);
+    const standard = STANDARD_LABELS[config?.selectedStandard] || STANDARD_LABELS[STANDARDS.WCAG_AA];
     const rtlEnabled = config?.rules?.rtl === true;
     const sorted = sortViolationsBySeverity(violations);
 
@@ -150,10 +150,6 @@ function resolveAgentKey(agentValue) {
     if (!agentValue) return 'generic';
     const normalized = String(agentValue).toLowerCase().trim();
     return AGENT_TAILS[normalized] ? normalized : 'generic';
-}
-
-function resolveStandardLabel(standard) {
-    return STANDARD_LABELS[standard] || STANDARD_LABELS[STANDARDS.WCAG_AA];
 }
 
 function truncateSnippet(html, maxLength = 120) {

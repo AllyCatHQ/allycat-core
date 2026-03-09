@@ -80,6 +80,26 @@ export function formatViolation(violation, options = {}) {
 }
 
 /**
+ * Format impact label string for display (plain, no chalk).
+ * Returns e.g. "[CRITICAL]"
+ * @param {string} impact
+ * @returns {string}
+ */
+export function formatImpactLabel(impact) {
+    return `[${(impact || 'unknown').toUpperCase()}]`;
+}
+
+/**
+ * Format a dim line-number hint for inline display.
+ * Returns e.g. "  — Line 42" (chalk dim) or "" when lineNumber is falsy.
+ * @param {number|null} lineNumber
+ * @returns {string}
+ */
+export function formatLineHint(lineNumber) {
+    return lineNumber ? chalk.dim(`  — Line ${lineNumber}`) : '';
+}
+
+/**
  * Format impact level with color badge
  */
 function formatImpact(impact) {

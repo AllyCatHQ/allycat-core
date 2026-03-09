@@ -10,19 +10,12 @@
 import path from 'path';
 import { buildStyles } from './styles.js';
 import { buildScript } from './script.js';
+import { countByImpact } from '../../utils/violationFormatter.js';
+import { STANDARD_LABELS, STANDARDS } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // Data Helpers
 // -----------------------------------------------------------------------------
-
-function countByImpact(violations) {
-    return {
-        critical: violations.filter(v => v.impact === 'critical').length,
-        serious:  violations.filter(v => v.impact === 'serious').length,
-        moderate: violations.filter(v => v.impact === 'moderate').length,
-        minor:    violations.filter(v => v.impact === 'minor').length,
-    };
-}
 
 /**
  * Extract unique WCAG tags from a set of violations, sorted numerically.
@@ -64,11 +57,7 @@ function escapeHtml(str) {
 }
 
 function resolveStandardLabel(standard) {
-    return {
-        'wcag-aa':  'WCAG 2.1 AA',
-        'wcag-aaa': 'WCAG 2.1 AAA',
-        'israel':   'Israeli Standard IS 5568',
-    }[standard] || 'WCAG 2.1 AA';
+    return STANDARD_LABELS[standard] || STANDARD_LABELS[STANDARDS.WCAG_AA];
 }
 
 // -----------------------------------------------------------------------------
