@@ -14,7 +14,7 @@ Verify that what the tool **tells** users matches what it **does**.
 - [ ] No flag is described with outdated behavior (e.g. old defaults, removed options)
 - [ ] Concurrency description in help is accurate — auto mode is documented, override path is explained
 - [ ] Supported file types list matches `SUPPORTED_EXTENSIONS` in `src/constants.js`
-- [ ] Exit codes documented in help match actual exit codes in `src/commands/scan.js`
+- [ ] Exit codes documented in help match actual exit codes in `src/commands/scanResultHandler.js`
 
 ### `src/commands/init.js` — Init Wizard
 - [ ] Every question in the wizard matches an actual field in `a11y-config.json`

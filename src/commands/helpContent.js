@@ -224,7 +224,7 @@ export const GITHUB_ACTIONS_SNIPPET =
           run: npm ci
 
         - name: Install A11y-Guard
-          run: npm install -g a11y-guard
+          run: npm install -g a11yguard-core
 
         - name: Run accessibility scan
           run: a11y-guard scan --fail-on-critical --json-file a11y-report
@@ -240,7 +240,7 @@ export const GITLAB_CI_SNIPPET =
     image: node:20
     script:
       - npm ci
-      - npm install -g a11y-guard
+      - npm install -g a11yguard-core
       - a11y-guard scan --fail-on-critical --json-file a11y-report
     artifacts:
       paths:
@@ -249,7 +249,7 @@ export const GITLAB_CI_SNIPPET =
 export const JENKINS_SNIPPET =
 `  stage('Accessibility') {
       steps {
-        sh 'npm install -g a11y-guard'
+        sh 'npm install -g a11yguard-core'
         sh 'a11y-guard scan --fail-on-critical --json-file a11y-report'
         archiveArtifacts artifacts: 'a11y-report.json'
       }

@@ -5,7 +5,7 @@
 >
 > **Related documents:**
 > - CSS delivery testing → [`docs/technical/css-delivery/css-delivery-testing.md`](../technical/css-delivery/css-delivery-testing.md)
-> - Cross-machine testing → [`docs/private/cross-machine-testing.md`](cross-machine-testing.md)
+> - Cross-machine testing → [`docs/contributing/cross-machine-testing.md`](cross-machine-testing.md)
 > - Release gate checklist → [`docs/BEFORE-EVERY-RELEASE.md`](../BEFORE-EVERY-RELEASE.md)
 >
 > Status keys: ✅ Pass · ❌ Fail · ⬜ Not yet run
@@ -289,8 +289,11 @@ node src/index.js scan tests/fixtures/sample.html --json-file
 
 ### 7.5 HTML report
 
+The HTML report is auto-generated when `ai.enabled: true` in `a11y-config.json`. There is no `--report` flag.
+
 ```bash
-node src/index.js scan tests/fixtures/sample.html --report
+# Set ai.enabled: true in a11y-config.json, then:
+node src/index.js scan tests/fixtures/sample.html
 ```
 - [ ] `a11y-report.html` created in project root
 - [ ] Open in browser — report renders without errors
@@ -515,7 +518,7 @@ node src/index.js scan tests/samples/react/tsx/ComprehensiveTest.tsx
 | 7.2 | Output: --summary | ⬜ |
 | 7.3 | Output: --output json | ⬜ |
 | 7.4 | Output: --json-file | ⬜ |
-| 7.5 | Output: --report (HTML) | ⬜ |
+| 7.5 | Output: HTML report (ai.enabled) | ⬜ |
 | 8 | Exit codes / threshold flags | ⬜ |
 | 9 | Concurrency | ⬜ |
 | 10 | CSS delivery (15 features) | ⬜ |

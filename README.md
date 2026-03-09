@@ -34,7 +34,7 @@ Fast, developer-friendly accessibility scanning with support for **WCAG 2.1 AA/A
 ## Installation
 
 ```bash
-npm install -g a11y-guard
+npm install -g a11yguard-core
 ```
 
 For full scan mode (contrast checking), download the Chromium browser once:
@@ -413,7 +413,7 @@ jobs:
         run: npm ci
 
       - name: Install A11y-Guard
-        run: npm install -g a11y-guard
+        run: npm install -g a11yguard-core
 
       - name: Run accessibility scan
         run: a11y-guard scan --fail-on-critical --json-file a11y-report
@@ -432,7 +432,7 @@ accessibility:
   image: node:20
   script:
     - npm ci
-    - npm install -g a11y-guard
+    - npm install -g a11yguard-core
     - a11y-guard scan --fail-on-critical --json-file a11y-report
   artifacts:
     paths:
@@ -444,7 +444,7 @@ accessibility:
 ```groovy
 stage('Accessibility') {
   steps {
-    sh 'npm install -g a11y-guard'
+    sh 'npm install -g a11yguard-core'
     sh 'a11y-guard scan --fail-on-critical --json-file a11y-report'
     archiveArtifacts artifacts: 'a11y-report.json'
   }
@@ -505,7 +505,12 @@ a11y-guard/
 │   ├── constants.js                   # Shared constants
 │   ├── commands/
 │   │   ├── init.js                    # `init` command
-│   │   ├── scan.js                    # `scan` orchestration & exit gates
+│   │   ├── scan.js                    # `scan` orchestrator (config + mode selection)
+│   │   ├── scanDispatcher.js          # Input resolution & scanner selection
+│   │   ├── scanResultHandler.js       # Output routing & CI exit code enforcement
+│   │   ├── watchMode.js               # `--watch` file watcher with NEW/FIXED delta labels
+│   │   ├── watchOutputter.js          # Watch mode output formatting
+│   │   ├── watchState.js              # Watch mode state management
 │   │   ├── scanOutputters.js          # Output routing (terminal, JSON, AI report)
 │   │   ├── help.js                    # `help` command
 │   │   └── helpContent.js             # FAQ, examples, CI snippets
@@ -528,6 +533,7 @@ a11y-guard/
 │   └── utils/
 │       ├── configLoader.js            # Config load, save, RAM-aware concurrency clamping
 │       ├── fileResolver.js            # File discovery & extension filtering
+│       ├── fileUtils.js               # BOM-aware file reading (UTF-16 + UTF-8)
 │       ├── pathUtils.js               # Cross-platform path normalization
 │       ├── sourceMapper.js            # Line number detection
 │       ├── violationFormatter.js      # Output formatting & grouping
