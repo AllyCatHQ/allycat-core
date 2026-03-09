@@ -10,7 +10,26 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { CONFIG_FILE_NAME, SCAN_MODES } from '../constants.js';
+import { CONFIG_FILE_NAME, SCAN_MODES, STANDARDS } from '../constants.js';
+
+// -----------------------------------------------------------------------------
+// Default Configuration
+// -----------------------------------------------------------------------------
+
+/**
+ * Canonical defaults used when no a11y-config.json exists.
+ * Single source of truth — update here to change defaults for all new projects.
+ *
+ * performance.concurrency is intentionally null so sanitizeConfig() computes
+ * a RAM-aware ceiling automatically, exactly as it does for user configs.
+ */
+export const DEFAULT_CONFIG = {
+    selectedStandard: STANDARDS.WCAG_AA,
+    scan:             { defaultMode: SCAN_MODES.QUICK },
+    rules:            { rtl: false },
+    ai:               { enabled: false },
+    performance:      { concurrency: null },
+};
 
 // -----------------------------------------------------------------------------
 // Config Sanitization
@@ -97,20 +116,25 @@ function sanitizeConfig(raw, scanMode) {
 
 /**
  * Load configuration from the project root.
+ * Falls back to DEFAULT_CONFIG if no file exists — never returns null.
  * Sanitizes and clamps all numeric values before returning.
  *
+ * The returned object always includes a `configIsDefault` boolean flag:
+ *   - true  → no config file found, defaults were used
+ *   - false → config was loaded from disk
+ *
  * @param {'quick'|'full'} scanMode - Used to compute safe concurrency ceiling
- * @returns {Object|null} - Configuration object or null if not found
+ * @returns {Object} - Configuration object (never null)
  */
 export function loadConfig(scanMode = SCAN_MODES.QUICK) {
     const configPath = getConfigPath();
 
     if (!fs.existsSync(configPath)) {
-        return null;
+        return { ...sanitizeConfig(DEFAULT_CONFIG, scanMode), configIsDefault: true };
     }
 
     const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    return sanitizeConfig(raw, scanMode);
+    return { ...sanitizeConfig(raw, scanMode), configIsDefault: false };
 }
 
 /**

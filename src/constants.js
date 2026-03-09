@@ -50,6 +50,7 @@ export const INSTALL = {
 
 export const MESSAGES = {
     NO_CONFIG:           'No configuration found — starting first-time setup...',
+    USING_DEFAULT_CONFIG: 'No config file found — using defaults (WCAG 2.1 AA, Quick mode).\n  Run `a11y-guard init` to customize for this project.',
     SCAN_CANCELLED:      'Scan cancelled — no configuration available.',
     SETUP_CANCELLED:     'Setup cancelled.',
     SETUP_ABORTED:       'Setup aborted.',

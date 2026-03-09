@@ -7,8 +7,7 @@
 
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
-import { loadConfig, configExists } from '../utils/configLoader.js';
-import { initCommand } from './init.js';
+import { loadConfig } from '../utils/configLoader.js';
 import { watchMode } from './watchMode.js';
 import { resolveInputFiles, executeScan } from './scanDispatcher.js';
 import { handleScanResult } from './scanResultHandler.js';
@@ -31,10 +30,11 @@ export async function scanCommand(target = null, options = {}) {
 
     if (target) target = expandUserPath(target);
 
-    // Pass 1: Load with preliminary mode to read defaultMode from config
-    const preliminaryConfig = await loadConfiguration(SCAN_MODES.QUICK);
-    if (!preliminaryConfig) {
-        return;
+    // Pass 1: Load with quick mode to read defaultMode; concurrency is re-clamped in pass 2.
+    const preliminaryConfig = loadConfig(SCAN_MODES.QUICK);
+
+    if (preliminaryConfig.configIsDefault) {
+        p.log.info(chalk.cyan(MESSAGES.USING_DEFAULT_CONFIG));
     }
 
     // Resolve the actual scan mode (CLI flags override config default)
@@ -70,27 +70,6 @@ export async function scanCommand(target = null, options = {}) {
 // -----------------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------------
-
-/**
- * Load config, running first-time setup automatically if none exists.
- *
- * @param {'quick'|'full'} scanMode - Used to compute safe concurrency ceiling
- * @returns {Promise<Object|null>} - Config object, or null if user cancelled init
- */
-async function loadConfiguration(scanMode = SCAN_MODES.QUICK) {
-    if (!configExists()) {
-        p.log.info(chalk.cyan(`${MESSAGES.NO_CONFIG}\n`));
-        await initCommand();
-
-        // User may have cancelled init
-        if (!configExists()) {
-            p.outro(chalk.yellow(MESSAGES.SCAN_CANCELLED));
-            return null;
-        }
-    }
-
-    return loadConfig(scanMode);
-}
 
 /**
  * Determine scan mode from CLI options or config default
