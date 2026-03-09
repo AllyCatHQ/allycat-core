@@ -27,7 +27,7 @@ Fast, developer-friendly accessibility scanning with support for **WCAG 2.1 AA/A
 - Node.js >= 18.0.0
 - npm >= 9.0.0
 
-> Full scan mode (contrast checking) additionally requires Playwright — see [Installation](#installation).
+> Full scan mode (contrast checking) requires a Chromium browser — download it once with `npx playwright install chromium`.
 
 ---
 
@@ -37,12 +37,13 @@ Fast, developer-friendly accessibility scanning with support for **WCAG 2.1 AA/A
 npm install -g a11y-guard
 ```
 
-For full scan mode (contrast checking):
+For full scan mode (contrast checking), download the Chromium browser once:
 
 ```bash
-npm install playwright @axe-core/playwright
 npx playwright install chromium
 ```
+
+> Playwright is included with A11y-Guard — no separate `npm install` needed.
 
 ---
 
@@ -473,10 +474,9 @@ a11y-guard scan src\components
 **"No configuration found"**
 Run `a11y-guard init` to create `a11y-config.json`.
 
-**"Cannot find package 'playwright'"**
-Install Playwright for full scan support:
+**Full scan fails — Chromium not found**
+Download the browser once:
 ```bash
-npm install playwright @axe-core/playwright
 npx playwright install chromium
 ```
 

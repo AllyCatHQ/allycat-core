@@ -7,7 +7,8 @@
  * Use for: Pre-commit checks, CI/CD pipelines, thorough audits
  *
  * Requirements:
- *   npm install playwright @axe-core/playwright
+ *   Playwright is installed automatically with this package.
+ *   Download the Chromium browser once before using --full:
  *   npx playwright install chromium
  *
  * Concurrency is RAM- and CPU-aware (via configLoader.getSafeConcurrencyCeiling).
@@ -36,6 +37,7 @@ import { buildExtraCss } from './cssInjector.js';
 import { checkRtlCompliancePlaywright } from './rtlRunner.js';
 import path from 'path';
 import pLimit from 'p-limit';
+import chalk from 'chalk';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -59,7 +61,20 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
     if (!silent) p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
     if (!silent) p.log.info('Using Playwright for full accessibility audit (including contrast)...');
 
-    const browser = await chromium.launch({ headless: true });
+    let browser;
+    try {
+        browser = await chromium.launch({ headless: true });
+    } catch (err) {
+        if (err.message.includes('Executable doesn') || err.message.includes('browserType.launch')) {
+            p.log.error(
+                'Chromium browser not found.\n' +
+                '  Run this once to download it:\n\n' +
+                `  ${chalk.bold.cyan('npx playwright install chromium')}\n`
+            );
+            process.exit(1);
+        }
+        throw err;
+    }
 
     // Shared CSS cache for this scan run — each CSS file read from disk exactly once
     const cssCache = new Map();
