@@ -58,7 +58,8 @@ export function isJsxFile(filePath) {
     return /\.(jsx|tsx)$/.test(filePath);
 }
 
-// HTML_WRAPPER_OFFSET — re-exported from transformerUtils for backward compatibility
+// Re-exported so consumers can import HTML_WRAPPER_OFFSET from this module
+// without knowing it moved to transformerUtils.
 export { HTML_WRAPPER_OFFSET };
 
 // -----------------------------------------------------------------------------

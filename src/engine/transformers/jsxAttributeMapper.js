@@ -79,7 +79,7 @@ export function renderAttributes(attributes, cssModuleBindings) {
 }
 
 // -----------------------------------------------------------------------------
-// Attribute Name Mapping
+// Attribute Name Helpers
 // -----------------------------------------------------------------------------
 
 /**

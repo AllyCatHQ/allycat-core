@@ -64,8 +64,6 @@ export function renderNodesToHtml(jsxNodes, cssModuleBindings) {
     };
 }
 
-// registerOrdinalEntry — imported from transformerUtils.js
-
 // -----------------------------------------------------------------------------
 // Node Rendering
 // -----------------------------------------------------------------------------
