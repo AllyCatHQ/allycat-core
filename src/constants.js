@@ -93,6 +93,11 @@ export const SUPPORTED_FRAMEWORKS = [
     { label: 'Angular', extensions: ['.component.html', '.component.ts'] },
 ];
 
+// ─── Impact Severity Order ────────────────────────────────────────────────────
+// Shared sort key: lower value = more severe. Used by watchMode and violationFormatter.
+
+export const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
+
 // ─── App Links ────────────────────────────────────────────────────────────────
 
 export const APP_LINKS = {

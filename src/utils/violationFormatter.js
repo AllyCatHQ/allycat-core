@@ -11,7 +11,7 @@
  */
 
 import chalk from 'chalk';
-import { SCAN_MODES } from '../constants.js';
+import { SCAN_MODES, IMPACT_ORDER } from '../constants.js';
 import {
     simplifySelector,
     truncateSnippet
@@ -51,11 +51,6 @@ export function formatViolation(violation, options = {}) {
         const snippet = truncateSnippet(violation.html, 60);
         lines.push(chalk.dim(`   HTML: ${chalk.yellow(snippet)}`));
     }
-    
-    // Line number highlight
-    // if (violation.lineNumber) {
-    //     lines.push(chalk.green(`   Line: ${violation.lineNumber}`));
-    // }
     
     // Help text
     lines.push(chalk.dim(`   Help: ${violation.help}`));
@@ -299,8 +294,6 @@ export function formatSummary(violations, scanMode) {
     lines.push(BOX_BOTTOM);
     return lines.join('\n');
 }
-
-const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
 
 /**
  * Sort comparator: line number ascending, then impact severity ascending.

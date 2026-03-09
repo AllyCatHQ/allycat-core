@@ -20,14 +20,10 @@ import chalk from 'chalk';
 import path from 'path';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../utils/fileResolver.js';
-import { SUPPORTED_EXTENSIONS } from '../constants.js';
+import { SUPPORTED_EXTENSIONS, SCAN_MODES, IMPACT_ORDER } from '../constants.js';
 import { runQuickAudit } from '../engine/scanners/quickScanner.js';
 import { runFullAudit } from '../engine/scanners/fullScanner.js';
-import { SCAN_MODES } from '../constants.js';
 import { formatImpactLabel, formatLineHint } from '../utils/violationFormatter.js';
-
-// Impact display order for sorting delta output
-const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -377,7 +373,6 @@ function printStatusLine(fileCount, total) {
 // -----------------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------------
-
 
 /**
  * Base identity key for a violation: rule id + html snippet only.
