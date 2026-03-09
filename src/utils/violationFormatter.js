@@ -13,8 +13,6 @@
 import chalk from 'chalk';
 import { SCAN_MODES } from '../constants.js';
 import {
-    findLineNumber,
-    generateFileLink,
     simplifySelector,
     truncateSnippet
 } from './sourceMapper.js';

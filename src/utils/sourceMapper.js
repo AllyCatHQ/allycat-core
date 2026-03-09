@@ -204,28 +204,6 @@ export function buildHtmlOrdinalIndex(sourceContent) {
 }
 
 /**
- * Generate a terminal-clickable file link
- * Works in VS Code, iTerm2, and most modern terminals
- * 
- * @param {string} filePath - Absolute path to file
- * @param {number|null} lineNumber - Line number (optional)
- * @returns {string} - Clickable file URI
- */
-export function generateFileLink(filePath, lineNumber = null) {
-    const absolutePath = filePath.startsWith('/') 
-        ? filePath 
-        : `${process.cwd()}/${filePath}`;
-    
-    // VS Code uses file:// URIs with line numbers
-    // Format: file:///path/to/file.html:lineNumber
-    if (lineNumber) {
-        return `${absolutePath}:${lineNumber}`;
-    }
-    
-    return absolutePath;
-}
-
-/**
  * Extract meaningful identifier from CSS selector
  * Simplifies axe-core's verbose selectors for display
  * 
