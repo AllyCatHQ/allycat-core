@@ -56,11 +56,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
         ? await runFullAudit(config, target || null, null)
         : await runQuickAudit(config, target || null, null);
 
-    for (const v of initialResult.violations) {
-        const key = normPath(v.file);
-        if (!state.has(key)) state.set(key, []);
-        state.get(key).push(v);
-    }
+    populateStateFromResult(state, initialResult.violations);
 
     clearScreen();
     printBanner();
@@ -158,13 +154,7 @@ async function handleChange(filepath, state, config, scanMode, fileCount, summar
 
     // Indexed keys handle duplicates: two violations with the same rule+html
     // but unresolved line numbers get distinct keys (base#0, base#1).
-    const prevIndexed = indexedKeys(previous);
-    const currIndexed = indexedKeys(current);
-    const prevSet = new Set(prevIndexed);
-    const currSet = new Set(currIndexed);
-
-    const added = current.filter((_, i) => !prevSet.has(currIndexed[i]));
-    const fixed = previous.filter((_, i) => !currSet.has(prevIndexed[i]));
+    const { added, fixed } = computeDelta(previous, current);
 
     state.set(key, current);
 
@@ -399,6 +389,42 @@ function indexedKeys(violations) {
         const n = counts[base] = (counts[base] ?? -1) + 1;
         return `${base}#${n}`;
     });
+}
+
+/**
+ * Group violations by normalized file path into the shared state map.
+ * Each key maps to an array of violations for that file.
+ *
+ * @param {Map}   state      - Shared state map (mutated in-place)
+ * @param {Array} violations - Flat violation array from a scan result
+ */
+function populateStateFromResult(state, violations) {
+    for (const v of violations) {
+        const key = normPath(v.file);
+        if (!state.has(key)) state.set(key, []);
+        state.get(key).push(v);
+    }
+}
+
+/**
+ * Compare previous and current violation lists using indexed keys.
+ * Returns violations that are newly introduced (added) and violations
+ * that have been resolved (fixed) since the last scan of this file.
+ *
+ * @param {Array} previous - Violations before the rescan
+ * @param {Array} current  - Violations after the rescan
+ * @returns {{ added: Array, fixed: Array }}
+ */
+function computeDelta(previous, current) {
+    const prevIndexed = indexedKeys(previous);
+    const currIndexed = indexedKeys(current);
+    const prevSet = new Set(prevIndexed);
+    const currSet = new Set(currIndexed);
+
+    return {
+        added: current.filter((_, i) => !prevSet.has(currIndexed[i])),
+        fixed: previous.filter((_, i) => !currSet.has(prevIndexed[i])),
+    };
 }
 
 function normPath(p_) {
