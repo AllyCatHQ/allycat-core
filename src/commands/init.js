@@ -48,14 +48,27 @@ export async function initCommand() {
 
     // Check if config exists
     if (configExists()) {
-        const overwrite = await p.confirm({
-            message: 'Configuration already exists. Overwrite it?',
-            initialValue: false,
+        const action = await p.select({
+            message: 'Configuration already exists. What would you like to do?',
+            options: [
+                { value: 'overwrite', label: 'Overwrite', hint: 'Run setup wizard to update the config' },
+                { value: 'delete',    label: 'Delete',    hint: 'Remove config file and use built-in defaults' },
+                { value: 'cancel',    label: 'Cancel',    hint: 'Keep existing configuration' },
+            ],
         });
-        if (p.isCancel(overwrite) || !overwrite) {
+
+        if (p.isCancel(action) || action === 'cancel') {
             p.outro(chalk.yellow(MESSAGES.SETUP_CANCELLED));
             return;
         }
+
+        if (action === 'delete') {
+            fs.unlinkSync(getConfigPath());
+            p.outro(chalk.green(MESSAGES.CONFIG_DELETED));
+            return;
+        }
+
+        // action === 'overwrite' — fall through to wizard
     }
 
     // Configuration questionnaire

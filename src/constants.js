@@ -54,6 +54,7 @@ export const MESSAGES = {
     SCAN_CANCELLED:      'Scan cancelled — no configuration available.',
     SETUP_CANCELLED:     'Setup cancelled.',
     SETUP_ABORTED:       'Setup aborted.',
+    CONFIG_DELETED:      'Configuration deleted. Built-in defaults will be used from now on.',
     ANALYZING:           'Analyzing source files...',
     ANALYSIS_COMPLETE:   'Analysis Complete.',
     ANALYSIS_FAILED:     'Analysis failed.',
