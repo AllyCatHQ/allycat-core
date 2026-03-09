@@ -49,9 +49,9 @@ Commit: type: message
 
 **After every feature or update, always include a "How to test" section** with the exact commands the user can run to verify the changes manually.
 
-**After every feature or update, always check if any documentation needs to be updated or created** — this includes `docs/private/future-enhancements.md`, `docs/private/known-issues.md`, `docs/private/PRE-DEPLOY-CHECKLIST.md`, `docs/technical/`, and any relevant design docs. Update or create docs as needed before considering the task complete.
+**After every feature or update, always check if any documentation needs to be updated or created** — this includes `docs/private/future-enhancements.md`, `docs/private/known-issues.md`, `docs/private/PRE-DEPLOY-CHECKLIST.md`, `docs/technical/`, `docs/contributing/`, and any relevant design docs. Update or create docs as needed before considering the task complete.
 
-**After solving any problem related to file type scanning** (line resolution, transformer output, CSS delivery, dynamic bindings, etc.) — always check if `docs/private/new-filetype-checklist.md` needs to be updated. If the fix reveals a pattern or pitfall that applies to all current or future file types, add it to that checklist before closing the task.
+**After solving any problem related to file type scanning** (line resolution, transformer output, CSS delivery, dynamic bindings, etc.) — always check if `docs/contributing/new-filetype-checklist.md` needs to be updated. If the fix reveals a pattern or pitfall that applies to all current or future file types, add it to that checklist before closing the task.
 
 **After every feature or update, always check if `README.md` needs to be updated** — any new flag, behavior, supported file type, or workflow change visible to end users must be reflected in the README.
 
