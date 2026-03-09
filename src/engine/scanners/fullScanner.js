@@ -22,18 +22,18 @@ import { readSourceFile } from '../../utils/fileUtils.js';
 import { getSafeConcurrencyCeiling } from '../../utils/configLoader.js';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../../utils/fileResolver.js';
-import { MESSAGES, STANDARDS, SCAN_MODES } from '../../constants.js';
+import { MESSAGES, SCAN_MODES } from '../../constants.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
-import { createRtlViolation } from '../../utils/rtlValidator.js';
 import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/violationProcessor.js';
-import { findLineNumber } from '../../utils/sourceMapper.js';
 import { transformJsxToHtml } from '../transformers/jsxTransformer.js';
 import { detectCssInJs } from '../transformers/transformerUtils.js';
-import { transformVueToHtml, extractStyleBlocks } from '../transformers/vueTransformer.js';
+import { transformVueToHtml } from '../transformers/vueTransformer.js';
 import { transformAngularToHtml } from '../transformers/angularTransformer.js';
-import { extractInlineTemplate, extractStyleUrls, extractInlineStyles, extractCssModuleImports } from '../transformers/angularTsExtractor.js';
+import { extractInlineTemplate, extractCssModuleImports } from '../transformers/angularTsExtractor.js';
 import { detectFileContext } from './scannerUtils.js';
-import { resolvAndInjectCss, resolveCssPaths, loadCssFiles, loadTsconfigAliases } from '../../utils/cssResolver.js';
+import { resolvAndInjectCss, loadTsconfigAliases } from '../../utils/cssResolver.js';
+import { buildExtraCss } from './cssInjector.js';
+import { checkRtlCompliancePlaywright } from './rtlRunner.js';
 import path from 'path';
 import pLimit from 'p-limit';
 
@@ -199,57 +199,6 @@ function processFullScanViolations(
 }
 
 // -----------------------------------------------------------------------------
-// RTL Compliance (Playwright path)
-// -----------------------------------------------------------------------------
-
-/**
- * Check RTL compliance using Playwright page
- *
- * @param {Object} page - Playwright page object
- * @param {string} filePath - Source file path
- * @param {string} sourceContent - Original source code
- * @param {boolean} isComponent - True for JSX/Vue/Angular files (checks body root, not <html>)
- * @param {Map<string,number[]>|null} ordinalIndex - Tag→line map for component root lookup
- * @param {string} selectedStandard - Accessibility standard (e.g. STANDARDS.ISRAEL)
- * @returns {Promise<Object|null>} - RTL violation object or null
- */
-async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, ordinalIndex, selectedStandard) {
-    if (isComponent) {
-        const hasRtl = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
-        if (hasRtl) return null;
-
-        const rootInfo = await page.evaluate(() => {
-            const root = document.body?.firstElementChild;
-            return root
-                ? { tag: root.tagName.toLowerCase(), html: root.outerHTML.split('>')[0] + '>' }
-                : { tag: 'div', html: '<div>' };
-        });
-
-        const sourceLines = ordinalIndex?.get(rootInfo.tag);
-        const lineNumber = (sourceLines && sourceLines.length > 0)
-            ? sourceLines[0]
-            : findLineNumber(sourceContent, `<${rootInfo.tag}`);
-
-        const help = selectedStandard === STANDARDS.ISRAEL
-            ? 'Add dir="rtl" to your root element or to the <html> tag in index.html.'
-            : 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
-
-        return createRtlViolation(selectedStandard, filePath, rootInfo.html, lineNumber, rootInfo.tag, help);
-    }
-
-    // HTML file path
-    const hasRtl = await page.evaluate(() => document.documentElement.getAttribute('dir') === 'rtl');
-    if (hasRtl) return null;
-
-    return createRtlViolation(
-        selectedStandard,
-        filePath,
-        '<html>',
-        findLineNumber(sourceContent, '<html')
-    );
-}
-
-// -----------------------------------------------------------------------------
 // File Scanning — Helpers
 // -----------------------------------------------------------------------------
 
@@ -295,48 +244,6 @@ async function transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAn
     }
 
     return { transformedHtml, lineMap, ordinalIndex, cssModuleBindings, warning };
-}
-
-/**
- * Build the extra CSS array for a given file.
- *
- * "Extra CSS" is framework-specific CSS that lives outside the normal
- * import/link pipeline (e.g. Vue <style> blocks, Angular styleUrls, CSS Modules).
- * It is passed directly to resolvAndInjectCss so Playwright can compute
- * accurate contrast values.
- *
- * @param {string} filePath
- * @param {string} sourceContent
- * @param {{ isVue: boolean, isAngularTs: boolean, isAngularHtml: boolean }} fileContext
- * @param {Map<string,string>} cssModuleBindings
- * @param {Map<string,string>} cssCache
- * @param {Map<string,string>} aliases
- * @returns {Promise<string[]>}
- */
-async function buildExtraCss(filePath, sourceContent, { isVue, isAngularTs, isAngularHtml }, cssModuleBindings, cssCache, aliases) {
-    let extraCss = [];
-    if (isVue) {
-        // Vue SFC: extract <style>, <style scoped>, <style module> block contents
-        extraCss = extractStyleBlocks(sourceContent);
-    } else if (isAngularTs) {
-        // Angular component: load styleUrls files + collect inline styles[] strings
-        const rawUrls = extractStyleUrls(sourceContent);
-        if (rawUrls.length > 0) {
-            const absPaths = resolveCssPaths(rawUrls, path.resolve(filePath));
-            extraCss.push(...await loadCssFiles(absPaths, cssCache));
-        }
-        extraCss.push(...extractInlineStyles(sourceContent));
-        // CSS Module imports: import styles from './comp.module.css'
-        if (cssModuleBindings.size > 0) {
-            const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
-            extraCss.push(...await loadCssFiles(modPaths, cssCache));
-        }
-    } else if (isAngularHtml && cssModuleBindings.size > 0) {
-        // CSS module files detected in companion .ts — load for contrast checking
-        const modPaths = resolveCssPaths([...cssModuleBindings.values()], path.resolve(filePath), aliases);
-        extraCss.push(...await loadCssFiles(modPaths, cssCache));
-    }
-    return extraCss;
 }
 
 // -----------------------------------------------------------------------------
