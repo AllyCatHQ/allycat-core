@@ -1,7 +1,7 @@
 # A11y-Guard
 
-[![npm version](https://img.shields.io/npm/v/a11y-guard.svg)](https://www.npmjs.com/package/a11y-guard)
-[![Node.js](https://img.shields.io/node/v/a11y-guard.svg)](https://nodejs.org)
+[![npm version](https://img.shields.io/badge/npm-v1.0.0-blue.svg)](https://www.npmjs.com/package/a11y-guard)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > The accessibility tool that works the way developers work — terminal, watch mode, CI gates, and AI fix prompts in one.
