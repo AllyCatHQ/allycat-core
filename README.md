@@ -1,8 +1,12 @@
 # A11y-Guard
 
+[![npm version](https://img.shields.io/npm/v/a11y-guard.svg)](https://www.npmjs.com/package/a11y-guard)
+[![Node.js](https://img.shields.io/node/v/a11y-guard.svg)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 > The accessibility tool that works the way developers work — terminal, watch mode, CI gates, and AI fix prompts in one.
 
-Fast, developer-friendly accessibility scanning with support for **WCAG 2.1 AA/AAA** and **Israeli Standard IS 5568**.
+**No server needed** · **Source files** · **Exact line numbers** · **JSX/TSX · Vue · Angular · HTML**
 
 ---
 
@@ -19,6 +23,33 @@ Fast, developer-friendly accessibility scanning with support for **WCAG 2.1 AA/A
 | ⚡ CI/CD Ready | Exit gates, JSON export, and git-diff scoping for pipelines |
 | ⚙️ Parallel Scanning | Auto-computed from RAM + CPU — no manual tuning needed |
 | 📖 Built-in Help | FAQ, examples, CI guides, and standards explained |
+
+---
+
+## Why A11y-Guard vs `@axe-core/cli`?
+
+`@axe-core/cli` (by Deque Labs) is the authoritative tool for **scanning live URLs**.
+A11y-Guard is built for a different scenario: scanning **source files before the app runs**.
+
+| | A11y-Guard | @axe-core/cli |
+|---|---|---|
+| Needs a running server? | **No** — scans source files directly | Yes — requires a URL |
+| JSX / TSX support? | **Yes** — Babel transformer | No |
+| Vue SFC support? | **Yes** — Vue compiler | No |
+| Angular template support? | **Yes** — inline + external | No |
+| Exact source line numbers? | **Yes** — clickable VSCode links | No — DOM selector only |
+| Watch mode (NEW/FIXED deltas)? | **Yes** | No |
+| Scan only git-changed files? | **Yes** (`--changed`) | No |
+| Israeli Standard IS 5568? | **Yes** | No |
+| RTL / BiDi validation? | **Yes** | No |
+| AI fix prompts (HTML report)? | **Yes** | No |
+| Quick scan (no browser)? | **Yes** — JSDOM, ~1s/file | No — always full browser |
+
+**Use A11y-Guard when:** you want a11y checks in pre-commit hooks, PR pipelines without
+a deployed environment, or editor-integrated watch mode.
+
+**Use `@axe-core/cli` when:** you need to scan a deployed URL or a page that requires
+full JavaScript execution to render dynamic content.
 
 ---
 
@@ -211,7 +242,7 @@ Running `a11y-guard init` creates `a11y-config.json` in your project root. You c
 }
 ```
 
-#### Configuration Reference
+### Configuration Reference
 
 | Option | Values | Description |
 |---|---|---|

@@ -1,7 +1,7 @@
 {
   "name": "a11y-guard",
   "version": "1.0.0",
-  "description": "Professional CLI for accessibility compliance testing — WCAG 2.1 AA/AAA and Israeli Standard IS 5568",
+  "description": "Accessibility tool for source files — scans JSX, Vue, Angular, and HTML without a running server. Exact line numbers, watch mode, CI gates, AI fix prompts. WCAG 2.1 AA/AAA and Israeli Standard IS 5568.",
   "main": "src/index.js",
   "bin": {
     "a11y-guard": "./src/index.js"
