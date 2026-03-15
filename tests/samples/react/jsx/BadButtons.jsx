@@ -2,7 +2,7 @@
  * BadButtons.jsx
  *
  * TEST PURPOSE: Detect button and interactive element violations.
- * Expected result: a11y-guard should report violations on lines below.
+ * Expected result: allycat should report violations on lines below.
  *
  * Violations planted:
  *  - Line 20: <button> completely empty                          → button-name (CRITICAL)

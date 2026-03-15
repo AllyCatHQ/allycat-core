@@ -1,0 +1,17 @@
+{
+  "selectedStandard": "wcag-aa",
+  "rules": {
+    "rtl": false,
+    "level": "AA"
+  },
+  "scan": {
+    "defaultMode": "quick"
+  },
+  "ai": {
+    "enabled": true,
+    "agent": "claude"
+  },
+  "performance": {
+    "concurrency": null
+  }
+}

@@ -1,7 +1,7 @@
 /**
  * Report HTML Builders
  *
- * Assembles the full HTML document and all its sections for the A11y-Guard report.
+ * Assembles the full HTML document and all its sections for the AllyCat report.
  * Consumes CSS from styles and client-side JS from script.
  *
  * @module engine/report/html
@@ -75,7 +75,7 @@ export function buildHtml(byFile, prompts, config, scanMode) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>A11y-Guard Report</title>
+<title>AllyCat Report</title>
 <style>${buildStyles()}</style>
 </head>
 <body>
@@ -106,7 +106,7 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
     <div class="header-brand">
         <div class="brand-icon">♿</div>
         <div>
-            <h1 class="brand-name">A11y-Guard</h1>
+            <h1 class="brand-name">AllyCat</h1>
             <div class="brand-sub">Accessibility Scan Report</div>
         </div>
     </div>

@@ -39,7 +39,7 @@ import { clearScreen, printBanner, printBaselineSummary, printStatusLine, printR
  * Start watch mode: initial scan, then re-scan on every file change.
  *
  * @param {string|null} target    - Optional file/directory to scope the watch
- * @param {Object}      config    - User configuration from a11y-config.json
+ * @param {Object}      config    - User configuration from allycat.config.json
  * @param {string}      scanMode  - 'quick' | 'full'
  */
 export async function watchMode(target, config, scanMode, options = {}) {

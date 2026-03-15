@@ -175,7 +175,7 @@ function buildJsonReport(violations, config, scanMode, warnings = []) {
  * @returns {string} - Complete filename with .json extension
  *
  * @example
- * generateJsonFilename(true)        // 'a11y-report-2025-02-17-143052.json'
+ * generateJsonFilename(true)        // 'allycat-report-2025-02-17-143052.json'
  * generateJsonFilename('my-report') // 'my-report.json'
  */
 function generateJsonFilename(userFilename) {

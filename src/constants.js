@@ -1,15 +1,15 @@
 // ─── Config & File Names ──────────────────────────────────────────────────────
 
-export const CONFIG_FILE_NAME = 'a11y-config.json';
-export const DEFAULT_REPORT_NAME = 'a11y-report';
+export const CONFIG_FILE_NAME = 'allycat.config.json';
+export const DEFAULT_REPORT_NAME = 'allycat-report';
 
 // ─── CLI Command Strings ──────────────────────────────────────────────────────
 
 export const CLI = {
-    NAME: 'a11y-guard',
-    SCAN: 'a11y-guard scan',
-    INIT: 'a11y-guard init',
-    HELP: 'a11y-guard help',
+    NAME: 'allycat',
+    SCAN: 'allycat scan',
+    INIT: 'allycat init',
+    HELP: 'allycat help',
 };
 
 // ─── Scan Modes ───────────────────────────────────────────────────────────────
@@ -31,8 +31,8 @@ export const STANDARDS = {
 
 export const UI = {
     DIVIDER:             '─'.repeat(60),
-    INTRO_SCAN:          ' A11y-Guard Scan ',
-    INTRO_SETUP:         ' A11y-Guard Setup ',
+    INTRO_SCAN:          ' AllyCat Scan ',
+    INTRO_SETUP:         ' AllyCat Setup ',
     SCAN_LABEL_FULL:     'Full (with contrast)',
     SCAN_LABEL_QUICK:    'Quick (no contrast)',
     SCAN_LABEL_QUICK_FAST: 'Quick (fast)',
@@ -50,7 +50,7 @@ export const INSTALL = {
 
 export const MESSAGES = {
     NO_CONFIG:           'No configuration found — starting first-time setup...',
-    USING_DEFAULT_CONFIG: 'No config file found — using defaults (WCAG 2.1 AA, Quick mode).\n  Run `a11y-guard init` to customize for this project.',
+    USING_DEFAULT_CONFIG: 'No config file found — using defaults (WCAG 2.1 AA, Quick mode).\n  Run `allycat init` to customize for this project.',
     SCAN_CANCELLED:      'Scan cancelled — no configuration available.',
     SETUP_CANCELLED:     'Setup cancelled.',
     SETUP_ABORTED:       'Setup aborted.',
@@ -73,7 +73,7 @@ export const STANDARD_LABELS = {
 
 // ─── Report File Names ────────────────────────────────────────────────────────
 
-export const DEFAULT_HTML_REPORT = 'a11y-report.html';
+export const DEFAULT_HTML_REPORT = 'allycat-report.html';
 
 // ─── Supported File Extensions ────────────────────────────────────────────────
 // Single source of truth for all file types the scanner accepts.
@@ -103,5 +103,5 @@ export const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
 // ─── App Links ────────────────────────────────────────────────────────────────
 
 export const APP_LINKS = {
-    DOCS: 'https://github.com/dotcomico/A11yGuard-Core/blob/main/Readme.md',
+    DOCS: 'https://github.com/AllyCatHQ/allycat-core/blob/main/README.md',
 };

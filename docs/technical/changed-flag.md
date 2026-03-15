@@ -24,7 +24,7 @@ After `git diff --name-only HEAD~1` runs, the file list is filtered:
 
 1. **Extension filter** — only files with a supported extension are kept (`.html`, `.htm`, `.jsx`, `.tsx`, `.vue`, `.component.html`, `.component.ts`)
 2. **Existence check** — deleted files (present in diff but not on disk) are dropped
-3. **Scope filter** — if a `<target>` path was passed (e.g. `a11y-guard scan --changed ./src`), only files under that path are kept using a strict path-boundary check (prevents false prefix matches like `src/` matching `src-old/`)
+3. **Scope filter** — if a `<target>` path was passed (e.g. `allycat scan --changed ./src`), only files under that path are kept using a strict path-boundary check (prevents false prefix matches like `src/` matching `src-old/`)
 
 ## What Is NOT Included
 
@@ -35,10 +35,10 @@ After `git diff --name-only HEAD~1` runs, the file list is filtered:
 
 ```bash
 # All changed files in the project
-a11y-guard scan --changed
+allycat scan --changed
 
 # Only changed files inside ./src
-a11y-guard scan --changed ./src
+allycat scan --changed ./src
 ```
 
 The target path is resolved via `path.resolve` so relative paths, `~`, and absolute paths all work.

@@ -1,4 +1,4 @@
-# Session Technical Summary — A11yGuard Core
+# Session Technical Summary — AllyCat Core
 **Date:** 2026-03-01  
 **Session Focus:** P-5 — Angular Transformer
 
@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-This session completed **P-5 of the v0.9 pre-launch roadmap**: full Angular template support for the A11yGuard CLI accessibility scanner.
+This session completed **P-5 of the v0.9 pre-launch roadmap**: full Angular template support for the AllyCat CLI accessibility scanner.
 
 ### What was added
 | File | Type | Purpose |

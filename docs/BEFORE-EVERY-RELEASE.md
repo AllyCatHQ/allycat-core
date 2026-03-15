@@ -28,7 +28,7 @@ Verify that what the tool **tells** users matches what it **does**.
 - [ ] All flags in the README exist and behave as described
 - [ ] All examples actually work (run at least one end-to-end)
 - [ ] Supported file types section is current
-- [ ] Installation command is correct (`npm install -g a11y-guard`)
+- [ ] Installation command is correct (`npm install -g allycat`)
 - [ ] Version referenced anywhere matches `package.json`
 
 ---
@@ -83,9 +83,9 @@ node src/index.js scan tests/fixtures/fail-on-clean.html
 
 ## 4. Configuration Accuracy
 
-- [ ] `a11y-guard init` followed by `a11y-guard scan .` works on a fresh project with no existing config
+- [ ] `allycat init` followed by `allycat scan .` works on a fresh project with no existing config
 - [ ] Config fields in generated `a11y-config.json` match what `configLoader.js` actually reads
-- [ ] Concurrency: run `a11y-guard init` and confirm the displayed parallel count is correct for this machine
+- [ ] Concurrency: run `allycat init` and confirm the displayed parallel count is correct for this machine
 - [ ] `--version` output matches `"version"` in `package.json`
 
 ---
@@ -125,16 +125,16 @@ npm pack --dry-run
 
 ```bash
 npm pack
-npm install -g a11y-guard-<version>.tgz
+npm install -g allycat-<version>.tgz
 
 cd /tmp/smoke-test   # or any directory outside this project
-a11y-guard --version                  # must match package.json version
-a11y-guard --help                     # must render without errors
-a11y-guard init                       # run through wizard, accept defaults
-a11y-guard scan .                     # must complete without crash
+allycat --version                  # must match package.json version
+allycat --help                     # must render without errors
+allycat init                       # run through wizard, accept defaults
+allycat scan .                     # must complete without crash
 
-npm uninstall -g a11y-guard
-rm a11y-guard-<version>.tgz
+npm uninstall -g allycat
+rm allycat-<version>.tgz
 ```
 
 - [ ] `--version` matches expected version
@@ -149,9 +149,9 @@ rm a11y-guard-<version>.tgz
 ```bash
 npm whoami                   # confirm logged in
 npm publish --access public
-npm info a11y-guard version   # confirm live version updated
+npm info allycat version   # confirm live version updated
 ```
 
 - [ ] Published successfully
 - [ ] Live version on npmjs.com matches expected version
-- [ ] Post-publish: fresh install test (`npm install -g a11y-guard && a11y-guard --version`)
+- [ ] Post-publish: fresh install test (`npm install -g allycat && allycat --version`)

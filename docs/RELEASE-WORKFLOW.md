@@ -24,7 +24,7 @@ Three variants:
 3. Creates a git commit: `1.0.1`
 4. Creates a git tag: `v1.0.1`
 
-Because `src/index.js` reads `version` from `package.json` at runtime (ISSUE-005 fix), `a11y-guard --version` will always reflect the bumped version automatically — no manual edits needed.
+Because `src/index.js` reads `version` from `package.json` at runtime (ISSUE-005 fix), `allycat --version` will always reflect the bumped version automatically — no manual edits needed.
 
 ---
 
@@ -32,7 +32,7 @@ Because `src/index.js` reads `version` from `package.json` at runtime (ISSUE-005
 
 Uploads the package to [npmjs.com](https://npmjs.com) so anyone can install it:
 ```bash
-npm install -g a11y-guard
+npm install -g allycat
 ```
 
 Only uploads the files listed in `"files"` in `package.json`:
@@ -63,12 +63,12 @@ npm pack --dry-run
 npm publish --access public
 
 # 6. Verify it's live
-npm info a11y-guard version
+npm info allycat version
 
 # 7. Smoke test from a clean install
-npm install -g a11y-guard
-a11y-guard --version   # must match the bumped version
-npm uninstall -g a11y-guard
+npm install -g allycat
+allycat --version   # must match the bumped version
+npm uninstall -g allycat
 ```
 
 ---

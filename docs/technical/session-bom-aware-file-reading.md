@@ -1,5 +1,5 @@
 # Technical Session Summary — BOM-Aware File Reading
-**Date:** 04.03.2026 | **Project:** A11yGuard Core | **Session type:** Defensive fix (ISSUE-001 / ENHANCE-001)
+**Date:** 04.03.2026 | **Project:** AllyCat Core | **Session type:** Defensive fix (ISSUE-001 / ENHANCE-001)
 
 ---
 

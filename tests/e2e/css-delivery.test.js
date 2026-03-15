@@ -21,7 +21,7 @@
  *
  * Requirements:
  *   - Playwright + Chromium: npx playwright install chromium
- *   - a11y-config.json present in project root (run: a11y-guard init)
+ *   - a11y-config.json present in project root (run: allycat init)
  */
 
 import { spawnSync } from 'child_process';

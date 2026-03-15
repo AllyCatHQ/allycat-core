@@ -1,6 +1,6 @@
-# A11y-Guard
+# AllyCat
 
-[![npm version](https://img.shields.io/badge/npm-v1.0.0-blue.svg)](https://www.npmjs.com/package/a11y-guard)
+[![npm version](https://img.shields.io/badge/npm-v1.0.0-blue.svg)](https://www.npmjs.com/package/allycat)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -26,12 +26,12 @@
 
 ---
 
-## Why A11y-Guard vs `@axe-core/cli`?
+## Why AllyCat vs `@axe-core/cli`?
 
 `@axe-core/cli` (by Deque Labs) is the authoritative tool for **scanning live URLs**.
-A11y-Guard is built for a different scenario: scanning **source files before the app runs**.
+AllyCat is built for a different scenario: scanning **source files before the app runs**.
 
-| | A11y-Guard | @axe-core/cli |
+| | AllyCat | @axe-core/cli |
 |---|---|---|
 | Needs a running server? | **No** — scans source files directly | Yes — requires a URL |
 | JSX / TSX support? | **Yes** — Babel transformer | No |
@@ -45,7 +45,7 @@ A11y-Guard is built for a different scenario: scanning **source files before the
 | AI fix prompts (HTML report)? | **Yes** | No |
 | Quick scan (no browser)? | **Yes** — JSDOM, ~1s/file | No — always full browser |
 
-**Use A11y-Guard when:** you want a11y checks in pre-commit hooks, PR pipelines without
+**Use AllyCat when:** you want a11y checks in pre-commit hooks, PR pipelines without
 a deployed environment, or editor-integrated watch mode.
 
 **Use `@axe-core/cli` when:** you need to scan a deployed URL or a page that requires
@@ -65,7 +65,7 @@ full JavaScript execution to render dynamic content.
 ## Installation
 
 ```bash
-npm install -g a11y-guard
+npm install -g allycat
 ```
 
 For full scan mode (contrast checking), download the Chromium browser once:
@@ -74,7 +74,7 @@ For full scan mode (contrast checking), download the Chromium browser once:
 npx playwright install chromium
 ```
 
-> Playwright is included with A11y-Guard — no separate `npm install` needed.
+> Playwright is included with AllyCat — no separate `npm install` needed.
 
 ---
 
@@ -82,26 +82,26 @@ npx playwright install chromium
 
 ```bash
 # 1. Initialize configuration
-a11y-guard init
+allycat init
 
 # 2. Scan your project
-a11y-guard scan
+allycat scan
 
 # 3. Scan a specific folder or file
-a11y-guard scan ./src
-a11y-guard scan ./src/components/Button.tsx
+allycat scan ./src
+allycat scan ./src/components/Button.tsx
 ```
 
 ---
 
 ## Commands
 
-### `a11y-guard init`
+### `allycat init`
 
-Interactive setup wizard. Creates `a11y-config.json` in your project root.
+Interactive setup wizard. Creates `allycat.config.json` in your project root.
 
 ```bash
-a11y-guard init
+allycat init
 ```
 
 Prompts for:
@@ -114,19 +114,19 @@ Prompts for:
 
 ---
 
-### `a11y-guard scan [target]`
+### `allycat scan [target]`
 
 Scan files for accessibility violations.
 
 ```bash
 # Scan entire project (uses config defaults)
-a11y-guard scan
+allycat scan
 
 # Scan specific directory
-a11y-guard scan ./src
+allycat scan ./src
 
 # Scan specific file
-a11y-guard scan ./src/pages/Home.tsx
+allycat scan ./src/pages/Home.tsx
 ```
 
 #### Options
@@ -149,36 +149,36 @@ a11y-guard scan ./src/pages/Home.tsx
 
 ```bash
 # Quick scan (default mode)
-a11y-guard scan
+allycat scan
 
 # Full scan with contrast checking
-a11y-guard scan --full
+allycat scan --full
 
 # Summary only — just violation counts
-a11y-guard scan --summary
+allycat scan --summary
 
 # JSON to terminal (pipe-friendly)
-a11y-guard scan -o json
+allycat scan -o json
 
 # Save JSON report — auto-generated filename
-a11y-guard scan --json-file
-# → a11y-report-2025-05-27-143052.json
+allycat scan --json-file
+# → allycat-report-2025-05-27-143052.json
 
 # Save JSON report — custom filename
-a11y-guard scan --json-file my-report
+allycat scan --json-file my-report
 # → my-report.json
 
 # Scan only git-changed files (great for pre-commit hooks)
-a11y-guard scan --changed
+allycat scan --changed
 
 # Scan changed files scoped to a directory
-a11y-guard scan --changed ./src
+allycat scan --changed ./src
 
 # Watch mode — auto re-scans on every file save (pre-existing shown as counts only)
-a11y-guard scan --watch
-a11y-guard scan --watch ./src
+allycat scan --watch
+allycat scan --watch ./src
 # Watch mode — show full details of pre-existing violations on startup
-a11y-guard scan --watch --existing
+allycat scan --watch --existing
 
 # After each save, watch mode shows a delta:
 #   [NEW]   — violation appeared since the last scan
@@ -186,42 +186,42 @@ a11y-guard scan --watch --existing
 # Violations with no label are unchanged since the last scan.
 
 # Block CI pipeline on critical violations and save report
-a11y-guard scan --fail-on-critical --json-file ci-report
+allycat scan --fail-on-critical --json-file ci-report
 
 # Strictest CI gate — block on any violation
-a11y-guard scan --fail-on-any --json-file ci-report
+allycat scan --fail-on-any --json-file ci-report
 ```
 
 ---
 
-### `a11y-guard help [topic]`
+### `allycat help [topic]`
 
 Access built-in documentation, FAQ, and examples.
 
 ```bash
 # List all help topics
-a11y-guard help
+allycat help
 
 # Specific topics
-a11y-guard help faq        # Common questions and answers
-a11y-guard help examples   # Real-world usage examples
-a11y-guard help ci         # CI/CD integration guide
-a11y-guard help standards  # Standards explained (WCAG vs Israeli)
+allycat help faq        # Common questions and answers
+allycat help examples   # Real-world usage examples
+allycat help ci         # CI/CD integration guide
+allycat help standards  # Standards explained (WCAG vs Israeli)
 ```
 
 #### Command-specific help
 
 ```bash
-a11y-guard --help        # All commands overview
-a11y-guard init --help   # Init command details
-a11y-guard scan --help   # Scan command with all options
+allycat --help        # All commands overview
+allycat init --help   # Init command details
+allycat scan --help   # Scan command with all options
 ```
 
 ---
 
 ## Configuration
 
-Running `a11y-guard init` creates `a11y-config.json` in your project root. You can also edit it manually.
+Running `allycat init` creates `allycat.config.json` in your project root. You can also edit it manually.
 
 ```json
 {
@@ -251,13 +251,13 @@ Running `a11y-guard init` creates `a11y-config.json` in your project root. You c
 | `rules.level` | `AA`, `AAA` | WCAG conformance level |
 | `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |
 | `ai.enabled` | `true`, `false` | Generate HTML report with AI fix prompts after each scan |
-| `performance.concurrency` | integer or `null` (default: `null`) | Files to scan in parallel. `null` = Auto (computed from RAM + CPU). Configure via `a11y-guard init` |
+| `performance.concurrency` | integer or `null` (default: `null`) | Files to scan in parallel. `null` = Auto (computed from RAM + CPU). Configure via `allycat init` |
 
 ---
 
 ## Supported File Types
 
-No framework configuration is required. A11y-Guard automatically scans all matching files found in your project:
+No framework configuration is required. AllyCat automatically scans all matching files found in your project:
 
 | File Type | Extension | Notes |
 |---|---|---|
@@ -273,7 +273,7 @@ No framework configuration is required. A11y-Guard automatically scans all match
 
 ## Parallel Scanning & Performance
 
-A11y-Guard scans multiple files concurrently. By default, the parallel limit is computed automatically from your machine's RAM and CPU — no manual tuning needed.
+AllyCat scans multiple files concurrently. By default, the parallel limit is computed automatically from your machine's RAM and CPU — no manual tuning needed.
 
 **Formula:**
 - Quick mode: `min(60% RAM ÷ 200 MB, CPU cores × 4)`
@@ -293,11 +293,11 @@ The resolved limit is shown in the scan panel on every run:
 │ Parallel:  Auto → 24 files
 ```
 
-To override, run `a11y-guard init`, enable **advanced options**, and choose a preset or enter a custom value. If your value exceeds the safe ceiling, A11y-Guard will warn and ask for confirmation before saving.
+To override, run `allycat init`, enable **advanced options**, and choose a preset or enter a custom value. If your value exceeds the safe ceiling, AllyCat will warn and ask for confirmation before saving.
 
 If you set a value manually and it exceeds the safe ceiling at scan time, it is clamped automatically with a warning:
 ```
-[a11y-guard] performance.concurrency "40" exceeds safe limit for your system
+[allycat] performance.concurrency "40" exceeds safe limit for your system
 in quick mode. Clamped to 24.
 ```
 
@@ -311,7 +311,7 @@ in quick mode. Clamped to 24.
 | WCAG 2.1 AAA | 7:1 | No | Government / Medical |
 | Israeli IS 5568 | 4.5:1 | **Yes** | Israeli websites (legally required) |
 
-> Run `a11y-guard help standards` for a full breakdown.
+> Run `allycat help standards` for a full breakdown.
 
 ---
 
@@ -343,10 +343,10 @@ For programmatic consumption or CI/CD integration:
 
 ```bash
 # Print to terminal
-a11y-guard scan -o json
+allycat scan -o json
 
 # Save to file (recommended for CI)
-a11y-guard scan --json-file report
+allycat scan --json-file report
 ```
 
 JSON structure:
@@ -378,7 +378,7 @@ JSON structure:
 
 ### AI Report (HTML)
 
-When `ai.enabled` is `true` in your config, A11y-Guard automatically generates a self-contained HTML report after every terminal scan and opens it in your default browser.
+When `ai.enabled` is `true` in your config, AllyCat automatically generates a self-contained HTML report after every terminal scan and opens it in your default browser.
 
 The report includes:
 - All violations grouped by file with severity badges
@@ -392,7 +392,7 @@ The report includes:
 Minimal output for quick CI log checks:
 
 ```bash
-a11y-guard scan --summary
+allycat scan --summary
 # → ✖ Found 3 violations in 1 file — 1 critical, 2 moderate
 ```
 
@@ -413,13 +413,13 @@ Use exit gate flags to control when the pipeline fails:
 
 ```bash
 # Block only on critical violations (loosest gate)
-a11y-guard scan --fail-on-critical
+allycat scan --fail-on-critical
 
 # Block on serious or critical violations
-a11y-guard scan --fail-on-serious
+allycat scan --fail-on-serious
 
 # Block on any violation (strictest gate)
-a11y-guard scan --fail-on-any
+allycat scan --fail-on-any
 ```
 
 ### GitHub Actions
@@ -443,17 +443,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install A11y-Guard
-        run: npm install -g a11y-guard
+      - name: Install AllyCat
+        run: npm install -g allycat
 
       - name: Run accessibility scan
-        run: a11y-guard scan --fail-on-critical --json-file a11y-report
+        run: allycat scan --fail-on-critical --json-file allycat-report
 
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
           name: accessibility-report
-          path: a11y-report.json
+          path: allycat-report.json
 ```
 
 ### GitLab CI
@@ -463,11 +463,11 @@ accessibility:
   image: node:20
   script:
     - npm ci
-    - npm install -g a11y-guard
-    - a11y-guard scan --fail-on-critical --json-file a11y-report
+    - npm install -g allycat
+    - allycat scan --fail-on-critical --json-file allycat-report
   artifacts:
     paths:
-      - a11y-report.json
+      - allycat-report.json
 ```
 
 ### Jenkins
@@ -475,27 +475,27 @@ accessibility:
 ```groovy
 stage('Accessibility') {
   steps {
-    sh 'npm install -g a11y-guard'
-    sh 'a11y-guard scan --fail-on-critical --json-file a11y-report'
-    archiveArtifacts artifacts: 'a11y-report.json'
+    sh 'npm install -g allycat'
+    sh 'allycat scan --fail-on-critical --json-file allycat-report'
+    archiveArtifacts artifacts: 'allycat-report.json'
   }
 }
 ```
 
-> Run `a11y-guard help ci` for more CI/CD examples.
+> Run `allycat help ci` for more CI/CD examples.
 
 ---
 
 ## Path Handling
 
-A11y-Guard is cross-platform. Forward slashes and backslashes are both supported:
+AllyCat is cross-platform. Forward slashes and backslashes are both supported:
 
 ```bash
 # All of these work on any OS
-a11y-guard scan ./src
-a11y-guard scan .\src
-a11y-guard scan src/components
-a11y-guard scan src\components
+allycat scan ./src
+allycat scan .\src
+allycat scan src/components
+allycat scan src\components
 ```
 
 ---
@@ -503,7 +503,7 @@ a11y-guard scan src\components
 ## Troubleshooting
 
 **"No configuration found"**
-Run `a11y-guard init` to create `a11y-config.json`.
+Run `allycat init` to create `allycat.config.json`.
 
 **Full scan fails — Chromium not found**
 Download the browser once:
@@ -514,7 +514,7 @@ npx playwright install chromium
 **Contrast not checked in quick mode**
 Contrast requires a real browser. Use `--full`:
 ```bash
-a11y-guard scan --full
+allycat scan --full
 ```
 
 **Files not being scanned**
@@ -523,14 +523,14 @@ Check that files are not inside `node_modules/`, `dist/`, or `build/`, and that 
 **`--changed` returns an error**
 `--changed` requires git and at least two commits. Run from inside a git repository.
 
-> Run `a11y-guard help faq` for a full list of common questions.
+> Run `allycat help faq` for a full list of common questions.
 
 ---
 
 ## Project Structure
 
 ```
-a11y-guard/
+allycat/
 ├── src/
 │   ├── index.js                       # CLI entry point & command definitions
 │   ├── constants.js                   # Shared constants
@@ -576,7 +576,7 @@ a11y-guard/
 ├── tests/
 │   ├── e2e/                           # End-to-end CLI tests
 │   └── samples/                       # Test HTML/JSX fixtures
-├── a11y-config.json                   # Project configuration (user-generated)
+├── allycat.config.json                # Project configuration (user-generated)
 ├── package.json
 ├── README.md
 ├── CONTRIBUTING.md
@@ -589,9 +589,9 @@ a11y-guard/
 
 Features planned or in progress:
 
-- **`--report` flag** — Expose the HTML report as a standalone CLI flag (`a11y-guard scan --report`) so it can be generated without enabling `ai.enabled` in config.
-- **UI preferences** — Per-project control over summary style and which violation fields are shown in terminal output, configurable via `a11y-guard init ui`.
-- **Config validation** — Warn on unknown or misspelled keys in `a11y-config.json` instead of silently falling back to defaults.
+- **`--report` flag** — Expose the HTML report as a standalone CLI flag (`allycat scan --report`) so it can be generated without enabling `ai.enabled` in config.
+- **UI preferences** — Per-project control over summary style and which violation fields are shown in terminal output, configurable via `allycat init ui`.
+- **Config validation** — Warn on unknown or misspelled keys in `allycat.config.json` instead of silently falling back to defaults.
 
 ---
 

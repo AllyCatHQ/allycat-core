@@ -2,7 +2,7 @@
  * BadHeadings.jsx
  *
  * TEST PURPOSE: Detect heading structure violations.
- * Expected result: a11y-guard should report violations on lines below.
+ * Expected result: allycat should report violations on lines below.
  *
  * Violations planted:
  *  - Line 18: Page starts with <h2> instead of <h1>             → page-has-heading-one (MODERATE)

@@ -1,14 +1,14 @@
-# Path Handling — A11yGuard Core
+# Path Handling — AllyCat Core
 **Last updated:** 2026-03-02
 
 ---
 
 ## Overview
 
-A11yGuard accepts a target file or directory path as the first argument to `scan`:
+AllyCat accepts a target file or directory path as the first argument to `scan`:
 
 ```bash
-a11y-guard scan <target>
+allycat scan <target>
 ```
 
 All path styles are normalized before resolution so that the tool works correctly regardless of how the user types the path — forward slashes, backslashes, trailing slashes, relative prefixes, or leading slashes.

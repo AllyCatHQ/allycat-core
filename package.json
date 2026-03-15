@@ -1,10 +1,10 @@
 {
-  "name": "a11y-guard",
+  "name": "allycat",
   "version": "1.0.0",
   "description": "Accessibility tool for source files — scans JSX, Vue, Angular, and HTML without a running server. Exact line numbers, watch mode, CI gates, AI fix prompts. WCAG 2.1 AA/AAA and Israeli Standard IS 5568.",
   "main": "src/index.js",
   "bin": {
-    "a11y-guard": "./src/index.js"
+    "allycat": "./src/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -27,7 +27,8 @@
     "angular",
     "html",
     "section508",
-    "ada"
+    "ada",
+    "allycat"
   ],
   "author": "Dotan Siman Tov",
   "license": "MIT",
@@ -37,11 +38,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/A11yGuard/A11yGuard-Core.git"
+    "url": "https://github.com/AllyCatHQ/allycat-core.git"
   },
-  "homepage": "https://github.com/A11yGuard/A11yGuard-Core#readme",
+  "homepage": "https://github.com/AllyCatHQ/allycat-core#readme",
   "bugs": {
-    "url": "https://github.com/A11yGuard/A11yGuard-Core/issues"
+    "url": "https://github.com/AllyCatHQ/allycat-core/issues"
   },
   "files": [
     "src/**/*",

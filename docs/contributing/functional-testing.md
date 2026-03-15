@@ -1,4 +1,4 @@
-# A11y-Guard: Functional Testing Guide
+# AllyCat: Functional Testing Guide
 
 > **Purpose:** Step-by-step manual verification that every feature of the tool works correctly.
 > Run this guide before any release to confirm the tool behaves as expected end-to-end.

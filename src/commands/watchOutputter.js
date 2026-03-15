@@ -37,7 +37,7 @@ export function clearScreen() {
 }
 
 export function printBanner() {
-    console.log(chalk.bold.magenta('  ◈  A11y-Guard  —  Watch Mode'));
+    console.log(chalk.bold.magenta('  ◈  AllyCat  —  Watch Mode'));
     console.log('');
 }
 

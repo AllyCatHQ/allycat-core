@@ -1,11 +1,11 @@
 # Technical Session Summary — CSS Delivery Support
-**Date:** 01.03.2026 | **Project:** A11yGuard Core | **Session type:** Feature implementation
+**Date:** 01.03.2026 | **Project:** AllyCat Core | **Session type:** Feature implementation
 
 ---
 
 ## 1. Executive Summary
 
-This session extended A11yGuard Core's full scanner (Playwright-based) to correctly detect CSS-driven contrast violations across all supported file types. Before this session, CSS was only reliably injected for JSX/TSX files (via ESM `import` statements) and HTML files (via `<link rel="stylesheet">`). Vue SFC style blocks, Angular component styles, and transitively-imported CSS were silently discarded — meaning Playwright rendered those components with no CSS and axe-core never reported contrast violations.
+This session extended AllyCat Core's full scanner (Playwright-based) to correctly detect CSS-driven contrast violations across all supported file types. Before this session, CSS was only reliably injected for JSX/TSX files (via ESM `import` statements) and HTML files (via `<link rel="stylesheet">`). Vue SFC style blocks, Angular component styles, and transitively-imported CSS were silently discarded — meaning Playwright rendered those components with no CSS and axe-core never reported contrast violations.
 
 ### Features implemented
 
@@ -149,9 +149,9 @@ This mirrors how browsers process `@import` — the imported file's rules are lo
 | **Diamond dependency** | A dependency graph where two different parents both depend on the same child. `A → B, A → C, B → D, C → D`. Without a visited-Set guard, D would be processed twice |
 | **Cycle guard / visited Set** | A `Set<path>` used during recursive traversal to detect and skip already-visited nodes, preventing infinite loops from circular `@import` chains |
 | **axe-core** | The open-source accessibility rules engine behind most automated a11y tools. Runs inside Playwright's browser context and reports WCAG violations via DOM inspection |
-| **Playwright** | Microsoft's browser automation library. Used in A11yGuard's full scan mode to launch a real Chromium instance, render HTML with full CSS, and let axe compute computed color values for contrast checking |
+| **Playwright** | Microsoft's browser automation library. Used in AllyCat's full scan mode to launch a real Chromium instance, render HTML with full CSS, and let axe compute computed color values for contrast checking |
 | **JSDOM** | A Node.js DOM implementation that parses HTML without a real browser. Used in quick scan mode — cannot compute layout or contrast because there is no rendering engine |
-| **`resolvAndInjectCss()`** | A11yGuard's central CSS pipeline function in `cssResolver.js`. Takes transformed HTML + source content + file path + cache + extraCssStrings → returns HTML with a `<style>` block injected before `</head>` |
+| **`resolvAndInjectCss()`** | AllyCat's central CSS pipeline function in `cssResolver.js`. Takes transformed HTML + source content + file path + cache + extraCssStrings → returns HTML with a `<style>` block injected before `</head>` |
 | **`extraCssStrings`** | The new optional parameter added to `resolvAndInjectCss`. Accepts already-resolved CSS text (Vue style blocks, Angular inline styles) that bypasses the file-loading pipeline and goes directly to injection |
 | **Bracket-depth scanner** | A character-by-character state machine that counts opening/closing brackets while tracking string boundaries. Used to safely extract array content from Angular `styles: [...]` without regex failing on `]` inside CSS attribute selectors |
 | **CSS cascade order** | The rule that later declarations in a stylesheet win over earlier ones when specificity is equal. Transitive imports must be prepended (come first) so the parent file's rules correctly override them |
@@ -183,4 +183,4 @@ This mirrors how browsers process `@import` — the imported file's rules are lo
 
 ---
 
-*Generated at end of session · A11yGuard Core v0.9 pre-launch*
+*Generated at end of session · AllyCat Core v0.9 pre-launch*

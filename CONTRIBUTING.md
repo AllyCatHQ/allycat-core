@@ -1,6 +1,6 @@
-# Contributing to A11y-Guard
+# Contributing to AllyCat
 
-Thank you for your interest in contributing to A11y-Guard! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to AllyCat! This document provides guidelines and instructions for contributing.
 
 ---
 
@@ -38,8 +38,8 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ```bash
 # Fork the repo on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/a11y-guard.git
-cd a11y-guard
+git clone https://github.com/YOUR_USERNAME/allycat.git
+cd allycat
 ```
 
 ---
@@ -66,13 +66,13 @@ npx playwright install chromium
 npm link
 
 # Now you can test from anywhere
-a11y-guard --version
+allycat --version
 ```
 
 ### 4. Unlink When Done
 
 ```bash
-npm unlink -g a11y-guard
+npm unlink -g allycat
 ```
 
 ---
@@ -80,15 +80,15 @@ npm unlink -g a11y-guard
 ## Project Structure
 
 ```
-a11y-guard/
+allycat/
 ├── src/
 │   ├── index.js              # CLI entry point & command definitions
 │   ├── constants.js          # Shared constants
 │   │
 │   ├── commands/
-│   │   ├── init.js           # `a11y-guard init` command
-│   │   ├── scan.js           # `a11y-guard scan` command
-│   │   └── help.js           # `a11y-guard help` command
+│   │   ├── init.js           # `allycat init` command
+│   │   ├── scan.js           # `allycat scan` command
+│   │   └── help.js           # `allycat help` command
 │   │
 │   ├── engine/
 │   │   ├── quickScanner.js   # JSDOM-based scanning (fast)
@@ -146,7 +146,7 @@ git checkout -b fix/your-bug-fix
 node src/index.js scan ./test-files
 
 # Or if linked globally
-a11y-guard scan ./test-files
+allycat scan ./test-files
 ```
 
 ### 4. Commit Your Changes
@@ -349,13 +349,13 @@ Run scans:
 
 ```bash
 # Quick scan
-a11y-guard scan ./test-files
+allycat scan ./test-files
 
 # Full scan
-a11y-guard scan ./test-files --full
+allycat scan ./test-files --full
 
 # Specific file
-a11y-guard scan ./test-files/button-test.html
+allycat scan ./test-files/button-test.html
 ```
 
 ### Test Different Scenarios
@@ -376,7 +376,7 @@ a11y-guard scan ./test-files/button-test.html
 ### Before Reporting
 
 1. Check existing issues for duplicates
-2. Try latest version: `npm update -g a11y-guard`
+2. Try latest version: `npm update -g allycat`
 3. Gather system info
 
 ### Bug Report Template
@@ -386,8 +386,8 @@ a11y-guard scan ./test-files/button-test.html
 Clear description of what happened.
 
 **To Reproduce**
-1. Run `a11y-guard init`
-2. Run `a11y-guard scan ./src`
+1. Run `allycat init`
+2. Run `allycat scan ./src`
 3. See error
 
 **Expected behavior**
@@ -396,7 +396,7 @@ What you expected to happen.
 **Environment**
 - OS: [e.g., Windows 11, macOS 14, Ubuntu 22]
 - Node.js: [e.g., 20.11.0]
-- A11y-Guard: [e.g., 1.0.0]
+- AllyCat: [e.g., 1.0.0]
 
 **Config file**
 ```json
@@ -441,7 +441,7 @@ Mockups, examples, references.
 
 ## Questions?
 
-- Open a [GitHub Discussion](https://github.com/YOUR_USERNAME/a11y-guard/discussions)
+- Open a [GitHub Discussion](https://github.com/YOUR_USERNAME/allycat/discussions)
 - Check existing issues
 - Review the code and comments
 

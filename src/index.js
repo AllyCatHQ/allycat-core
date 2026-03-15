@@ -15,9 +15,9 @@ const program = new Command();
 // Program Configuration
 
 program
-  .name('a11y-guard')
+  .name('allycat')
   .description(`
-${chalk.bold('A11y-Guard')} — Professional CLI for accessibility compliance testing.
+${chalk.bold('AllyCat')} — Professional CLI for accessibility compliance testing.
 
 Supports ${chalk.cyan('WCAG 2.1 AA/AAA')} and ${chalk.cyan('Israeli Standard IS 5568')}.
 Fast scanning with precise error locations and clickable VS Code links.
@@ -28,12 +28,12 @@ Fast scanning with precise error locations and clickable VS Code links.
 ${chalk.dim(UI.DIVIDER)}
 
 ${chalk.bold('Quick Start:')}
-  ${chalk.cyan('$')} a11y-guard init          ${chalk.dim('# Setup configuration')}
-  ${chalk.cyan('$')} a11y-guard scan          ${chalk.dim('# Scan your project')}
+  ${chalk.cyan('$')} allycat init          ${chalk.dim('# Setup configuration')}
+  ${chalk.cyan('$')} allycat scan          ${chalk.dim('# Scan your project')}
 
 ${chalk.bold('Learn More:')}
-  ${chalk.cyan('$')} a11y-guard help examples ${chalk.dim('# See usage examples')}
-  ${chalk.cyan('$')} a11y-guard help faq      ${chalk.dim('# Common questions')}
+  ${chalk.cyan('$')} allycat help examples ${chalk.dim('# See usage examples')}
+  ${chalk.cyan('$')} allycat help faq      ${chalk.dim('# Common questions')}
 
 ${chalk.bold('Documentation:')}
   ${chalk.dim(APP_LINKS.DOCS)}
@@ -46,14 +46,14 @@ program
   .description('Setup configuration wizard for your project')
   .addHelpText('after', `
 ${chalk.bold('What it does:')}
-  Creates ${chalk.cyan('a11y-config.json')} in your project root with:
+  Creates ${chalk.cyan('allycat.config.json')} in your project root with:
   • Framework type (React, Vue, Angular, HTML)
   • Accessibility standard (WCAG AA, AAA, Israeli)
   • RTL support settings
   • Default scan mode
 
 ${chalk.bold('Example:')}
-  ${chalk.cyan('$')} a11y-guard init
+  ${chalk.cyan('$')} allycat init
 `)
   .action(initCommand);
 
@@ -91,22 +91,22 @@ ${chalk.bold('Output Options:')}
   ${chalk.dim('Summary')}   Just counts, minimal output
 
 ${chalk.bold('Examples:')}
-  ${chalk.cyan('$')} a11y-guard scan                    ${chalk.dim('# Scan entire project')}
-  ${chalk.cyan('$')} a11y-guard scan ./src              ${chalk.dim('# Scan specific folder')}
-  ${chalk.cyan('$')} a11y-guard scan ./src/Button.tsx   ${chalk.dim('# Scan specific file')}
-  ${chalk.cyan('$')} a11y-guard scan --full             ${chalk.dim('# Full scan with contrast')}
-  ${chalk.cyan('$')} a11y-guard scan --summary          ${chalk.dim('# Quick count only')}
-  ${chalk.cyan('$')} a11y-guard scan -o json            ${chalk.dim('# JSON to terminal')}
-  ${chalk.cyan('$')} a11y-guard scan --json-file        ${chalk.dim('# Save to timestamped file')}
-  ${chalk.cyan('$')} a11y-guard scan --json-file report ${chalk.dim('# Save to report.json')}
-  ${chalk.cyan('$')} a11y-guard scan --fail-on-critical ${chalk.dim('# Exit 1 if critical violations found')}
-  ${chalk.cyan('$')} a11y-guard scan --fail-on-serious  ${chalk.dim('# Exit 2 if serious or critical found')}
-  ${chalk.cyan('$')} a11y-guard scan --fail-on-any      ${chalk.dim('# Exit 3 if any violation found')}
-  ${chalk.cyan('$')} a11y-guard scan --changed          ${chalk.dim('# Scan only git-changed files')}
-  ${chalk.cyan('$')} a11y-guard scan --changed ./src    ${chalk.dim('# Changed files scoped to ./src')}
-  ${chalk.cyan('$')} a11y-guard scan --watch            ${chalk.dim('# Watch and re-scan on file change')}
-  ${chalk.cyan('$')} a11y-guard scan --watch ./src      ${chalk.dim('# Watch specific folder')}
-  ${chalk.cyan('$')} a11y-guard scan --watch --existing ${chalk.dim('# Watch — show full pre-existing violation details on startup')}
+  ${chalk.cyan('$')} allycat scan                    ${chalk.dim('# Scan entire project')}
+  ${chalk.cyan('$')} allycat scan ./src              ${chalk.dim('# Scan specific folder')}
+  ${chalk.cyan('$')} allycat scan ./src/Button.tsx   ${chalk.dim('# Scan specific file')}
+  ${chalk.cyan('$')} allycat scan --full             ${chalk.dim('# Full scan with contrast')}
+  ${chalk.cyan('$')} allycat scan --summary          ${chalk.dim('# Quick count only')}
+  ${chalk.cyan('$')} allycat scan -o json            ${chalk.dim('# JSON to terminal')}
+  ${chalk.cyan('$')} allycat scan --json-file        ${chalk.dim('# Save to timestamped file')}
+  ${chalk.cyan('$')} allycat scan --json-file report ${chalk.dim('# Save to report.json')}
+  ${chalk.cyan('$')} allycat scan --fail-on-critical ${chalk.dim('# Exit 1 if critical violations found')}
+  ${chalk.cyan('$')} allycat scan --fail-on-serious  ${chalk.dim('# Exit 2 if serious or critical found')}
+  ${chalk.cyan('$')} allycat scan --fail-on-any      ${chalk.dim('# Exit 3 if any violation found')}
+  ${chalk.cyan('$')} allycat scan --changed          ${chalk.dim('# Scan only git-changed files')}
+  ${chalk.cyan('$')} allycat scan --changed ./src    ${chalk.dim('# Changed files scoped to ./src')}
+  ${chalk.cyan('$')} allycat scan --watch            ${chalk.dim('# Watch and re-scan on file change')}
+  ${chalk.cyan('$')} allycat scan --watch ./src      ${chalk.dim('# Watch specific folder')}
+  ${chalk.cyan('$')} allycat scan --watch --existing ${chalk.dim('# Watch — show full pre-existing violation details on startup')}
 `)
   .action((target, options) => scanCommand(target, options));
 
@@ -123,8 +123,8 @@ ${chalk.bold('Available Topics:')}
   ${chalk.cyan('standards')} Accessibility standards explained
 
 ${chalk.bold('Usage:')}
-  ${chalk.cyan('$')} a11y-guard help faq
-  ${chalk.cyan('$')} a11y-guard help examples
+  ${chalk.cyan('$')} allycat help faq
+  ${chalk.cyan('$')} allycat help examples
 `)
   .action((topic) => helpCommand(topic));
 

@@ -2,7 +2,7 @@
  * BadImages.jsx
  *
  * TEST PURPOSE: Detect image accessibility violations.
- * Expected result: a11y-guard should report violations on lines below.
+ * Expected result: allycat should report violations on lines below.
  *
  * Violations planted:
  *  - Line 22: <img> with no alt attribute at all             → image-alt (CRITICAL)
