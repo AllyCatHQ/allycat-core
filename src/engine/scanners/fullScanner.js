@@ -35,12 +35,37 @@ import { resolvAndInjectCss, loadTsconfigAliases } from '../../utils/cssResolver
 import { buildExtraCss } from './cssInjector.js';
 import { checkRtlCompliancePlaywright } from './rtlRunner.js';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import pLimit from 'p-limit';
 import chalk from 'chalk';
 
 // -----------------------------------------------------------------------------
 // Playwright lazy loader
 // -----------------------------------------------------------------------------
+
+/**
+ * Detect whether allycat is running from a global or local npm install.
+ * Compares this file's path against the project's node_modules folder.
+ * Returns the correct install command string, or both options if detection fails.
+ */
+function detectInstallCommand() {
+    try {
+        const thisFile = fileURLToPath(import.meta.url);
+        const localNodeModules = path.join(process.cwd(), 'node_modules');
+        const isLocal = thisFile.startsWith(localNodeModules);
+        return isLocal
+            ? chalk.bold.cyan('npm install playwright @axe-core/playwright')
+            : chalk.bold.cyan('npm install -g playwright @axe-core/playwright');
+    } catch {
+        // Detection failed — show both options so the user can pick the right one
+        return (
+            chalk.bold.cyan('npm install -g playwright @axe-core/playwright') +
+            chalk.dim('  (global)') + '\n' +
+            `  ${chalk.bold.cyan('npm install playwright @axe-core/playwright')}` +
+            chalk.dim('  (local project)')
+        );
+    }
+}
 
 async function loadPlaywright() {
     try {
@@ -50,8 +75,7 @@ async function loadPlaywright() {
     } catch {
         throw new Error(
             'Full scan requires Playwright. Install it once:\n\n' +
-            `  ${chalk.bold('Global install:')}  ${chalk.bold.cyan('npm install -g playwright @axe-core/playwright')}\n` +
-            `  ${chalk.bold('Local project:')}   ${chalk.bold.cyan('npm install playwright @axe-core/playwright')}\n\n` +
+            `  ${detectInstallCommand()}\n\n` +
             `  Then run: ${chalk.bold.cyan('npx playwright install chromium')}`
         );
     }
