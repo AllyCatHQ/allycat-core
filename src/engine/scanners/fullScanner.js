@@ -49,8 +49,8 @@ async function loadPlaywright() {
     } catch {
         throw new Error(
             'Full scan requires Playwright.\n' +
-            '  Run: npm install playwright @axe-core/playwright\n' +
-            '  Then: npx playwright install chromium'
+            `  Run:${chalk.bold.cyan(' npm install playwright @axe-core/playwright\n')}` +
+            `  Then: ${chalk.bold.cyan('npx playwright install chromium')}`
         );
     }
 }
