@@ -62,9 +62,5 @@
     "glob": "^13.0.2",
     "jsdom": "^28.0.0",
     "p-limit": "^7.3.0"
-  },
-  "optionalDependencies": {
-    "playwright": "^1.58.2",
-    "@axe-core/playwright": "^4.11.1"
   }
 }
