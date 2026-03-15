@@ -104,7 +104,7 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
     return `
 <header class="header">
     <div class="header-brand">
-        <div class="brand-icon">♿</div>
+        <img class="brand-icon" src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/icon-face.png" alt="AllyCat" />
         <div>
             <h1 class="brand-name">AllyCat</h1>
             <div class="brand-sub">Accessibility Scan Report</div>

@@ -89,10 +89,9 @@ export function buildStyles() {
 
     .brand-icon {
         width: 36px; height: 36px;
-        background: var(--accent);
         border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 18px; flex-shrink: 0;
+        flex-shrink: 0;
+        object-fit: contain;
     }
 
     .brand-name { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
