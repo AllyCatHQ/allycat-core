@@ -38,11 +38,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/A11yGuard/A11yGuard-Core.git"
+    "url": "https://github.com/AllyCatHQ/allycat-core.git"
   },
-  "homepage": "https://github.com/A11yGuard/A11yGuard-Core#readme",
+  "homepage": "https://github.com/AllyCatHQ/allycat-core#readme",
   "bugs": {
-    "url": "https://github.com/A11yGuard/A11yGuard-Core/issues"
+    "url": "https://github.com/AllyCatHQ/allycat-core/issues"
   },
   "files": [
     "src/**/*",
