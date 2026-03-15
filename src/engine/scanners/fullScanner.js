@@ -8,8 +8,9 @@
  *
  * Requirements:
  *   Playwright is an optional dependency — install it once before using --full:
- *   npm install playwright @axe-core/playwright
- *   npx playwright install chromium
+ *   Global: npm install -g playwright @axe-core/playwright
+ *   Local:  npm install playwright @axe-core/playwright
+ *   Then:   npx playwright install chromium
  *
  * Concurrency is RAM- and CPU-aware (via configLoader.getSafeConcurrencyCeiling).
  * Full mode is additionally capped at 8 due to Playwright CPU/IO overhead.
@@ -48,9 +49,10 @@ async function loadPlaywright() {
         return { chromium, AxeBuilder };
     } catch {
         throw new Error(
-            'Full scan requires Playwright.\n' +
-            `  Run:${chalk.bold.cyan(' npm install playwright @axe-core/playwright\n')}` +
-            `  Then: ${chalk.bold.cyan('npx playwright install chromium')}`
+            'Full scan requires Playwright. Install it once:\n\n' +
+            `  ${chalk.bold('Global install:')}  ${chalk.bold.cyan('npm install -g playwright @axe-core/playwright')}\n` +
+            `  ${chalk.bold('Local project:')}   ${chalk.bold.cyan('npm install playwright @axe-core/playwright')}\n\n` +
+            `  Then run: ${chalk.bold.cyan('npx playwright install chromium')}`
         );
     }
 }
