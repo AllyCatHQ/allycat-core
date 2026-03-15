@@ -42,8 +42,9 @@ export const UI = {
 // These appear verbatim in both scan.js (error hints) and helpContent.js (FAQ).
 
 export const INSTALL = {
-    PLAYWRIGHT: 'npm install playwright @axe-core/playwright',
-    CHROMIUM:   'npx playwright install chromium',
+    PLAYWRIGHT_GLOBAL: 'npm install -g playwright @axe-core/playwright',
+    PLAYWRIGHT_LOCAL:  'npm install playwright @axe-core/playwright',
+    CHROMIUM:          'npx playwright install chromium',
 };
 
 // ─── Messages ─────────────────────────────────────────────────────────────────

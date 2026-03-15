@@ -7,17 +7,16 @@
  * Use for: Pre-commit checks, CI/CD pipelines, thorough audits
  *
  * Requirements:
- *   Playwright is installed automatically with this package.
- *   Download the Chromium browser once before using --full:
- *   npx playwright install chromium
+ *   Playwright is an optional dependency — install it once before using --full:
+ *   Global: npm install -g playwright @axe-core/playwright
+ *   Local:  npm install playwright @axe-core/playwright
+ *   Then:   npx playwright install chromium
  *
  * Concurrency is RAM- and CPU-aware (via configLoader.getSafeConcurrencyCeiling).
  * Full mode is additionally capped at 8 due to Playwright CPU/IO overhead.
  * Per-file failures are caught and logged — other files continue scanning.
  */
 
-import { chromium } from 'playwright';
-import AxeBuilder from '@axe-core/playwright';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { readSourceFile } from '../../utils/fileUtils.js';
 import { getSafeConcurrencyCeiling } from '../../utils/configLoader.js';
@@ -36,8 +35,60 @@ import { resolvAndInjectCss, loadTsconfigAliases } from '../../utils/cssResolver
 import { buildExtraCss } from './cssInjector.js';
 import { checkRtlCompliancePlaywright } from './rtlRunner.js';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import pLimit from 'p-limit';
 import chalk from 'chalk';
+
+// -----------------------------------------------------------------------------
+// Playwright lazy loader
+// -----------------------------------------------------------------------------
+
+/**
+ * Detect whether allycat is running from a global or local npm install.
+ * Compares this file's path against the project's node_modules folder.
+ * Returns the correct install command string, or both options if detection fails.
+ */
+function detectInstallCommand() {
+    try {
+        const thisFile = fileURLToPath(import.meta.url);
+        const localNodeModules = path.join(process.cwd(), 'node_modules');
+        const isLocal = thisFile.startsWith(localNodeModules);
+        return isLocal
+            ? chalk.bold.cyan('npm install playwright @axe-core/playwright')
+            : chalk.bold.cyan('npm install -g playwright @axe-core/playwright');
+    } catch {
+        // Detection failed — show both options so the user can pick the right one
+        return (
+            chalk.bold.cyan('npm install -g playwright @axe-core/playwright') +
+            chalk.dim('  (global)') + '\n' +
+            `  ${chalk.bold.cyan('npm install playwright @axe-core/playwright')}` +
+            chalk.dim('  (local project)')
+        );
+    }
+}
+
+async function loadPlaywright() {
+    try {
+        const { chromium } = await import('playwright');
+        const { default: AxeBuilder } = await import('@axe-core/playwright');
+        return { chromium, AxeBuilder };
+    } catch {
+        throw new Error(
+            'Full scan requires Playwright. Install it once:\n\n' +
+            `  ${detectInstallCommand()}\n\n` +
+            `  Then run: ${chalk.bold.cyan('npx playwright install chromium')}`
+        );
+    }
+}
+
+/**
+ * Verify Playwright is installed and importable.
+ * Throws the same user-friendly error as loadPlaywright() if not available.
+ * Used for early preflight checks before file resolution begins.
+ */
+export async function checkPlaywrightAvailable() {
+    await loadPlaywright();
+}
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -60,6 +111,8 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
 
     if (!silent) p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
     if (!silent) p.log.info('Using Playwright for full accessibility audit (including contrast)...');
+
+    const { chromium, AxeBuilder } = await loadPlaywright();
 
     let browser;
     try {
@@ -91,7 +144,7 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
             filesToScan.map(filePath =>
                 limiter(async () => {
                     try {
-                        return await scanSingleFile(browser, filePath, config, cssCache, aliases);
+                        return await scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder);
                     } catch (err) {
                         p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
                         return { violations: [], warning: null };
@@ -270,7 +323,7 @@ async function transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAn
  * @param {Map<string,string>} aliases - Resolved tsconfig path aliases
  * @returns {Promise<{ violations: Array, warning: string|null }>}
  */
-async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
+async function scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder) {
     const violations = [];
     let warning = null;
 

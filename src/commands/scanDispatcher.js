@@ -12,8 +12,8 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { runQuickAudit } from '../engine/scanners/quickScanner.js';
-import { runFullAudit } from '../engine/scanners/fullScanner.js';
-import { SUPPORTED_EXTENSIONS, MESSAGES, INSTALL, SCAN_MODES } from '../constants.js';
+import { runFullAudit, checkPlaywrightAvailable } from '../engine/scanners/fullScanner.js';
+import { SUPPORTED_EXTENSIONS, MESSAGES, SCAN_MODES } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Input Resolution
@@ -155,38 +155,31 @@ export async function executeScan(config, scanMode, targetPath, preResolvedFiles
 }
 
 /**
- * Handle scan errors with helpful hints
+ * Verify Playwright is available before file resolution begins.
+ * Returns true on success. On failure, logs the error and returns false
+ * so the caller can abort without doing unnecessary file work.
+ *
+ * No-ops for quick mode.
+ *
+ * @param {string} scanMode - 'quick' or 'full'
+ * @returns {Promise<boolean>}
+ */
+export async function preflightScan(scanMode) {
+    if (scanMode !== SCAN_MODES.FULL) return true;
+    try {
+        await checkPlaywrightAvailable();
+        return true;
+    } catch (error) {
+        p.log.error(error.message);
+        return false;
+    }
+}
+
+/**
+ * Handle scan errors
  *
  * @param {Error} error - The caught error
  */
 function handleScanError(error) {
     p.log.error(error.message);
-
-    if (isPlaywrightNotInstalledError(error)) {
-        p.log.info(chalk.dim(`Hint: Run "${INSTALL.PLAYWRIGHT}" first.`));
-    } else if (isBrowserNotInstalledError(error)) {
-        p.log.info(chalk.dim(`Hint: Run "${INSTALL.CHROMIUM}" to install the browser.`));
-    }
-}
-
-/**
- * Check if error is due to missing Playwright package
- *
- * @param {Error} error - The caught error
- * @returns {boolean}
- */
-function isPlaywrightNotInstalledError(error) {
-    return error.message.includes("Cannot find package 'playwright'") ||
-        error.message.includes("Cannot find module 'playwright'");
-}
-
-/**
- * Check if error is due to missing browser
- *
- * @param {Error} error - The caught error
- * @returns {boolean}
- */
-function isBrowserNotInstalledError(error) {
-    return error.message.includes("Executable doesn't exist") ||
-        error.message.includes('browserType.launch');
 }

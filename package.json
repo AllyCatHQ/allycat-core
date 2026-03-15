@@ -50,7 +50,6 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@axe-core/playwright": "^4.11.1",
     "@babel/parser": "^7.29.0",
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
@@ -62,7 +61,10 @@
     "commander": "^14.0.3",
     "glob": "^13.0.2",
     "jsdom": "^28.0.0",
-    "p-limit": "^7.3.0",
+    "p-limit": "^7.3.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "playwright": "^1.58.2"
   }
 }
