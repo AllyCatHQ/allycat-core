@@ -47,7 +47,8 @@
   "files": [
     "src/**/*",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "@babel/parser": "^7.29.0",
