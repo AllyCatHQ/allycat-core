@@ -110,7 +110,7 @@ function main() {
     const totalMb = (os.totalmem() / 1024 ** 3).toFixed(1);
 
     console.log('\n╔══════════════════════════════════════════════════════╗');
-    console.log(  '║     A11yGuard Core — Memory Benchmark v2             ║');
+    console.log(  '║     AllyCat Core — Memory Benchmark v2             ║');
     console.log(  '║     Each row = isolated fresh subprocess             ║');
     console.log(  '╚══════════════════════════════════════════════════════╝');
     console.log(`  Node.js : ${process.version}`);

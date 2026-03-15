@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 // Styled-components usage — CSS is generated at runtime, so contrast checking
-// is unavailable. A11yGuard will warn and continue scanning for other violations.
+// is unavailable. AllyCat will warn and continue scanning for other violations.
 
 const Card = styled.div`
   background: #555;

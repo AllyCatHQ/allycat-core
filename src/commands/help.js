@@ -176,7 +176,7 @@ function showStandards() {
 function showTopicList() {
     const divider = chalk.dim(UI.DIVIDER);
 
-    console.log(chalk.bold.cyan('A11y-Guard Help'));
+    console.log(chalk.bold.cyan('AllyCat Help'));
     console.log(divider);
     console.log('');
 

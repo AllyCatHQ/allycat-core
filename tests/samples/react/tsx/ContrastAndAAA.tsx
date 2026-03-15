@@ -6,10 +6,10 @@
  * IMPORTANT — Two scan commands needed to see everything:
  *
  *   Quick (AA, no contrast):
- *     a11y-guard scan test-files/react/tsx/ContrastAndAAA.tsx
+ *     allycat scan test-files/react/tsx/ContrastAndAAA.tsx
  *
  *   Full (AAA, with contrast):
- *     a11y-guard scan test-files/react/tsx/ContrastAndAAA.tsx --full
+ *     allycat scan test-files/react/tsx/ContrastAndAAA.tsx --full
  *
  * Contrast ratios reference:
  *   WCAG AA  normal text → requires 4.5:1

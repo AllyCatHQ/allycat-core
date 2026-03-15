@@ -3,7 +3,7 @@
  *
  * TEST PURPOSE: Full coverage accessibility scan for TSX files.
  * Tests WCAG 2.1 AA violations across every major category.
- * Run with: a11y-guard scan test-files/react/ComprehensiveTest.tsx
+ * Run with: allycat scan test-files/react/ComprehensiveTest.tsx
  *
  * Expected violations (quick scan):
  *

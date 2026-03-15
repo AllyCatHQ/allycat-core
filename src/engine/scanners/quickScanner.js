@@ -40,7 +40,7 @@ const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
 /**
  * Main quick audit entry point
  *
- * @param {Object} config - User configuration from a11y-config.json
+ * @param {Object} config - User configuration from allycat.config.json
  * @param {string|null} targetPath - Optional specific file/folder to scan
  * @returns {Promise<Array>} - Array of violation objects
  */

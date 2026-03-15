@@ -96,7 +96,7 @@ export const FAQ_ITEMS = [
    • ${chalk.cyan('Israeli IS 5568')} — Israel accessibility law (includes RTL)`
     },
     {
-        q: 'Does A11y-Guard support Vue and Angular?',
+        q: 'Does AllyCat support Vue and Angular?',
         a: `Yes! The scanner automatically detects and handles all major frameworks:
 ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).join(', ')} — ${chalk.bold(f.label)}`).join('\n')}
 
@@ -223,34 +223,34 @@ export const GITHUB_ACTIONS_SNIPPET =
         - name: Install dependencies
           run: npm ci
 
-        - name: Install A11y-Guard
-          run: npm install -g a11y-guard
+        - name: Install AllyCat
+          run: npm install -g allycat
 
         - name: Run accessibility scan
-          run: a11y-guard scan --fail-on-critical --json-file a11y-report
+          run: allycat scan --fail-on-critical --json-file allycat-report
 
         - name: Upload report
           uses: actions/upload-artifact@v4
           with:
             name: accessibility-report
-            path: a11y-report.json`;
+            path: allycat-report.json`;
 
 export const GITLAB_CI_SNIPPET =
 `  accessibility:
     image: node:20
     script:
       - npm ci
-      - npm install -g a11y-guard
-      - a11y-guard scan --fail-on-critical --json-file a11y-report
+      - npm install -g allycat
+      - allycat scan --fail-on-critical --json-file allycat-report
     artifacts:
       paths:
-        - a11y-report.json`;
+        - allycat-report.json`;
 
 export const JENKINS_SNIPPET =
 `  stage('Accessibility') {
       steps {
-        sh 'npm install -g a11y-guard'
-        sh 'a11y-guard scan --fail-on-critical --json-file a11y-report'
-        archiveArtifacts artifacts: 'a11y-report.json'
+        sh 'npm install -g allycat'
+        sh 'allycat scan --fail-on-critical --json-file allycat-report'
+        archiveArtifacts artifacts: 'allycat-report.json'
       }
     }`;

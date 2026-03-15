@@ -1,7 +1,7 @@
 /**
  * Configuration Loader
  * 
- * Shared utilities for loading and validating a11y-guard configuration.
+ * Shared utilities for loading and validating allycat configuration.
  * Used by scan, and potentially future commands (fix, report, etc.)
  * 
  * @module utils/configLoader
@@ -17,7 +17,7 @@ import { CONFIG_FILE_NAME, SCAN_MODES, STANDARDS } from '../constants.js';
 // -----------------------------------------------------------------------------
 
 /**
- * Canonical defaults used when no a11y-config.json exists.
+ * Canonical defaults used when no allycat.config.json exists.
  * Single source of truth — update here to change defaults for all new projects.
  *
  * performance.concurrency is intentionally null so sanitizeConfig() computes
@@ -83,7 +83,7 @@ function clampConcurrency(raw, scanMode) {
 
     if (valid && parsed > ceiling) {
         console.warn(
-            `[a11y-guard] performance.concurrency "${parsed}" exceeds safe limit ` +
+            `[allycat] performance.concurrency "${parsed}" exceeds safe limit ` +
             `for your system in ${scanMode} mode. Clamped to ${clamped}.`
         );
     }

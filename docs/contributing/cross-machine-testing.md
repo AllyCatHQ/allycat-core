@@ -1,4 +1,4 @@
-# A11y-Guard: Cross-Machine Testing Guide
+# AllyCat: Cross-Machine Testing Guide
 
 > Last updated: 2026-03-09
 > Status legend: ✅ Done · ⬜ Still needed · 🔴 Blocker · 🟡 Should do · 🔵 Nice to have
@@ -50,22 +50,22 @@ nvm use 20
 node --version   # → v20.x.x
 
 # 2. Clone or copy the project
-git clone https://github.com/A11yGuard/A11yGuard-Core.git
-cd A11yGuard-Core
+git clone https://github.com/AllyCat/AllyCat-Core.git
+cd AllyCat-Core
 
 # 3. Install dependencies
 npm install
 
 # 4. Link globally for local testing
 npm link
-which a11y-guard   # → /Users/<you>/.nvm/versions/node/v20.x.x/bin/a11y-guard
+which allycat   # → /Users/<you>/.nvm/versions/node/v20.x.x/bin/allycat
 
 # 5. Install Playwright Chromium for --full mode
 npx playwright install chromium
 # Chromium is stored in: ~/.cache/ms-playwright/
 
 # 6. Verify
-a11y-guard --version
+allycat --version
 ```
 
 ### 2b. Linux (Ubuntu 22.04 / 24.04)
@@ -85,22 +85,22 @@ sudo apt-get install -y \
   libasound2 libatspi2.0-0 libxfixes3 libxext6
 
 # 3. Clone or copy the project
-git clone https://github.com/A11yGuard/A11yGuard-Core.git
-cd A11yGuard-Core
+git clone https://github.com/AllyCat/AllyCat-Core.git
+cd AllyCat-Core
 
 # 4. Install dependencies
 npm install
 
 # 5. Link globally
 npm link
-which a11y-guard   # → /home/<you>/.nvm/versions/node/v20.x.x/bin/a11y-guard
+which allycat   # → /home/<you>/.nvm/versions/node/v20.x.x/bin/allycat
 
 # 6. Install Playwright Chromium
 npx playwright install chromium
 # Chromium is stored in: ~/.cache/ms-playwright/
 
 # 7. Verify
-a11y-guard --version
+allycat --version
 ```
 
 ### 2c. Windows (Git Bash)
@@ -113,32 +113,32 @@ nvm use 20
 node --version
 
 # 2. Clone the project
-git clone https://github.com/A11yGuard/A11yGuard-Core.git
-cd "A11yGuard-Core"
+git clone https://github.com/AllyCat/AllyCat-Core.git
+cd "AllyCat-Core"
 
 # 3. Install dependencies
 npm install
 
 # 4. Link globally
 npm link
-# Binary resolves to: %APPDATA%\npm\a11y-guard.cmd
+# Binary resolves to: %APPDATA%\npm\allycat.cmd
 
 # 5. Install Playwright Chromium (run in Git Bash or PowerShell)
 npx playwright install chromium
 # Chromium is stored in: %USERPROFILE%\AppData\Local\ms-playwright\
 
 # 6. Verify
-a11y-guard --version
+allycat --version
 ```
 
 ### 2d. Windows (PowerShell 7)
 
 ```powershell
 # After npm link is done (see Git Bash steps above):
-a11y-guard --version
+allycat --version
 
 # Check exit codes in PowerShell (not $? — use $LASTEXITCODE):
-a11y-guard scan tests/fixtures/fail-on-critical.html --fail-on-critical
+allycat scan tests/fixtures/fail-on-critical.html --fail-on-critical
 echo $LASTEXITCODE   # → 1
 ```
 
@@ -149,20 +149,20 @@ Run this from inside the project root on any OS:
 ```bash
 # 1. Pack
 npm pack
-# → a11y-guard-1.0.0.tgz
+# → allycat-1.0.0.tgz
 
 # 2. Install globally from tarball
-npm install -g a11y-guard-1.0.0.tgz
+npm install -g allycat-1.0.0.tgz
 
 # 3. Test in a separate directory (no local node_modules)
 mkdir /tmp/a11y-test-project
 cd /tmp/a11y-test-project
-a11y-guard --version
-a11y-guard init
+allycat --version
+allycat init
 
 # 4. Cleanup
-npm uninstall -g a11y-guard
-rm ~/A11yGuard-Core/a11y-guard-1.0.0.tgz
+npm uninstall -g allycat
+rm ~/AllyCat-Core/allycat-1.0.0.tgz
 ```
 
 ---
@@ -189,10 +189,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy the packed tarball (run npm pack first)
-COPY a11y-guard-*.tgz ./
+COPY allycat-*.tgz ./
 
 # Install globally from tarball
-RUN npm install -g a11y-guard-*.tgz
+RUN npm install -g allycat-*.tgz
 
 # Install Playwright Chromium inside the container
 RUN npx playwright install chromium --with-deps
@@ -215,14 +215,14 @@ CMD ["bash"]
 npm pack
 
 # Step 2: Build the Docker image
-docker build -f Dockerfile.crosstest -t a11y-guard-crosstest .
+docker build -f Dockerfile.crosstest -t allycat-crosstest .
 
 # Step 3: Run interactive shell
-docker run --rm -it a11y-guard-crosstest bash
+docker run --rm -it allycat-crosstest bash
 
 # Inside the container — run the full test suite:
-a11y-guard --version
-a11y-guard init   # (non-interactive — Ctrl+C after confirming it launches)
+allycat --version
+allycat init   # (non-interactive — Ctrl+C after confirming it launches)
 
 # Then run individual test commands from Section 4 below
 ```
@@ -231,10 +231,10 @@ a11y-guard init   # (non-interactive — Ctrl+C after confirming it launches)
 
 ```bash
 # Run a one-liner smoke test (no interactive shell needed):
-docker run --rm a11y-guard-crosstest \
-  bash -c "a11y-guard --version && \
-           a11y-guard scan /test-project/sample.html && \
-           a11y-guard scan /test-project/fail-on-critical.html --fail-on-critical; \
+docker run --rm allycat-crosstest \
+  bash -c "allycat --version && \
+           allycat scan /test-project/sample.html && \
+           allycat scan /test-project/fail-on-critical.html --fail-on-critical; \
            echo EXIT:$?"
 # Expected last line: EXIT:1
 ```
@@ -270,7 +270,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: Version check
-        run: a11y-guard --version
+        run: allycat --version
 
       - name: Quick scan (HTML fixture)
         run: node src/index.js scan tests/fixtures/sample.html
@@ -296,7 +296,7 @@ On each target machine, run the complete functional test suite to verify all fea
 
 > Prerequisites on each machine:
 > - `npm link` completed (or installed from tarball — see Section 2e)
-> - `a11y-config.json` present (run `a11y-guard init` once)
+> - `a11y-config.json` present (run `allycat init` once)
 > - Playwright Chromium installed for `--full` tests: `npx playwright install chromium`
 
 The sections below (5–8) cover **platform-specific** behavior that goes beyond functional correctness — things that only matter when running on a different OS, shell, or Node version.
@@ -308,9 +308,9 @@ The sections below (5–8) cover **platform-specific** behavior that goes beyond
 Run these five commands on each target environment to confirm the installation is healthy before running the full suite:
 
 ```bash
-a11y-guard --version
-a11y-guard --help
-a11y-guard init         # run through wizard, accept defaults
+allycat --version
+allycat --help
+allycat init         # run through wizard, accept defaults
 node src/index.js scan tests/fixtures/sample.html
 node tests/e2e/thresholds.test.js    # expect: 8/8 passed
 ```
@@ -324,7 +324,7 @@ For the complete feature-by-feature test list (all file types, output modes, sta
 
 - ⬜ **Version matches package.json**
   ```bash
-  a11y-guard --version
+  allycat --version
   ```
   Expected: prints the version string from `package.json` (e.g. `1.0.0`).
   Not a hardcoded string — verify it matches `cat package.json | grep '"version"'`.
@@ -363,7 +363,7 @@ For the complete feature-by-feature test list (all file types, output modes, sta
   # macOS/Linux:
   node src/index.js scan /absolute/path/to/tests/fixtures/sample.html
   # Windows Git Bash:
-  node src/index.js scan "C:/Users/dotan/Docs/Vs Projects/Projects/A11yGuard Core/tests/fixtures/sample.html"
+  node src/index.js scan "C:/Users/dotan/Docs/Vs Projects/Projects/AllyCat Core/tests/fixtures/sample.html"
   ```
   Expected: file found and scanned. Exit 0.
 
@@ -430,9 +430,9 @@ For the complete feature-by-feature test list (all file types, output modes, sta
 
 - ⬜ **npm link — binary resolves correctly**
   ```bash
-  which a11y-guard        # macOS/Linux
-  where a11y-guard        # Windows CMD
-  get-command a11y-guard  # PowerShell
+  which allycat        # macOS/Linux
+  where allycat        # Windows CMD
+  get-command allycat  # PowerShell
   ```
   Expected: path returned points to the linked binary (not undefined or "not found").
 
@@ -440,8 +440,8 @@ For the complete feature-by-feature test list (all file types, output modes, sta
   ```bash
   # In a directory with no node_modules:
   mkdir /tmp/clean-project && cd /tmp/clean-project
-  a11y-guard --version
-  a11y-guard scan /path/to/tests/fixtures/sample.html
+  allycat --version
+  allycat scan /path/to/tests/fixtures/sample.html
   ```
   Expected: tool works without needing a local `node_modules`. Exit 0.
 
@@ -519,25 +519,25 @@ Run after `npm pack` before publishing:
 ```bash
 # 1. Pack
 npm pack
-# → a11y-guard-1.0.0.tgz
+# → allycat-1.0.0.tgz
 
 # 2. Install globally from tarball into a different directory
 cd /tmp
-npm install -g ~/path/to/A11yGuard-Core/a11y-guard-1.0.0.tgz
+npm install -g ~/path/to/AllyCat-Core/allycat-1.0.0.tgz
 
 # 3. Run in a clean test project
 mkdir /tmp/smoke-project && cd /tmp/smoke-project
-a11y-guard --version
-a11y-guard init
-a11y-guard scan /path/to/tests/fixtures/sample.html
-a11y-guard scan /path/to/tests/fixtures/sample.html --summary
-a11y-guard scan /path/to/tests/fixtures/sample.html --full
-a11y-guard scan /path/to/tests/fixtures/sample.html -o json
-a11y-guard scan /path/to/tests/fixtures/fail-on-critical.html --fail-on-critical; echo "Exit: $?"
+allycat --version
+allycat init
+allycat scan /path/to/tests/fixtures/sample.html
+allycat scan /path/to/tests/fixtures/sample.html --summary
+allycat scan /path/to/tests/fixtures/sample.html --full
+allycat scan /path/to/tests/fixtures/sample.html -o json
+allycat scan /path/to/tests/fixtures/fail-on-critical.html --fail-on-critical; echo "Exit: $?"
 
 # 4. Clean up
-npm uninstall -g a11y-guard
-rm ~/path/to/A11yGuard-Core/a11y-guard-1.0.0.tgz
+npm uninstall -g allycat
+rm ~/path/to/AllyCat-Core/allycat-1.0.0.tgz
 ```
 
 - ⬜ Tarball smoke test passes on Windows

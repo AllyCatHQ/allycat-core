@@ -1,6 +1,6 @@
 # New File Type Support — Checklist
 
-Every time a new file type is added to A11yGuard, go through every item below.
+Every time a new file type is added to AllyCat, go through every item below.
 Each section explains WHY it matters, not just what to do.
 
 ---
@@ -49,7 +49,7 @@ line entry to `ordinalIndex.get(tagName)` in document order.
 `ordinalIndex` and `window.document` to `processAxeViolations` — never null for HTML.
 
 **How to test:** Create a fixture with 3+ identical elements (e.g. three `<button></button>`
-on separate lines). Run `a11y-guard scan <fixture>` and verify each violation shows a
+on separate lines). Run `allycat scan <fixture>` and verify each violation shows a
 distinct line number, not all the same.
 
 ---

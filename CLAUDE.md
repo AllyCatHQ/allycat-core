@@ -59,10 +59,10 @@ If a design decision is unclear → ask a precise architectural question, not a 
 
 ## Project Overview
 
-A11yGuard Core is a Node.js CLI tool for accessibility compliance testing (WCAG 2.1 AA/AAA and Israeli Standard IS 5568). It scans HTML, JSX, and TSX files using axe-core and outputs violations with precise line numbers and clickable VS Code links.
+AllyCat Core is a Node.js CLI tool for accessibility compliance testing (WCAG 2.1 AA/AAA and Israeli Standard IS 5568). It scans HTML, JSX, and TSX files using axe-core and outputs violations with precise line numbers and clickable VS Code links.
 
 - **Module system:** ES Modules (ESM) — all files use `import`/`export`
-- **Entry point:** `src/index.js` (registered as `a11y-guard` binary)
+- **Entry point:** `src/index.js` (registered as `allycat` binary)
 - **No build step** — runs directly via Node.js
 
 ## Commands
@@ -78,7 +78,7 @@ node tests/e2e/concurrency.test.js
 
 # Link globally for local testing
 npm link
-a11y-guard scan <target>
+allycat scan <target>
 ```
 
 There is no build, lint, or format step configured.
@@ -124,7 +124,7 @@ For JSX/TSX files, `src/engine/transformers/jsxTransformer.js` first converts JS
 
 ### Configuration
 
-Runtime config is stored in `a11y-config.json` (created by `a11y-guard init`):
+Runtime config is stored in `a11y-config.json` (created by `allycat init`):
 - `selectedStandard`: `wcag-aa` | `wcag-aaa` | `israel`
 - `scan.defaultMode`: `quick` | `full`
 - `rules.rtl`: boolean

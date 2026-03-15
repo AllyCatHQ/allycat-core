@@ -15,8 +15,8 @@
  *        from those class-based styles.
  *
  * SCAN COMMANDS:
- *   Quick: a11y-guard scan test-files/react/jsx/ContrastCssTest.jsx
- *   Full:  a11y-guard scan test-files/react/jsx/ContrastCssTest.jsx --full
+ *   Quick: allycat scan test-files/react/jsx/ContrastCssTest.jsx
+ *   Full:  allycat scan test-files/react/jsx/ContrastCssTest.jsx --full
  *
  * ─────────────────────────────────────────────────────────────────────────
  * EXPECTED VIOLATIONS — FULL SCAN (--full, wcag-aa):

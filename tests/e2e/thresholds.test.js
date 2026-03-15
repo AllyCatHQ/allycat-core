@@ -12,7 +12,7 @@
  *   node tests/e2e/thresholds.test.js
  *
  * Prerequisites:
- *   a11y-config.json must exist in the project root (run "a11y-guard init" first).
+ *   a11y-config.json must exist in the project root (run "allycat init" first).
  */
 
 import { spawnSync } from 'child_process';

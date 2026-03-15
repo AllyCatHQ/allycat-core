@@ -2,7 +2,7 @@
  * GoodComponent.jsx
  *
  * TEST PURPOSE: Zero violations baseline.
- * Expected result: a11y-guard should report 0 issues.
+ * Expected result: allycat should report 0 issues.
  *
  * Covers:
  *  - Images with proper alt text
