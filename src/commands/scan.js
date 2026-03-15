@@ -9,7 +9,7 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import { loadConfig } from '../utils/configLoader.js';
 import { watchMode } from './watchMode.js';
-import { resolveInputFiles, executeScan } from './scanDispatcher.js';
+import { resolveInputFiles, executeScan, preflightScan } from './scanDispatcher.js';
 import { handleScanResult } from './scanResultHandler.js';
 import { SUPPORTED_EXTENSIONS_DISPLAY, MESSAGES, UI, SCAN_MODES } from '../constants.js';
 import { expandUserPath } from '../utils/pathUtils.js';
@@ -46,6 +46,12 @@ export async function scanCommand(target = null, options = {}) {
     // Watch mode: delegate entirely — does not return to the normal scan path
     if (options.watch) {
         await watchMode(target, config, scanMode, options);
+        return;
+    }
+
+    // Fail fast: check Playwright is installed before doing any file work
+    if (!await preflightScan(scanMode)) {
+        p.outro(chalk.red('Full scan aborted.'));
         return;
     }
 

@@ -81,6 +81,15 @@ async function loadPlaywright() {
     }
 }
 
+/**
+ * Verify Playwright is installed and importable.
+ * Throws the same user-friendly error as loadPlaywright() if not available.
+ * Used for early preflight checks before file resolution begins.
+ */
+export async function checkPlaywrightAvailable() {
+    await loadPlaywright();
+}
+
 // -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------

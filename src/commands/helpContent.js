@@ -23,8 +23,12 @@ export const FAQ_ITEMS = [
     },
     {
         q: 'How do I install Playwright for full scans?',
-        a: `Run these commands:
-   ${chalk.yellow(INSTALL.PLAYWRIGHT)}
+        a: `Run the install command for your setup, then download the browser:
+
+   Global install:  ${chalk.yellow(INSTALL.PLAYWRIGHT_GLOBAL)}
+   Local project:   ${chalk.yellow(INSTALL.PLAYWRIGHT_LOCAL)}
+
+   Then download the browser:
    ${chalk.yellow(INSTALL.CHROMIUM)}`
     },
     {
