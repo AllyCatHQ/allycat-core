@@ -7,8 +7,8 @@
  * Use for: Pre-commit checks, CI/CD pipelines, thorough audits
  *
  * Requirements:
- *   Playwright is installed automatically with this package.
- *   Download the Chromium browser once before using --full:
+ *   Playwright is an optional dependency — install it once before using --full:
+ *   npm install playwright @axe-core/playwright
  *   npx playwright install chromium
  *
  * Concurrency is RAM- and CPU-aware (via configLoader.getSafeConcurrencyCeiling).
@@ -16,8 +16,6 @@
  * Per-file failures are caught and logged — other files continue scanning.
  */
 
-import { chromium } from 'playwright';
-import AxeBuilder from '@axe-core/playwright';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { readSourceFile } from '../../utils/fileUtils.js';
 import { getSafeConcurrencyCeiling } from '../../utils/configLoader.js';
@@ -40,6 +38,24 @@ import pLimit from 'p-limit';
 import chalk from 'chalk';
 
 // -----------------------------------------------------------------------------
+// Playwright lazy loader
+// -----------------------------------------------------------------------------
+
+async function loadPlaywright() {
+    try {
+        const { chromium } = await import('playwright');
+        const { default: AxeBuilder } = await import('@axe-core/playwright');
+        return { chromium, AxeBuilder };
+    } catch {
+        throw new Error(
+            'Full scan requires Playwright.\n' +
+            '  Run: npm install playwright @axe-core/playwright\n' +
+            '  Then: npx playwright install chromium'
+        );
+    }
+}
+
+// -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------
 
@@ -60,6 +76,8 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
 
     if (!silent) p.log.info(`Found ${filesToScan.length} file${filesToScan.length > 1 ? 's' : ''} to scan.`);
     if (!silent) p.log.info('Using Playwright for full accessibility audit (including contrast)...');
+
+    const { chromium, AxeBuilder } = await loadPlaywright();
 
     let browser;
     try {
@@ -91,7 +109,7 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
             filesToScan.map(filePath =>
                 limiter(async () => {
                     try {
-                        return await scanSingleFile(browser, filePath, config, cssCache, aliases);
+                        return await scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder);
                     } catch (err) {
                         p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
                         return { violations: [], warning: null };
@@ -270,7 +288,7 @@ async function transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAn
  * @param {Map<string,string>} aliases - Resolved tsconfig path aliases
  * @returns {Promise<{ violations: Array, warning: string|null }>}
  */
-async function scanSingleFile(browser, filePath, config, cssCache, aliases) {
+async function scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder) {
     const violations = [];
     let warning = null;
 
