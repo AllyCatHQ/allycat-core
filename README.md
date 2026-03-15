@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" alt="AllyCat logo" width="200" />
+</p>
+
 # AllyCat
 
 [![npm version](https://img.shields.io/badge/npm-v1.0.0-blue.svg)](https://www.npmjs.com/package/allycat)
@@ -7,6 +11,10 @@
 > The accessibility tool that works the way developers work — terminal, watch mode, CI gates, and AI fix prompts in one.
 
 **No server needed** · **Source files** · **Exact line numbers** · **JSX/TSX · Vue · Angular · HTML**
+
+<p align="center">
+  <img src="assets/demo.gif" alt="AllyCat scanning files — violations found and reported" />
+</p>
 
 ---
 

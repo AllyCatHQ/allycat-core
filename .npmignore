@@ -15,6 +15,9 @@ tsconfig.json
 *.md
 !README.md
 
+# Brand assets — not needed by end users
+assets/
+
 # OS artifacts
 .DS_Store
 Thumbs.db
