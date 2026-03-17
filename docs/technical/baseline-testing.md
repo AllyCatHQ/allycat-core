@@ -297,6 +297,111 @@ echo $LASTEXITCODE
 
 ---
 
+---
+
+## Edge Case Tests
+
+These tests probe failure modes and boundary conditions not covered by the main test suite.
+
+---
+
+### EC-1 — Corrupted baseline file
+
+**What it proves:** If `.a11y-baseline.json` exists but contains invalid JSON, the scanner warns on `stderr` and continues without baseline classification — it does not crash or exit non-zero due to the parse failure.
+
+```bash
+# Write a corrupted baseline file
+node -e "require('fs').writeFileSync('.a11y-baseline.json', 'NOT VALID JSON', 'utf8')"
+
+node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
+echo $LASTEXITCODE
+```
+
+**Expected stderr:**
+```
+[allycat] Warning: could not parse .a11y-baseline.json — treating as missing
+```
+
+**Expected stdout:** Normal violation output (no BASELINE/NEW labels — baseline was treated as missing).
+
+✅ Exit code: `0`
+
+---
+
+### EC-2 — `--save-baseline` and `--fail-on-new` used together
+
+**What it proves:** `--save-baseline` always takes the early-return path and exits 0. When both flags are passed, `--fail-on-new` is silently ignored — the save completes and no classification runs.
+
+```bash
+node src/index.js scan tests/fixtures/baseline-a.html --save-baseline --fail-on-new
+echo $LASTEXITCODE
+```
+
+**Expected output:**
+```
+✔ Baseline saved → .a11y-baseline.json
+  3 violations recorded across 1 file
+  Commit this file to your repository.
+```
+
+> No BASELINE/NEW labels. No exit 4. `--fail-on-new` is never reached.
+
+✅ Exit code: `0`
+
+---
+
+### EC-3 — All violations fixed, zero violations with `--fail-on-new`
+
+**What it proves:** When the scanned file is fully clean, `--fail-on-new` does not produce a broken or empty baseline-labeled output. The scanner shows the normal "No issues found" message and exits 0.
+
+```bash
+# Save baseline from the clean fixture (0 violations)
+node src/index.js scan tests/fixtures/fail-on-clean.html --save-baseline
+
+# Scan the same clean file — 0 violations, baseline classification still runs
+node src/index.js scan tests/fixtures/fail-on-clean.html --fail-on-new
+echo $LASTEXITCODE
+```
+
+**Expected output:**
+```
+✔ No accessibility issues found!
+```
+
+> `allViolations.length === 0` → the baseline output path exits early with the clean message, not an empty table.
+
+✅ Exit code: `0`
+
+---
+
+### EC-4 — Empty baseline + dirty scan target → all violations are NEW
+
+**What it proves:** A baseline with 0 entries (saved on a clean file) does not suppress anything. Every violation in the next scan is treated as `NEW` and blocks the pipeline.
+
+```bash
+# Step 1 — save an empty baseline from the clean fixture
+node src/index.js scan tests/fixtures/fail-on-clean.html --save-baseline
+
+# Step 2 — scan a file with violations: baseline is empty, all 3 are NEW
+node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
+echo $LASTEXITCODE
+```
+
+**Expected terminal output:**
+```
+3 issues  (3 new)
+
+  NEW  [CRITICAL]  ...button-name
+  NEW  [CRITICAL]  ...image-alt
+  NEW  [MODERATE]  ...region
+
+✖ 3 new violations — pipeline blocked
+```
+
+✅ Exit code: `4`
+
+---
+
 ## Cleanup
 
 ```bash
@@ -318,6 +423,10 @@ Remove-Item .a11y-baseline.json -ErrorAction SilentlyContinue
 | 7 | Missing baseline file → warning, no block | `baseline-a.html` | `--fail-on-new` | `0` |
 | 8 | Exit 4 takes priority over exit 1 | `baseline-a.html` (cross-file baseline) | `--fail-on-new --fail-on-critical` | `4` |
 | 9 | Severity gate still runs on suppressed violations | `baseline-a.html` | `--fail-on-new --fail-on-critical` | `1` |
+| EC-1 | Corrupted baseline → warning + no crash | `baseline-a.html` | `--fail-on-new` | `0` |
+| EC-2 | `--save-baseline` wins over `--fail-on-new` | `baseline-a.html` | `--save-baseline --fail-on-new` | `0` |
+| EC-3 | 0 violations + `--fail-on-new` → clean message | `fail-on-clean.html` | `--fail-on-new` | `0` |
+| EC-4 | Empty baseline → all violations NEW | `fail-on-clean.html` → `baseline-a.html` | `--fail-on-new` | `4` |
 
 > Each test that modifies a fixture includes a restore step. Always run restore before the next test.
 
