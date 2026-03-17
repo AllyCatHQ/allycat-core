@@ -60,6 +60,11 @@ Full functional test checklist (all features, all file types, all output modes):
 
 Quick summary of what must pass before release:
 
+### Lint — must pass clean
+```bash
+npm run lint    # expect: no output, exit 0
+```
+
 ### E2E Tests — automated, must all pass
 ```bash
 node tests/e2e/thresholds.test.js    # exit codes — expect 8/8 passed
