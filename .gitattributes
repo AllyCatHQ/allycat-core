@@ -1,0 +1,2 @@
+# Force LF for shebang files — CRLF breaks the shebang on Linux/macOS
+src/index.js eol=lf

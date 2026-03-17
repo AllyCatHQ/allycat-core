@@ -18,6 +18,11 @@ tsconfig.json
 # Brand assets — not needed by end users
 assets/
 
+# Dev config — not needed by end users
+eslint.config.js
+.nvmrc
+.editorconfig
+
 # OS artifacts
 .DS_Store
 Thumbs.db
