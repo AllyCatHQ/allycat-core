@@ -74,7 +74,7 @@ function outputSummaryOnly(violations, scanMode, warnings = []) {
     }
 
     for (const w of warnings) {
-        process.stderr.write(`[WARNING] ${w}\n`);
+        process.stderr.write(chalk.yellow(`⚠ [allycat] ${w}\n`));
     }
 
     console.log('');

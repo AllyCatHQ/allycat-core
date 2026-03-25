@@ -13,6 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
+import chalk from 'chalk';
 import { BASELINE_FILE } from '../constants.js';
 
 // -----------------------------------------------------------------------------
@@ -74,7 +75,7 @@ export function loadBaseline() {
     try {
         return JSON.parse(fs.readFileSync(src, 'utf8'));
     } catch {
-        process.stderr.write(`[allycat] Warning: could not parse ${BASELINE_FILE} — treating as missing\n`);
+        process.stderr.write(chalk.yellow(`⚠ [allycat] Warning: could not parse ${BASELINE_FILE} — treating as missing\n`));
         return null;
     }
 }

@@ -40,7 +40,7 @@ export function handleScanResult(violations, warnings, config, scanMode, options
     if (options.failOnNew) {
         const baseline = loadBaseline();
         if (!baseline) {
-            process.stderr.write('[allycat] Warning: --fail-on-new specified but no allycat-baseline.json found. Run --save-baseline first. Continuing without baseline check.\n');
+            process.stderr.write(chalk.yellow('⚠ [allycat] Warning: --fail-on-new specified but no allycat-baseline.json found. Run --save-baseline first. Continuing without baseline check.\n'));
         } else {
             baselineResult = classifyViolations(violations, baseline);
         }
