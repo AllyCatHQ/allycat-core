@@ -119,10 +119,17 @@ function displayScanConfiguration(config, scanMode, options, target) {
                 ? `Exit gate: ${chalk.red('Critical only')}\n`
                 : '';
 
+    const baselineLine = options.saveBaseline
+        ? `Baseline:  ${chalk.cyan('Saving → .a11y-baseline.json')}\n`
+        : options.failOnNew
+            ? `Baseline:  ${chalk.cyan('Active → fail on NEW violations (exit 4)')}\n`
+            : '';
+
     p.note(
         `Mode:      ${modeDisplay}\n` +
         scopeLine +
         exitGateLine +
+        baselineLine +
         `Standard:  ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Output:    ${chalk.bold(options.output || 'terminal')}\n` +
