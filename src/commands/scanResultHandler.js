@@ -5,7 +5,10 @@
  * Called once a scan completes successfully.
  */
 
+import * as p from '@clack/prompts';
+import chalk from 'chalk';
 import { outputResults } from './scanOutputters.js';
+import { saveBaseline, loadBaseline, classifyViolations } from '../utils/baselineManager.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -21,8 +24,45 @@ import { outputResults } from './scanOutputters.js';
  * @param {Object} options - CLI options
  */
 export function handleScanResult(violations, warnings, config, scanMode, options) {
-    outputResults(violations, config, scanMode, options, warnings);
+    // --save-baseline: snapshot current violations and always exit 0
+    if (options.saveBaseline) {
+        const dest = saveBaseline(violations, config, scanMode);
+        console.log('');
+        p.log.success(chalk.green(`Baseline saved → ${chalk.bold('.a11y-baseline.json')}`));
+        console.log(chalk.dim(`  ${violations.length} violation${violations.length !== 1 ? 's' : ''} recorded across ${countFiles(violations)} file${countFiles(violations) !== 1 ? 's' : ''}`));
+        console.log(chalk.dim(`  Commit this file to your repository.`));
+        console.log('');
+        return; // always exit 0
+    }
+
+    // --fail-on-new: load baseline and classify violations
+    let baselineResult = null;
+    if (options.failOnNew) {
+        const baseline = loadBaseline();
+        if (!baseline) {
+            process.stderr.write('[allycat] Warning: --fail-on-new specified but no .a11y-baseline.json found. Run --save-baseline first. Continuing without baseline check.\n');
+        } else {
+            baselineResult = classifyViolations(violations, baseline);
+        }
+    }
+
+    outputResults(violations, config, scanMode, options, warnings, baselineResult);
+
+    // Exit code 4 takes priority over severity gates
+    if (baselineResult && baselineResult.newViolations.length > 0) {
+        process.exit(4);
+    }
+
+    // Severity gates apply to all violations (including baseline-suppressed ones)
     exitOnThreshold(violations, options);
+}
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+function countFiles(violations) {
+    return new Set(violations.map(v => v.file)).size;
 }
 
 // -----------------------------------------------------------------------------
