@@ -24,18 +24,22 @@ import { openInBrowser } from '../utils/browserOpener.js';
 /**
  * Route results to appropriate output handler
  *
- * @param {Array} violations - Scan violations
- * @param {Object} config - User configuration
- * @param {string} scanMode - Current scan mode
- * @param {Object} options - CLI options
+ * @param {Array}       violations     - Scan violations
+ * @param {Object}      config         - User configuration
+ * @param {string}      scanMode       - Current scan mode
+ * @param {Object}      options        - CLI options
+ * @param {Array}       warnings       - Scan warnings
+ * @param {Object|null} baselineResult - Classified violations from baselineManager, or null
  */
-export function outputResults(violations, config, scanMode, options, warnings = []) {
+export function outputResults(violations, config, scanMode, options, warnings = [], baselineResult = null) {
     if (options.jsonFile) {
         outputJsonFile(violations, config, scanMode, options.jsonFile, warnings);
     } else if (options.output === 'json') {
         outputJson(violations, config, scanMode, warnings);
     } else if (options.summary) {
         outputSummaryOnly(violations, scanMode, warnings);
+    } else if (baselineResult) {
+        outputTerminalWithBaseline(baselineResult, scanMode);
     } else {
         outputTerminal(violations, scanMode);
     }
@@ -105,6 +109,115 @@ function outputTerminal(violations, scanMode) {
 
     displayTerminalTips(scanMode);
 }
+
+// -----------------------------------------------------------------------------
+// Baseline Terminal Output
+// -----------------------------------------------------------------------------
+
+/**
+ * Output violations to terminal with NEW / BASELINE labels.
+ *
+ * @param {{ newViolations: Array, baselineViolations: Array, staleCount: number }} baselineResult
+ * @param {string} scanMode
+ */
+function outputTerminalWithBaseline({ newViolations, baselineViolations, staleCount }, scanMode) {
+    const allViolations = [
+        ...newViolations.map(v => ({ ...v, _baselineStatus: 'NEW' })),
+        ...baselineViolations.map(v => ({ ...v, _baselineStatus: 'BASELINE' }))
+    ];
+
+    if (allViolations.length === 0) {
+        console.log('');
+        p.outro(chalk.green('✔ No accessibility issues found!'));
+        p.outro(chalk.gray.bold('Developer Tool Only. Limited Scope. Manual verification recommended.'));
+        return;
+    }
+
+    // Group by file preserving insertion order
+    const byFile = allViolations.reduce((acc, v) => {
+        if (!acc[v.file]) acc[v.file] = [];
+        acc[v.file].push(v);
+        return acc;
+    }, {});
+
+    const output = [];
+
+    for (const [file, fileViolations] of Object.entries(byFile)) {
+        const fileNew  = fileViolations.filter(v => v._baselineStatus === 'NEW').length;
+        const fileSup  = fileViolations.filter(v => v._baselineStatus === 'BASELINE').length;
+
+        const countParts = [];
+        if (fileNew  > 0) countParts.push(chalk.red(`${fileNew} new`));
+        if (fileSup  > 0) countParts.push(chalk.dim(`${fileSup} suppressed`));
+
+        output.push('');
+        output.push(chalk.underline.cyan(file));
+        output.push(chalk.dim(`${fileViolations.length} issue${fileViolations.length !== 1 ? 's' : ''}`) +
+            (countParts.length ? chalk.dim('  (') + countParts.join(chalk.dim(' · ')) + chalk.dim(')') : ''));
+        output.push('');
+
+        for (const violation of fileViolations) {
+            const isNew = violation._baselineStatus === 'NEW';
+            const labelBadge = isNew
+                ? chalk.bgRed.white.bold('  NEW      ')
+                : chalk.bgGray.white('  BASELINE ');
+
+            output.push(`${labelBadge}  ${formatViolationInline(violation)}`);
+            if (!isNew) {
+                output.push(chalk.dim('   (suppressed — exists in .a11y-baseline.json)'));
+            }
+            output.push('');
+        }
+    }
+
+    console.log(output.join('\n'));
+
+    // Footer summary
+    const totalNew = newViolations.length;
+    const totalSup = baselineViolations.length;
+
+    if (totalNew > 0) {
+        console.log(chalk.red(`✖ ${totalNew} new violation${totalNew !== 1 ? 's' : ''} — pipeline blocked`));
+    }
+    if (totalSup > 0) {
+        console.log(chalk.dim(`✓ ${totalSup} baseline violation${totalSup !== 1 ? 's' : ''} suppressed (run --save-baseline to clean up)`));
+    }
+
+    displayTerminalTips(scanMode);
+}
+
+/**
+ * Format a single violation inline (impact badge + description + rule + file).
+ * Used in baseline output where the label badge precedes the normal content.
+ *
+ * @param {Object} violation
+ * @returns {string}
+ */
+function formatViolationInline(violation) {
+    const impactBadges = {
+        critical: chalk.bgRed.white.bold(' CRITICAL '),
+        serious:  chalk.bgRed.white(' SERIOUS '),
+        moderate: chalk.bgYellow.black(' MODERATE '),
+        minor:    chalk.bgBlue.white(' MINOR ')
+    };
+    const impactBadge = impactBadges[violation.impact] || chalk.bgGray.white(` ${(violation.impact || 'unknown').toUpperCase()} `);
+
+    const location = violation.lineNumber
+        ? chalk.cyan(`${violation.file}`) + chalk.green(`:${violation.lineNumber}`)
+        : chalk.cyan(`${violation.file}`);
+
+    return [
+        `${impactBadge}  ${violation.description}`,
+        chalk.dim(`   Rule: ${violation.id}`),
+        chalk.dim('   File: ') + location,
+        violation.selector ? chalk.dim(`   Element: ${violation.selector}`) : '',
+        violation.html     ? chalk.dim(`   HTML: ${chalk.yellow(violation.html.substring(0, 80))}`) : ''
+    ].filter(Boolean).join('\n');
+}
+
+// -----------------------------------------------------------------------------
+// Terminal Tips
+// -----------------------------------------------------------------------------
 
 /**
  * Display helpful tips after terminal output

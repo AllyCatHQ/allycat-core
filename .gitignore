@@ -2,7 +2,8 @@ node_modules/
 # Exception: test fixture for npm package CSS resolution (Feature 7)
 !tests/samples/npm-css/node_modules/
 !tests/samples/npm-css/node_modules/**
-a11y-config.json
+allycat.config.json
+.a11y-baseline.json
 test-page.html
 test-page2.html
 a11y-report.html

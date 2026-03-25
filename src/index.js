@@ -75,6 +75,8 @@ program
   .option('-c, --changed', 'Scan only files changed since the last commit (requires git)')
   .option('-w, --watch', 'Watch files and re-scan incrementally on every change')
   .option('-e, --existing', 'In watch mode: show full details of pre-existing violations on startup (default: counts only)')
+  .option('--save-baseline', 'Save all current violations as a baseline — exits 0 always')
+  .option('--fail-on-new', 'Exit code 4 if any violation is not in the baseline (requires --save-baseline to have been run first)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan
@@ -106,7 +108,10 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} allycat scan --changed ./src    ${chalk.dim('# Changed files scoped to ./src')}
   ${chalk.cyan('$')} allycat scan --watch            ${chalk.dim('# Watch and re-scan on file change')}
   ${chalk.cyan('$')} allycat scan --watch ./src      ${chalk.dim('# Watch specific folder')}
-  ${chalk.cyan('$')} allycat scan --watch --existing ${chalk.dim('# Watch — show full pre-existing violation details on startup')}
+  ${chalk.cyan('$')} allycat scan --watch --existing   ${chalk.dim('# Watch — show full pre-existing violation details on startup')}
+  ${chalk.cyan('$')} allycat scan --save-baseline      ${chalk.dim('# Snapshot all current violations to .a11y-baseline.json')}
+  ${chalk.cyan('$')} allycat scan --fail-on-new         ${chalk.dim('# Exit 4 if any violation is not in the baseline')}
+  ${chalk.cyan('$')} allycat scan --fail-on-new --fail-on-critical ${chalk.dim('# Combine baseline gate with severity gate')}
 `)
   .action((target, options) => scanCommand(target, options));
 

@@ -150,6 +150,8 @@ allycat scan ./src/pages/Home.tsx
 | `--fail-on-critical` | | Exit code 1 if any critical violations found |
 | `--fail-on-serious` | | Exit code 2 if any serious or critical violations found |
 | `--fail-on-any` | | Exit code 3 if any violations found (strictest gate) |
+| `--save-baseline` | | Snapshot all current violations to `.a11y-baseline.json` — exits 0 always |
+| `--fail-on-new` | | Exit code 4 if any violation is not in the saved baseline |
 | `--changed` | `-c` | Scan only files changed since the last git commit |
 | `--watch` | `-w` | Watch for file changes and re-scan automatically |
 | `--existing` | `-e` | In watch mode: show full details of pre-existing violations on startup (default: counts only) |
@@ -417,6 +419,7 @@ allycat scan --summary
 | `1` | `--fail-on-critical` | Critical violations found |
 | `2` | `--fail-on-serious` | Serious or critical violations found |
 | `3` | `--fail-on-any` | Any violations found (strictest gate) |
+| `4` | `--fail-on-new` | New violation found that was not in the saved baseline |
 
 Use exit gate flags to control when the pipeline fails:
 
@@ -430,6 +433,44 @@ allycat scan --fail-on-serious
 # Block on any violation (strictest gate)
 allycat scan --fail-on-any
 ```
+
+### Violation Baseline
+
+Adopt a CI gate immediately — without fixing every pre-existing violation first.
+
+**Day 1 — snapshot what exists today:**
+
+```bash
+allycat scan --save-baseline
+# Creates .a11y-baseline.json — commit this file to your repository
+```
+
+**Every CI run — only fail on NEW violations:**
+
+```bash
+allycat scan --fail-on-new
+# Exit 0 if all violations were in the baseline (even if count is high)
+# Exit 4 if any violation is NOT in the baseline (new regression)
+```
+
+**After fixing violations — update the baseline:**
+
+```bash
+allycat scan --save-baseline
+# Re-runs the snapshot; stale entries (fixed violations) are removed automatically
+```
+
+**Combine with severity gates:**
+
+```bash
+allycat scan --fail-on-new --fail-on-critical
+# Exit 4 if new violations exist; exit 1 if critical baseline violations exist
+```
+
+> Matching uses a composite key: file + rule + SHA-256(element HTML) + CSS selector.
+> No line numbers — stable across any edit that doesn't touch the element itself.
+
+---
 
 ### GitHub Actions
 

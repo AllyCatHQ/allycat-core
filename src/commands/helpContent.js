@@ -72,15 +72,41 @@ export const FAQ_ITEMS = [
    ${chalk.cyan('--fail-on-critical')}  ${chalk.dim('# critical violations only (loosest gate)')}
    ${chalk.cyan('--fail-on-serious')}   ${chalk.dim('# serious or critical')}
    ${chalk.cyan('--fail-on-any')}       ${chalk.dim('# any violation (strictest gate)')}
+   ${chalk.cyan('--fail-on-new')}       ${chalk.dim('# only violations not in the saved baseline (exit 4)')}
 
    Exit codes:
    ${chalk.green('0')} — threshold not met        → pipeline continues
    ${chalk.red('1')} — critical violations found  → --fail-on-critical triggered
    ${chalk.red('2')} — serious violations found   → --fail-on-serious triggered
    ${chalk.red('3')} — any violations found       → --fail-on-any triggered
+   ${chalk.red('4')} — new violations vs baseline → --fail-on-new triggered
 
    Combine with ${chalk.cyan('--json-file')} to block ${chalk.bold('and')} save a report:
    ${chalk.yellow(`${CLI.SCAN} --fail-on-serious --json-file ${DEFAULT_REPORT_NAME}`)}`
+    },
+    {
+        q: 'How do I adopt a CI a11y gate without fixing all existing violations first?',
+        a: `Use the baseline workflow — snapshot existing violations and only fail on ${chalk.bold('new')} ones:
+
+   ${chalk.bold('Step 1:')} Snapshot all current violations (run once, commit the file)
+   ${chalk.yellow(`${CLI.SCAN} --save-baseline`)}
+   → Creates ${chalk.cyan('.a11y-baseline.json')} in your project root
+
+   ${chalk.bold('Step 2:')} In CI — only fail on NEW violations
+   ${chalk.yellow(`${CLI.SCAN} --fail-on-new`)}
+   → ${chalk.green('Exit 0')} if all violations were in the baseline
+   → ${chalk.red('Exit 4')} if any violation is NOT in the baseline
+
+   ${chalk.bold('Step 3:')} After fixing violations, update the baseline
+   ${chalk.yellow(`${CLI.SCAN} --save-baseline`)}
+   → Re-run to remove fixed violations from the snapshot
+
+   ${chalk.bold('Combine with severity gates:')}
+   ${chalk.yellow(`${CLI.SCAN} --fail-on-new --fail-on-critical`)}
+   → Blocks on new violations (exit 4) ${chalk.dim('or')} critical baseline violations (exit 1)
+
+   ${chalk.bold('If no baseline file is found:')}
+   --fail-on-new emits a warning and exits 0 (safe first-run default)`
     },
     {
         q: 'How do I save the report to a file?',
@@ -181,6 +207,15 @@ export const EXAMPLE_SECTIONS = [
             { cmd: `${CLI.SCAN} --fail-on-any`,                   desc: 'Block on any violation (strictest gate)' },
             { cmd: `${CLI.SCAN} --json-file ci-report`,           desc: 'Generate report artifact' },
             { cmd: `${CLI.SCAN} -o json > report.json`,           desc: 'Redirect to file' }
+        ]
+    },
+    {
+        title: 'Baseline Workflow',
+        examples: [
+            { cmd: `${CLI.SCAN} --save-baseline`,                              desc: 'Snapshot all current violations to .a11y-baseline.json' },
+            { cmd: `${CLI.SCAN} --fail-on-new`,                                desc: 'Exit 4 if any violation is not in the baseline' },
+            { cmd: `${CLI.SCAN} --fail-on-new --fail-on-critical`,             desc: 'Combine baseline gate with severity gate' },
+            { cmd: `${CLI.SCAN} ./src --save-baseline`,                        desc: 'Save baseline scoped to ./src' }
         ]
     },
     {
