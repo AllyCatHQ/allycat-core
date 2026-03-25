@@ -581,12 +581,12 @@
     </div>
     <div class="header-stats">
         <div class="stat">
-            <div class="stat-value stat-total">8</div>
+            <div class="stat-value stat-total">3</div>
             <div class="stat-label">Total</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat">
-            <div class="stat-value stat-critical">5</div>
+            <div class="stat-value stat-critical">2</div>
             <div class="stat-label">Critical</div>
         </div>
         <div class="stat">
@@ -594,7 +594,7 @@
             <div class="stat-label">Serious</div>
         </div>
         <div class="stat">
-            <div class="stat-value stat-moderate">3</div>
+            <div class="stat-value stat-moderate">1</div>
             <div class="stat-label">Moderate</div>
         </div>
         <div class="stat">
@@ -615,7 +615,7 @@
         <div class="header-meta">
             <div>Standard: WCAG 2.1 AA</div>
             <div>Mode: Quick</div>
-            <div>3/15/2026, 4:10:24 AM</div>
+            <div>3/25/2026, 8:21:42 PM</div>
         </div>
     </div>
 </header>
@@ -636,10 +636,10 @@
         <div class="sidebar-label">Files</div>
         <div class="sidebar-files" id="sidebar-files">
             
-        <div class="file-tab active" onclick="switchTab(0)" data-index="0" data-filename="sample.html">
-            <div class="file-tab-name">sample.html</div>
+        <div class="file-tab active" onclick="switchTab(0)" data-index="0" data-filename="baseline-a.html">
+            <div class="file-tab-name">baseline-a.html</div>
             <div class="file-tab-path">tests/fixtures</div>
-            <span class="file-tab-badge">8</span>
+            <span class="file-tab-badge">3</span>
         </div>
         </div>
         <div class="sidebar-empty" id="sidebar-empty">No files match</div>
@@ -649,8 +649,8 @@
         <div class="panel active" data-index="0">
             <div class="panel-header">
                 <div class="panel-header-left">
-                    <span class="panel-filepath">tests/fixtures/sample.html</span>
-                    <span class="panel-count">8 issues</span>
+                    <span class="panel-filepath">tests/fixtures/baseline-a.html</span>
+                    <span class="panel-count">3 issues</span>
                 </div>
                 
                 <div class="panel-header-right">
@@ -664,31 +664,31 @@
         <div class="filter-row">
             <span class="filter-label">Severity:</span>
             <button class="filter-btn active" data-filter="all" data-filter-type="impact" onclick="filterPanel(0, 'all', 'impact', this)">
-                All<span class="filter-count">8</span>
+                All<span class="filter-count">3</span>
             </button>
             
             <button class="filter-btn" data-filter="critical" data-filter-type="impact" onclick="filterPanel(0, 'critical', 'impact', this)">
-                Critical<span class="filter-count">5</span>
+                Critical<span class="filter-count">2</span>
             </button>
             <button class="filter-btn" data-filter="moderate" data-filter-type="impact" onclick="filterPanel(0, 'moderate', 'impact', this)">
-                Moderate<span class="filter-count">3</span>
+                Moderate<span class="filter-count">1</span>
             </button>
         </div>
         
         <div class="filter-row">
             <span class="filter-label">WCAG:</span>
             <button class="filter-btn active" data-filter="all" data-filter-type="wcag" onclick="filterPanel(0, 'all', 'wcag', this)">
-                All<span class="filter-count">8</span>
+                All<span class="filter-count">3</span>
             </button>
             
             <button class="filter-btn" data-filter="wcag2a" data-filter-type="wcag" onclick="filterPanel(0, 'wcag2a', 'wcag', this)">
-                wcag2a<span class="filter-count">5</span>
+                wcag2a<span class="filter-count">2</span>
             </button>
             <button class="filter-btn" data-filter="wcag111" data-filter-type="wcag" onclick="filterPanel(0, 'wcag111', 'wcag', this)">
                 wcag111<span class="filter-count">1</span>
             </button>
             <button class="filter-btn" data-filter="wcag412" data-filter-type="wcag" onclick="filterPanel(0, 'wcag412', 'wcag', this)">
-                wcag412<span class="filter-count">4</span>
+                wcag412<span class="filter-count">1</span>
             </button>
         </div>
     </div>
@@ -710,65 +710,32 @@
 You are fixing accessibility violations in the following source file.
 Do NOT change functionality, styling, or logic beyond what is required for the fixes.
 
-**File:** `tests/fixtures/sample.html`
+**File:** `tests/fixtures/baseline-a.html`
 **Standard:** WCAG 2.1 AA
-**Violations to fix:** 8
+**Violations to fix:** 3
 
 ---
 
-### Violations (8 total)
+### Violations (3 total)
 
 **1. [CRITICAL] Ensure &lt;img&gt; elements have alternative text or a role of none or presentation**
    - Rule: `image-alt`
-   - Line: 9
-   - Element: `&lt;img src=&quot;logo.png&quot;&gt;`
+   - Line: 5
+   - Element: `&lt;img src=&quot;photo.jpg&quot;&gt;`
    - What to fix: Images must have alternative text
    - WCAG: wcag2a, wcag111
 
 **2. [CRITICAL] Ensure buttons have discernible text**
    - Rule: `button-name`
-   - Line: 12
+   - Line: 6
    - Element: `&lt;button&gt;&lt;/button&gt;`
    - What to fix: Buttons must have discernible text
    - WCAG: wcag2a, wcag412
 
-**3. [CRITICAL] Ensure buttons have discernible text**
-   - Rule: `button-name`
-   - Line: 13
-   - Element: `&lt;button&gt;&lt;/button&gt;`
-   - What to fix: Buttons must have discernible text
-   - WCAG: wcag2a, wcag412
-
-**4. [CRITICAL] Ensure buttons have discernible text**
-   - Rule: `button-name`
-   - Line: 14
-   - Element: `&lt;button&gt;&lt;/button&gt;`
-   - What to fix: Buttons must have discernible text
-   - WCAG: wcag2a, wcag412
-
-**5. [CRITICAL] Ensure buttons have discernible text**
-   - Rule: `button-name`
-   - Line: 15
-   - Element: `&lt;button&gt;&lt;/button&gt;`
-   - What to fix: Buttons must have discernible text
-   - WCAG: wcag2a, wcag412
-
-**6. [MODERATE] Ensure all page content is contained by landmarks**
+**3. [MODERATE] Ensure all page content is contained by landmarks**
    - Rule: `region`
-   - Line: 9
-   - Element: `&lt;img src=&quot;logo.png&quot;&gt;`
-   - What to fix: All page content should be contained by landmarks
-
-**7. [MODERATE] Ensure all page content is contained by landmarks**
-   - Rule: `region`
-   - Line: 17
-   - Element: `&lt;input type=&quot;text&quot; placeholder=&quot;Enter name&quot;&gt;`
-   - What to fix: All page content should be contained by landmarks
-
-**8. [MODERATE] Ensure all page content is contained by landmarks**
-   - Rule: `region`
-   - Line: 19
-   - Element: `&lt;p&gt;Some content here.&lt;/p&gt;`
+   - Line: 5
+   - Element: `&lt;img src=&quot;photo.jpg&quot;&gt;`
    - What to fix: All page content should be contained by landmarks
 
 ---
@@ -794,88 +761,7 @@ Think through each fix before writing code. If a fix requires context you don't 
         <div class="violation-header">
             <span class="impact-badge" style="background:#ff4d4d22;color:#ff4d4d;border:1px solid #ff4d4d55;">critical</span>
             <span class="violation-desc">Ensure buttons have discernible text</span>
-            <span class="violation-line">Line 12</span>
-        </div>
-        <div class="violation-body">
-            <div>
-                <div class="vfield-label">Rule</div>
-                <div class="vfield-value">button-name</div>
-            </div>
-            
-            <div>
-                <div class="vfield-label">WCAG</div>
-                <div class="vfield-value">wcag2a, wcag412</div>
-            </div>
-            
-            <div class="vfield-full">
-                <div class="vfield-label">Element</div>
-                <code class="vfield-value code">&lt;button&gt;&lt;/button&gt;</code>
-            </div>
-            <div class="vfield-full">
-                <div class="vfield-label">How to fix</div>
-                <div class="vfield-value">Buttons must have discernible text <a class="help-link" href="https://dequeuniversity.com/rules/axe/4.11/button-name?application=axeAPI" target="_blank">Learn more ↗</a></div>
-            </div>
-        </div>
-    </div>
-    <div class="violation" data-impact="critical" data-wcag="wcag2a wcag412">
-        <div class="violation-header">
-            <span class="impact-badge" style="background:#ff4d4d22;color:#ff4d4d;border:1px solid #ff4d4d55;">critical</span>
-            <span class="violation-desc">Ensure buttons have discernible text</span>
-            <span class="violation-line">Line 13</span>
-        </div>
-        <div class="violation-body">
-            <div>
-                <div class="vfield-label">Rule</div>
-                <div class="vfield-value">button-name</div>
-            </div>
-            
-            <div>
-                <div class="vfield-label">WCAG</div>
-                <div class="vfield-value">wcag2a, wcag412</div>
-            </div>
-            
-            <div class="vfield-full">
-                <div class="vfield-label">Element</div>
-                <code class="vfield-value code">&lt;button&gt;&lt;/button&gt;</code>
-            </div>
-            <div class="vfield-full">
-                <div class="vfield-label">How to fix</div>
-                <div class="vfield-value">Buttons must have discernible text <a class="help-link" href="https://dequeuniversity.com/rules/axe/4.11/button-name?application=axeAPI" target="_blank">Learn more ↗</a></div>
-            </div>
-        </div>
-    </div>
-    <div class="violation" data-impact="critical" data-wcag="wcag2a wcag412">
-        <div class="violation-header">
-            <span class="impact-badge" style="background:#ff4d4d22;color:#ff4d4d;border:1px solid #ff4d4d55;">critical</span>
-            <span class="violation-desc">Ensure buttons have discernible text</span>
-            <span class="violation-line">Line 14</span>
-        </div>
-        <div class="violation-body">
-            <div>
-                <div class="vfield-label">Rule</div>
-                <div class="vfield-value">button-name</div>
-            </div>
-            
-            <div>
-                <div class="vfield-label">WCAG</div>
-                <div class="vfield-value">wcag2a, wcag412</div>
-            </div>
-            
-            <div class="vfield-full">
-                <div class="vfield-label">Element</div>
-                <code class="vfield-value code">&lt;button&gt;&lt;/button&gt;</code>
-            </div>
-            <div class="vfield-full">
-                <div class="vfield-label">How to fix</div>
-                <div class="vfield-value">Buttons must have discernible text <a class="help-link" href="https://dequeuniversity.com/rules/axe/4.11/button-name?application=axeAPI" target="_blank">Learn more ↗</a></div>
-            </div>
-        </div>
-    </div>
-    <div class="violation" data-impact="critical" data-wcag="wcag2a wcag412">
-        <div class="violation-header">
-            <span class="impact-badge" style="background:#ff4d4d22;color:#ff4d4d;border:1px solid #ff4d4d55;">critical</span>
-            <span class="violation-desc">Ensure buttons have discernible text</span>
-            <span class="violation-line">Line 15</span>
+            <span class="violation-line">Line 6</span>
         </div>
         <div class="violation-body">
             <div>
@@ -902,7 +788,7 @@ Think through each fix before writing code. If a fix requires context you don't 
         <div class="violation-header">
             <span class="impact-badge" style="background:#ff4d4d22;color:#ff4d4d;border:1px solid #ff4d4d55;">critical</span>
             <span class="violation-desc">Ensure &lt;img&gt; elements have alternative text or a role of none or presentation</span>
-            <span class="violation-line">Line 9</span>
+            <span class="violation-line">Line 5</span>
         </div>
         <div class="violation-body">
             <div>
@@ -917,7 +803,7 @@ Think through each fix before writing code. If a fix requires context you don't 
             
             <div class="vfield-full">
                 <div class="vfield-label">Element</div>
-                <code class="vfield-value code">&lt;img src=&quot;logo.png&quot;&gt;</code>
+                <code class="vfield-value code">&lt;img src=&quot;photo.jpg&quot;&gt;</code>
             </div>
             <div class="vfield-full">
                 <div class="vfield-label">How to fix</div>
@@ -929,7 +815,7 @@ Think through each fix before writing code. If a fix requires context you don't 
         <div class="violation-header">
             <span class="impact-badge" style="background:#ffd16622;color:#ffd166;border:1px solid #ffd16655;">moderate</span>
             <span class="violation-desc">Ensure all page content is contained by landmarks</span>
-            <span class="violation-line">Line 9</span>
+            <span class="violation-line">Line 5</span>
         </div>
         <div class="violation-body">
             <div>
@@ -940,53 +826,7 @@ Think through each fix before writing code. If a fix requires context you don't 
             
             <div class="vfield-full">
                 <div class="vfield-label">Element</div>
-                <code class="vfield-value code">&lt;img src=&quot;logo.png&quot;&gt;</code>
-            </div>
-            <div class="vfield-full">
-                <div class="vfield-label">How to fix</div>
-                <div class="vfield-value">All page content should be contained by landmarks <a class="help-link" href="https://dequeuniversity.com/rules/axe/4.11/region?application=axeAPI" target="_blank">Learn more ↗</a></div>
-            </div>
-        </div>
-    </div>
-    <div class="violation" data-impact="moderate" >
-        <div class="violation-header">
-            <span class="impact-badge" style="background:#ffd16622;color:#ffd166;border:1px solid #ffd16655;">moderate</span>
-            <span class="violation-desc">Ensure all page content is contained by landmarks</span>
-            <span class="violation-line">Line 17</span>
-        </div>
-        <div class="violation-body">
-            <div>
-                <div class="vfield-label">Rule</div>
-                <div class="vfield-value">region</div>
-            </div>
-            
-            
-            <div class="vfield-full">
-                <div class="vfield-label">Element</div>
-                <code class="vfield-value code">&lt;input type=&quot;text&quot; placeholder=&quot;Enter name&quot;&gt;</code>
-            </div>
-            <div class="vfield-full">
-                <div class="vfield-label">How to fix</div>
-                <div class="vfield-value">All page content should be contained by landmarks <a class="help-link" href="https://dequeuniversity.com/rules/axe/4.11/region?application=axeAPI" target="_blank">Learn more ↗</a></div>
-            </div>
-        </div>
-    </div>
-    <div class="violation" data-impact="moderate" >
-        <div class="violation-header">
-            <span class="impact-badge" style="background:#ffd16622;color:#ffd166;border:1px solid #ffd16655;">moderate</span>
-            <span class="violation-desc">Ensure all page content is contained by landmarks</span>
-            <span class="violation-line">Line 19</span>
-        </div>
-        <div class="violation-body">
-            <div>
-                <div class="vfield-label">Rule</div>
-                <div class="vfield-value">region</div>
-            </div>
-            
-            
-            <div class="vfield-full">
-                <div class="vfield-label">Element</div>
-                <code class="vfield-value code">&lt;p&gt;Some content here.&lt;/p&gt;</code>
+                <code class="vfield-value code">&lt;img src=&quot;photo.jpg&quot;&gt;</code>
             </div>
             <div class="vfield-full">
                 <div class="vfield-label">How to fix</div>
