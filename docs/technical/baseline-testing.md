@@ -90,19 +90,23 @@ echo $LASTEXITCODE
 
 **What it proves:** A new element added after baseline was saved appears as `NEW`. The original violations remain `BASELINE`. Exit 4.
 
-```bash
+```powershell
 # Step 1 — save baseline from the original file
 node src/index.js scan tests/fixtures/baseline-a.html --save-baseline
 
 # Step 2 — add an unlabeled input (introduces 2 new violations: label + region@input)
-node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-a.html','utf8'); c=c.replace('</body>','<input type=\"text\">\n</body>'); fs.writeFileSync('tests/fixtures/baseline-a.html',c,'utf8')"
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-a.html'))
+$c = $c.Replace('</body>', "<input>`n</body>")
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-a.html'), $c, [System.Text.Encoding]::UTF8)
 
 # Step 3 — scan: new violations expected
 node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
 echo $LASTEXITCODE
 
 # Step 4 — restore original file
-node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-a.html','utf8'); c=c.replace('<input type=\"text\">\n',''); fs.writeFileSync('tests/fixtures/baseline-a.html',c,'utf8')"
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-a.html'))
+$c = $c.Replace("<input>`n", '')
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-a.html'), $c, [System.Text.Encoding]::UTF8)
 ```
 
 **Expected terminal output:**
@@ -127,19 +131,21 @@ node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-
 
 **What it proves:** Prepending blank lines shifts all line numbers in the output, but matching is purely composite-key based — no line numbers — so all violations still match the baseline. Exit 0.
 
-```bash
+```powershell
 # Step 1 — save baseline
 node src/index.js scan tests/fixtures/baseline-a.html --save-baseline
 
 # Step 2 — prepend 10 blank lines (shifts every line number by 10)
-node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-a.html','utf8'); fs.writeFileSync('tests/fixtures/baseline-a.html','\n\n\n\n\n\n\n\n\n\n'+c,'utf8')"
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-a.html'))
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-a.html'), ("`n" * 10) + $c, [System.Text.Encoding]::UTF8)
 
 # Step 3 — scan: violations now at lines ~15-16 instead of 5-6, should still be BASELINE
 node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
 echo $LASTEXITCODE
 
 # Step 4 — restore
-node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-a.html','utf8'); fs.writeFileSync('tests/fixtures/baseline-a.html',c.replace(/^\n+/,''),'utf8')"
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-a.html'))
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-a.html'), $c.TrimStart("`n"), [System.Text.Encoding]::UTF8)
 ```
 
 **Expected terminal output:**
@@ -163,19 +169,23 @@ node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-
 
 **What it proves:** A developer modifies the broken element (adds `class="hero"`) without fixing the a11y issue. The element's `violation.html` changes → new SHA-256 fingerprint → no match → resurfaces as `NEW`. Untouched elements remain `BASELINE`.
 
-```bash
+```powershell
 # Step 1 — save baseline
 node src/index.js scan tests/fixtures/baseline-a.html --save-baseline
 
 # Step 2 — add class="hero" to img (violation.html changes, issue is not fixed)
-node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-a.html','utf8'); c=c.replace('<img src=\"photo.jpg\">','<img src=\"photo.jpg\" class=\"hero\">'); fs.writeFileSync('tests/fixtures/baseline-a.html',c,'utf8')"
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-a.html'))
+$c = $c.Replace('<img src="photo.jpg">', '<img src="photo.jpg" class="hero">')
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-a.html'), $c, [System.Text.Encoding]::UTF8)
 
 # Step 3 — scan: img violations resurface as NEW, button stays BASELINE
 node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
 echo $LASTEXITCODE
 
 # Step 4 — restore
-node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-a.html','utf8'); c=c.replace('<img src=\"photo.jpg\" class=\"hero\">','<img src=\"photo.jpg\">'); fs.writeFileSync('tests/fixtures/baseline-a.html',c,'utf8')"
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-a.html'))
+$c = $c.Replace('<img src="photo.jpg" class="hero">', '<img src="photo.jpg">')
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-a.html'), $c, [System.Text.Encoding]::UTF8)
 ```
 
 **Expected terminal output:**
@@ -200,19 +210,23 @@ node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-
 
 Uses `baseline-stale.html` (has `<main>` to avoid `region` violations, giving a clean 2-violation baseline of `button-name` + `image-alt`).
 
-```bash
+```powershell
 # Step 1 — save baseline (2 violations: button-name + image-alt)
 node src/index.js scan tests/fixtures/baseline-stale.html --save-baseline
 
 # Step 2 — fix the img by adding alt text
-node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-stale.html','utf8'); c=c.replace('<img src=\"photo.jpg\">','<img src=\"photo.jpg\" alt=\"A photo\">'); fs.writeFileSync('tests/fixtures/baseline-stale.html',c,'utf8')"
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-stale.html'))
+$c = $c.Replace('<img src="photo.jpg">', '<img src="photo.jpg" alt="A photo">')
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-stale.html'), $c, [System.Text.Encoding]::UTF8)
 
 # Step 3 — scan: image-alt is gone (stale), button-name is BASELINE
 node src/index.js scan tests/fixtures/baseline-stale.html --fail-on-new
 echo $LASTEXITCODE
 
 # Step 4 — restore
-node -e "const fs=require('fs'); let c=fs.readFileSync('tests/fixtures/baseline-stale.html','utf8'); c=c.replace('<img src=\"photo.jpg\" alt=\"A photo\">','<img src=\"photo.jpg\">'); fs.writeFileSync('tests/fixtures/baseline-stale.html',c,'utf8')"
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-stale.html'))
+$c = $c.Replace('<img src="photo.jpg" alt="A photo">', '<img src="photo.jpg">')
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-stale.html'), $c, [System.Text.Encoding]::UTF8)
 ```
 
 **Expected terminal output:**
