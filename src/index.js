@@ -109,7 +109,7 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} allycat scan --watch            ${chalk.dim('# Watch and re-scan on file change')}
   ${chalk.cyan('$')} allycat scan --watch ./src      ${chalk.dim('# Watch specific folder')}
   ${chalk.cyan('$')} allycat scan --watch --existing   ${chalk.dim('# Watch — show full pre-existing violation details on startup')}
-  ${chalk.cyan('$')} allycat scan --save-baseline      ${chalk.dim('# Snapshot all current violations to .a11y-baseline.json')}
+  ${chalk.cyan('$')} allycat scan --save-baseline      ${chalk.dim('# Snapshot all current violations to allycat-baseline.json')}
   ${chalk.cyan('$')} allycat scan --fail-on-new         ${chalk.dim('# Exit 4 if any violation is not in the baseline')}
   ${chalk.cyan('$')} allycat scan --fail-on-new --fail-on-critical ${chalk.dim('# Combine baseline gate with severity gate')}
 `)

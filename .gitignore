@@ -3,7 +3,7 @@ node_modules/
 !tests/samples/npm-css/node_modules/
 !tests/samples/npm-css/node_modules/**
 allycat.config.json
-.a11y-baseline.json
+allycat-baseline.json
 test-page.html
 test-page2.html
 a11y-report.html

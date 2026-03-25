@@ -2,7 +2,7 @@
 
 ## What It Does
 
-`--save-baseline` snapshots every current violation into `.a11y-baseline.json`.
+`--save-baseline` snapshots every current violation into `allycat-baseline.json`.
 `--fail-on-new` loads that snapshot on the next scan and exits with code 4 if any
 violation is found that was not present in the snapshot.
 
@@ -203,8 +203,8 @@ with three public functions:
 
 | Function | Responsibility |
 |---|---|
-| `saveBaseline(violations, config, scanMode)` | Write `.a11y-baseline.json` to cwd |
-| `loadBaseline()` | Read and parse `.a11y-baseline.json`; return null if not found |
+| `saveBaseline(violations, config, scanMode)` | Write `allycat-baseline.json` to cwd |
+| `loadBaseline()` | Read and parse `allycat-baseline.json`; return null if not found |
 | `classifyViolations(violations, baseline)` | Return `{ newViolations, baselineViolations, staleCount }` |
 
 `scanResultHandler.js` owns the orchestration: it calls these functions, passes
@@ -218,7 +218,7 @@ No scanner changes. No violation pipeline changes.
 ```
 Day 1
   allycat scan --save-baseline
-  → .a11y-baseline.json created with all current violations
+  → allycat-baseline.json created with all current violations
   → commit to repository
 
 Every CI run

@@ -28,7 +28,7 @@ export function handleScanResult(violations, warnings, config, scanMode, options
     if (options.saveBaseline) {
         const dest = saveBaseline(violations, config, scanMode);
         console.log('');
-        p.log.success(chalk.green(`Baseline saved → ${chalk.bold('.a11y-baseline.json')}`));
+        p.log.success(chalk.green(`Baseline saved → ${chalk.bold('allycat-baseline.json')}`));
         console.log(chalk.dim(`  ${violations.length} violation${violations.length !== 1 ? 's' : ''} recorded across ${countFiles(violations)} file${countFiles(violations) !== 1 ? 's' : ''}`));
         console.log(chalk.dim(`  Commit this file to your repository.`));
         console.log('');
@@ -40,7 +40,7 @@ export function handleScanResult(violations, warnings, config, scanMode, options
     if (options.failOnNew) {
         const baseline = loadBaseline();
         if (!baseline) {
-            process.stderr.write('[allycat] Warning: --fail-on-new specified but no .a11y-baseline.json found. Run --save-baseline first. Continuing without baseline check.\n');
+            process.stderr.write('[allycat] Warning: --fail-on-new specified but no allycat-baseline.json found. Run --save-baseline first. Continuing without baseline check.\n');
         } else {
             baselineResult = classifyViolations(violations, baseline);
         }

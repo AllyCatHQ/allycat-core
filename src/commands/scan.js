@@ -120,7 +120,7 @@ function displayScanConfiguration(config, scanMode, options, target) {
                 : '';
 
     const baselineLine = options.saveBaseline
-        ? `Baseline:  ${chalk.cyan('Saving → .a11y-baseline.json')}\n`
+        ? `Baseline:  ${chalk.cyan('Saving → allycat-baseline.json')}\n`
         : options.failOnNew
             ? `Baseline:  ${chalk.cyan('Active → fail on NEW violations (exit 4)')}\n`
             : '';

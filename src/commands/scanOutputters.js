@@ -164,7 +164,7 @@ function outputTerminalWithBaseline({ newViolations, baselineViolations, staleCo
 
             output.push(`${labelBadge}  ${formatViolationInline(violation)}`);
             if (!isNew) {
-                output.push(chalk.dim('   (suppressed — exists in .a11y-baseline.json)'));
+                output.push(chalk.dim('   (suppressed — exists in allycat-baseline.json)'));
             }
             output.push('');
         }

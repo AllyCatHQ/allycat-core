@@ -13,8 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
-
-const BASELINE_FILE = '.a11y-baseline.json';
+import { BASELINE_FILE } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Fingerprinting

@@ -150,7 +150,7 @@ allycat scan ./src/pages/Home.tsx
 | `--fail-on-critical` | | Exit code 1 if any critical violations found |
 | `--fail-on-serious` | | Exit code 2 if any serious or critical violations found |
 | `--fail-on-any` | | Exit code 3 if any violations found (strictest gate) |
-| `--save-baseline` | | Snapshot all current violations to `.a11y-baseline.json` — exits 0 always |
+| `--save-baseline` | | Snapshot all current violations to `allycat-baseline.json` — exits 0 always |
 | `--fail-on-new` | | Exit code 4 if any violation is not in the saved baseline |
 | `--changed` | `-c` | Scan only files changed since the last git commit |
 | `--watch` | `-w` | Watch for file changes and re-scan automatically |
@@ -442,7 +442,7 @@ Adopt a CI gate immediately — without fixing every pre-existing violation firs
 
 ```bash
 allycat scan --save-baseline
-# Creates .a11y-baseline.json — commit this file to your repository
+# Creates allycat-baseline.json — commit this file to your repository
 ```
 
 **Every CI run — only fail on NEW violations:**

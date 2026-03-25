@@ -90,7 +90,7 @@ export const FAQ_ITEMS = [
 
    ${chalk.bold('Step 1:')} Snapshot all current violations (run once, commit the file)
    ${chalk.yellow(`${CLI.SCAN} --save-baseline`)}
-   → Creates ${chalk.cyan('.a11y-baseline.json')} in your project root
+   → Creates ${chalk.cyan('allycat-baseline.json')} in your project root
 
    ${chalk.bold('Step 2:')} In CI — only fail on NEW violations
    ${chalk.yellow(`${CLI.SCAN} --fail-on-new`)}
@@ -212,7 +212,7 @@ export const EXAMPLE_SECTIONS = [
     {
         title: 'Baseline Workflow',
         examples: [
-            { cmd: `${CLI.SCAN} --save-baseline`,                              desc: 'Snapshot all current violations to .a11y-baseline.json' },
+            { cmd: `${CLI.SCAN} --save-baseline`,                              desc: 'Snapshot all current violations to allycat-baseline.json' },
             { cmd: `${CLI.SCAN} --fail-on-new`,                                desc: 'Exit 4 if any violation is not in the baseline' },
             { cmd: `${CLI.SCAN} --fail-on-new --fail-on-critical`,             desc: 'Combine baseline gate with severity gate' },
             { cmd: `${CLI.SCAN} ./src --save-baseline`,                        desc: 'Save baseline scoped to ./src' }

@@ -1,6 +1,7 @@
 // ─── Config & File Names ──────────────────────────────────────────────────────
 
-export const CONFIG_FILE_NAME = 'allycat.config.json';
+export const CONFIG_FILE_NAME  = 'allycat.config.json';
+export const BASELINE_FILE     = 'allycat-baseline.json';
 export const DEFAULT_REPORT_NAME = 'allycat-report';
 
 // ─── CLI Command Strings ──────────────────────────────────────────────────────

@@ -13,7 +13,7 @@
 node src/index.js init
 
 # Clean state — remove any leftover baseline from previous runs
-Remove-Item .a11y-baseline.json -ErrorAction SilentlyContinue
+Remove-Item allycat-baseline.json -ErrorAction SilentlyContinue
 ```
 
 ---
@@ -52,7 +52,7 @@ echo $LASTEXITCODE
 
 **Expected output:**
 ```
-✔ Baseline saved → .a11y-baseline.json
+✔ Baseline saved → allycat-baseline.json
   3 violations recorded across 1 file
   Commit this file to your repository.
 ```
@@ -246,17 +246,17 @@ $c = $c.Replace('<img src="photo.jpg" alt="A photo">', '<img src="photo.jpg">')
 
 ## Test 7 — No baseline file
 
-**What it proves:** If `--fail-on-new` is used but no `.a11y-baseline.json` exists, the scanner emits a warning on `stderr` and continues normally without blocking the pipeline.
+**What it proves:** If `--fail-on-new` is used but no `allycat-baseline.json` exists, the scanner emits a warning on `stderr` and continues normally without blocking the pipeline.
 
 ```bash
-Remove-Item .a11y-baseline.json -ErrorAction SilentlyContinue
+Remove-Item allycat-baseline.json -ErrorAction SilentlyContinue
 node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
 echo $LASTEXITCODE
 ```
 
 **Expected stderr:**
 ```
-[allycat] Warning: --fail-on-new specified but no .a11y-baseline.json found. Run --save-baseline first. Continuing without baseline check.
+[allycat] Warning: --fail-on-new specified but no allycat-baseline.json found. Run --save-baseline first. Continuing without baseline check.
 ```
 
 **Expected stdout:** Normal violation output (no BASELINE/NEW labels).
@@ -321,11 +321,11 @@ These tests probe failure modes and boundary conditions not covered by the main 
 
 ### EC-1 — Corrupted baseline file
 
-**What it proves:** If `.a11y-baseline.json` exists but contains invalid JSON, the scanner warns on `stderr` and continues without baseline classification — it does not crash or exit non-zero due to the parse failure.
+**What it proves:** If `allycat-baseline.json` exists but contains invalid JSON, the scanner warns on `stderr` and continues without baseline classification — it does not crash or exit non-zero due to the parse failure.
 
 ```bash
 # Write a corrupted baseline file
-node -e "require('fs').writeFileSync('.a11y-baseline.json', 'NOT VALID JSON', 'utf8')"
+node -e "require('fs').writeFileSync('allycat-baseline.json', 'NOT VALID JSON', 'utf8')"
 
 node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
 echo $LASTEXITCODE
@@ -333,7 +333,7 @@ echo $LASTEXITCODE
 
 **Expected stderr:**
 ```
-[allycat] Warning: could not parse .a11y-baseline.json — treating as missing
+[allycat] Warning: could not parse allycat-baseline.json — treating as missing
 ```
 
 **Expected stdout:** Normal violation output (no BASELINE/NEW labels — baseline was treated as missing).
@@ -353,7 +353,7 @@ echo $LASTEXITCODE
 
 **Expected output:**
 ```
-✔ Baseline saved → .a11y-baseline.json
+✔ Baseline saved → allycat-baseline.json
   3 violations recorded across 1 file
   Commit this file to your repository.
 ```
@@ -419,7 +419,7 @@ echo $LASTEXITCODE
 ## Cleanup
 
 ```bash
-Remove-Item .a11y-baseline.json -ErrorAction SilentlyContinue
+Remove-Item allycat-baseline.json -ErrorAction SilentlyContinue
 ```
 
 ---
