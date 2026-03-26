@@ -262,21 +262,25 @@ export function createViolationFromNode(
  */
 export function processAxeViolations(
     filePath, violations, sourceContent,
-    lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null
+    lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null,
+    nodeEnhancer = null
 ) {
-    const isJsxContext = lineMap && lineMap.size > 0;
+    // A component context means we have a transformed HTML string (JSX/Vue/Angular).
+    // Plain HTML files pass null for transformedHtml.
+    const isComponentContext = transformedHtml !== null;
     const results = [];
 
     for (const violation of violations) {
-        // Skip document-level rules for JSX/TSX component files.
+        // Skip document-level rules for component files (JSX/TSX/Vue/Angular).
         // A component is a fragment, not a full page — these rules don't apply.
-        if (isJsxContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
+        if (isComponentContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
 
         for (const node of violation.nodes) {
-            results.push(createViolationFromNode(
+            const base = createViolationFromNode(
                 filePath, violation, node, sourceContent,
                 lineMap, transformedHtml, ordinalIndex, domDocument
-            ));
+            );
+            results.push(nodeEnhancer ? nodeEnhancer(base, violation, node) : base);
         }
     }
 

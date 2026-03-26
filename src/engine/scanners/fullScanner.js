@@ -24,7 +24,7 @@ import * as p from '@clack/prompts';
 import { resolveFiles } from '../../utils/fileResolver.js';
 import { MESSAGES, SCAN_MODES } from '../../constants.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
-import { createViolationFromNode, DOCUMENT_LEVEL_RULES } from '../../utils/violationProcessor.js';
+import { processAxeViolations } from '../../utils/violationProcessor.js';
 import { transformJsxToHtml } from '../transformers/jsxTransformer.js';
 import { detectCssInJs } from '../transformers/transformerUtils.js';
 import { transformVueToHtml } from '../transformers/vueTransformer.js';
@@ -162,10 +162,16 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
 }
 
 // -----------------------------------------------------------------------------
-// Violation Processing
+// Violation Processing Helpers
 //
-// buildQueryDocument, extractContrastData, and enhanceWithContrastData are
-// private helpers used exclusively by processFullScanViolations.
+// buildQueryDocument  — builds a lightweight JSDOM for ordinal-index lookup,
+//                       because Playwright's DOM is not accessible from Node.js.
+// extractContrastData — pulls contrast ratio/color data from an axe node.
+// enhanceWithContrastData — adds contrast fields to a processed violation.
+//
+// These are passed to processAxeViolations (violationProcessor.js) as part of
+// the full-scan pipeline. They stay here because contrast data and the JSDOM
+// rebuild are both Playwright-specific concerns.
 // -----------------------------------------------------------------------------
 
 /**
@@ -221,44 +227,6 @@ function enhanceWithContrastData(baseViolation, axeViolation, node) {
         return { ...baseViolation, contrastData: extractContrastData(node) };
     }
     return baseViolation;
-}
-
-/**
- * Process full-scan violations with ordinal-index resolution and contrast data.
- *
- * Builds the query document once per file — not once per violation.
- * That document is then shared across all violation nodes for that file.
- *
- * @param {string} filePath
- * @param {Array} violations
- * @param {string} sourceContent
- * @param {Map<number,number>|null} lineMap
- * @param {string|null} transformedHtml
- * @param {Map<string,number[]>|null} ordinalIndex
- * @returns {Array}
- */
-function processFullScanViolations(
-    filePath, violations, sourceContent,
-    lineMap = null, transformedHtml = null, ordinalIndex = null
-) {
-    const isComponentContext = lineMap && transformedHtml;
-    const domDocument = isComponentContext ? buildQueryDocument(transformedHtml) : null;
-    const processed = [];
-
-    for (const violation of violations) {
-        // Skip document-level rules for component files (JSX/TSX/Vue/Angular).
-        if (isComponentContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
-
-        for (const node of violation.nodes) {
-            const baseViolation = createViolationFromNode(
-                filePath, violation, node, sourceContent,
-                lineMap, transformedHtml, ordinalIndex, domDocument
-            );
-            processed.push(enhanceWithContrastData(baseViolation, violation, node));
-        }
-    }
-
-    return processed;
 }
 
 // -----------------------------------------------------------------------------
@@ -357,13 +325,16 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases, AxeB
             .withTags(getAxeTags(config))
             .analyze();
 
-        violations.push(...processFullScanViolations(
+        const domDocument = isComponent ? buildQueryDocument(scanContent) : null;
+        violations.push(...processAxeViolations(
             filePath,
             axeResults.violations,
             sourceContent,
             isComponent ? lineMap : null,
             isComponent ? scanContent : null,
-            isComponent ? ordinalIndex : null
+            isComponent ? ordinalIndex : null,
+            domDocument,
+            (base, axeViolation, node) => enhanceWithContrastData(base, axeViolation, node)
         ));
 
         if (config.rules.rtl) {
