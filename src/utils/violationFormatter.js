@@ -145,9 +145,9 @@ export function countByImpact(violations) {
  * Group violations by file path
  * 
  * @param {Array} violations - Array of violation objects
- * @returns {Object} - Violations grouped by file with counts
+ * @returns {Object} - Violation counts per file: { [filePath]: { count, critical, serious } }
  */
-export function groupByFile(violations) {
+export function countViolationsByFile(violations) {
     return violations.reduce((accumulator, violation) => {
         const filePath = violation.file;
 

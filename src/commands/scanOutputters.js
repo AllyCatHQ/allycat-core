@@ -12,7 +12,7 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import { UI, SCAN_MODES, DEFAULT_REPORT_NAME } from '../constants.js';
-import { formatSummary, formatByFile, countByImpact, groupByFile, formatViolationForJson } from '../utils/violationFormatter.js';
+import { formatSummary, formatByFile, countByImpact, countViolationsByFile, formatViolationForJson } from '../utils/violationFormatter.js';
 import { generatePrompts } from '../engine/report/promptGenerator.js';
 import { generateReport } from '../engine/report/generator.js';
 import { openInBrowser } from '../utils/browserOpener.js';
@@ -272,7 +272,7 @@ function buildJsonReport(violations, config, scanMode, warnings = []) {
         warnings: warnings,
         totalViolations: violations.length,
         summary: countByImpact(violations),
-        byFile: groupByFile(violations),
+        byFile: countViolationsByFile(violations),
         violations: violations.map(formatViolationForJson)
     };
 }
