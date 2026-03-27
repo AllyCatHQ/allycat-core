@@ -97,7 +97,7 @@ The tool has two distinct scanning paths selected per invocation:
 ```
 src/index.js (Commander CLI)
   → src/commands/scan.js              # thin orchestrator: config → dispatch → result
-      → src/utils/configLoader.js     # loads a11y-config.json, clamps concurrency to RAM
+      → src/utils/configLoader.js     # loads allycat.config.json, clamps concurrency to RAM
       → src/commands/watchMode.js     # watch mode branch (--watch flag) — does not return
       → src/commands/scanDispatcher.js
           → resolveInputFiles()       # validates target path or builds --changed file list
