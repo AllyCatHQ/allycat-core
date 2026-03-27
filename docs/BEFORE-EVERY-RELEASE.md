@@ -40,7 +40,9 @@ All strings visible to users — printed to terminal, written to reports, shown 
 ### Files to review:
 - `src/commands/helpContent.js` — full read-through for typos
 - `src/commands/init.js` — all prompts and messages
-- `src/commands/scanOutputters.js` — all terminal output strings
+- `src/commands/outputters/terminalOutputter.js` — all terminal output strings
+- `src/commands/outputters/summaryOutputter.js` — summary-mode strings
+- `src/commands/outputters/jsonOutputter.js` — JSON output structure
 - `src/engine/report/generator.js` — all HTML report strings
 - `src/constants.js` — any user-visible labels or messages
 

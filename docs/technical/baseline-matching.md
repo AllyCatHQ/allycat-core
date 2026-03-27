@@ -208,7 +208,7 @@ with three public functions:
 | `classifyViolations(violations, baseline)` | Return `{ newViolations, baselineViolations, staleCount }` |
 
 `scanResultHandler.js` owns the orchestration: it calls these functions, passes
-the classification to `scanOutputters.js` for rendering, and enforces the exit code.
+the classification to `outputters/index.js` for rendering, and enforces the exit code.
 No scanner changes. No violation pipeline changes.
 
 ---

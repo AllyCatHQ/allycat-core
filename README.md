@@ -592,7 +592,12 @@ allycat/
 │   │   ├── watchMode.js               # `--watch` file watcher with NEW/FIXED delta labels
 │   │   ├── watchOutputter.js          # Watch mode output formatting
 │   │   ├── watchState.js              # Watch mode state management
-│   │   ├── scanOutputters.js          # Output routing (terminal, JSON, AI report)
+│   │   ├── outputters/
+│   │   │   ├── index.js               # Output router (terminal, JSON, AI report)
+│   │   │   ├── terminalOutputter.js   # Terminal output formatter
+│   │   │   ├── summaryOutputter.js    # Summary-only output
+│   │   │   ├── jsonOutputter.js       # JSON output
+│   │   │   └── reportOutputter.js     # HTML AI report generator
 │   │   ├── help.js                    # `help` command
 │   │   └── helpContent.js             # FAQ, examples, CI snippets
 │   ├── engine/
@@ -605,6 +610,9 @@ allycat/
 │   │   │   ├── angularTransformer.js  # Angular .component.html transformer
 │   │   │   ├── angularTsExtractor.js  # Angular inline template extractor
 │   │   │   └── transformerUtils.js    # Shared transformer utilities
+│   │   ├── violations/
+│   │   │   ├── violationProcessor.js  # axe-core result → violation objects (3-layer resolution)
+│   │   │   └── rtlValidator.js        # RTL compliance checks (HTML & JSX)
 │   │   └── report/
 │   │       ├── generator.js           # HTML report entry point
 │   │       ├── html.js                # HTML assembly
@@ -618,14 +626,12 @@ allycat/
 │       ├── pathUtils.js               # Cross-platform path normalization
 │       ├── sourceMapper.js            # Line number detection
 │       ├── violationFormatter.js      # Output formatting & grouping
-│       ├── violationProcessor.js      # axe-core result → violation objects
 │       ├── axeConfig.js               # axe-core tag list per standard
-│       ├── rtlValidator.js            # RTL compliance checks (HTML & JSX)
 │       ├── cssResolver.js             # CSS extraction & injection for full scan
 │       └── browserOpener.js           # Cross-platform browser launch
 ├── tests/
 │   ├── e2e/                           # End-to-end CLI tests
-│   └── samples/                       # Test HTML/JSX fixtures
+│   └── fixtures/                      # Test HTML/JSX/Vue/Angular fixtures
 ├── allycat.config.json                # Project configuration (user-generated)
 ├── package.json
 ├── README.md

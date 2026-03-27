@@ -32,7 +32,7 @@ in `HTML_WRAPPER_OFFSET` so `lineMap` entries stay accurate.
 
 ## 2. Duplicate Element Line Resolution (Ordinal Index)
 
-**Files:** `src/utils/violationProcessor.js`, `src/utils/sourceMapper.js`
+**Files:** `src/engine/violations/violationProcessor.js`, `src/utils/sourceMapper.js`
 
 This is the most subtle bug to introduce and the hardest to notice in testing.
 
@@ -103,7 +103,7 @@ dynamic attribute binding and verify no false positive is raised for it.
 
 ## 5. Document-Level Rule Filtering
 
-**File:** `src/utils/violationProcessor.js` → `DOCUMENT_LEVEL_RULES`
+**File:** `src/engine/violations/violationProcessor.js` → `DOCUMENT_LEVEL_RULES`
 
 Component files are fragments, not full HTML documents. Axe-core will flag rules like:
 - `landmark-one-main` — no `<main>` in a button component
@@ -136,7 +136,7 @@ If you forget this, the scanner silently skips all files of the new type.
 
 ## 7. RTL Compliance
 
-**File:** `src/utils/rtlValidator.js`
+**File:** `src/engine/violations/rtlValidator.js`
 
 If the new file type is a component (fragment), use `checkJsxRtlCompliance()`.
 If it is a full HTML document, use `checkRtlCompliance()`.

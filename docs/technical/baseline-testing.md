@@ -455,4 +455,4 @@ Remove-Item allycat-baseline.json -ErrorAction SilentlyContinue
 | Load + classify entry point | `src/commands/scanResultHandler.js:40-47` |
 | Exit 4 priority logic | `src/commands/scanResultHandler.js:52-54` |
 | Severity gate | `src/commands/scanResultHandler.js:57` → `exitOnThreshold()` |
-| Terminal output with labels | `src/commands/scanOutputters.js` — `outputTerminalWithBaseline()` |
+| Terminal output with labels | `src/commands/outputters/terminalOutputter.js` — `outputTerminalWithBaseline()` |
