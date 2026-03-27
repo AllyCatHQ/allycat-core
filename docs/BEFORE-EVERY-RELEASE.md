@@ -17,7 +17,7 @@ Verify that what the tool **tells** users matches what it **does**.
 - [ ] Exit codes documented in help match actual exit codes in `src/commands/scanResultHandler.js`
 
 ### `src/commands/init.js` — Init Wizard
-- [ ] Every question in the wizard matches an actual field in `a11y-config.json`
+- [ ] Every question in the wizard matches an actual field in `allycat.config.json`
 - [ ] Default values shown in prompts match actual defaults in `src/utils/configLoader.js`
 - [ ] Supported standards listed in wizard match `STANDARDS` in `src/constants.js`
 - [ ] Scan modes listed match `SCAN_MODES` in `src/constants.js`
@@ -58,7 +58,7 @@ All strings visible to users — printed to terminal, written to reports, shown 
 ## 3. Test Gate
 
 Full functional test checklist (all features, all file types, all output modes):
-**→ [`docs/private/functional-testing.md`](../private/functional-testing.md)**
+**→ [`docs/contributing/functional-testing.md`](../contributing/functional-testing.md)**
 
 Quick summary of what must pass before release:
 
@@ -91,7 +91,7 @@ node src/index.js scan tests/fixtures/fail-on-clean.html
 ## 4. Configuration Accuracy
 
 - [ ] `allycat init` followed by `allycat scan .` works on a fresh project with no existing config
-- [ ] Config fields in generated `a11y-config.json` match what `configLoader.js` actually reads
+- [ ] Config fields in generated `allycat.config.json` match what `configLoader.js` actually reads
 - [ ] Concurrency: run `allycat init` and confirm the displayed parallel count is correct for this machine
 - [ ] `--version` output matches `"version"` in `package.json`
 
@@ -146,7 +146,7 @@ rm allycat-<version>.tgz
 
 - [ ] `--version` matches expected version
 - [ ] `--help` renders correctly, no placeholder text
-- [ ] `init` completes and writes `a11y-config.json`
+- [ ] `init` completes and writes `allycat.config.json`
 - [ ] `scan .` completes (violations or clean — either is fine, no crash)
 
 ---

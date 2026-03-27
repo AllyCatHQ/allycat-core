@@ -292,11 +292,11 @@ jobs:
 On each target machine, run the complete functional test suite to verify all features work correctly.
 
 **Full test list with exact commands and expected output:**
-→ [`docs/private/functional-testing.md`](functional-testing.md)
+→ [`docs/contributing/functional-testing.md`](functional-testing.md)
 
 > Prerequisites on each machine:
 > - `npm link` completed (or installed from tarball — see Section 2e)
-> - `a11y-config.json` present (run `allycat init` once)
+> - `allycat.config.json` present (run `allycat init` once)
 > - Playwright Chromium installed for `--full` tests: `npx playwright install chromium`
 
 The sections below (5–8) cover **platform-specific** behavior that goes beyond functional correctness — things that only matter when running on a different OS, shell, or Node version.
@@ -316,7 +316,7 @@ node tests/e2e/thresholds.test.js    # expect: 8/8 passed
 ```
 
 For the complete feature-by-feature test list (all file types, output modes, standards, RTL, watch mode, exit codes, etc.) see:
-**→ [`docs/private/functional-testing.md`](functional-testing.md)**
+**→ [`docs/contributing/functional-testing.md`](functional-testing.md)**
 
 ---
 
@@ -330,7 +330,7 @@ For the complete feature-by-feature test list (all file types, output modes, sta
   Not a hardcoded string — verify it matches `cat package.json | grep '"version"'`.
 
 > All remaining feature tests (init wizard, scan modes, file types, output modes, exit codes, standards, RTL, watch mode, `--changed`, CSS delivery) are documented in:
-> **→ [`docs/private/functional-testing.md`](functional-testing.md)**
+> **→ [`docs/contributing/functional-testing.md`](functional-testing.md)**
 > Run the full checklist on each target machine before signing off.
 
 ---
@@ -494,7 +494,7 @@ Run these after switching Node versions (use `nvm use <version>`):
 Run all three automated E2E scripts in sequence:
 
 ```bash
-# Prerequisites: a11y-config.json exists, Playwright Chromium installed
+# Prerequisites: allycat.config.json exists, Playwright Chromium installed
 
 node tests/e2e/thresholds.test.js
 # Expected: 8/8 passed
