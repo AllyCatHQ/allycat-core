@@ -7,7 +7,7 @@
 
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
-import { outputResults } from './scanOutputters.js';
+import { outputResults } from './outputters/index.js';
 import { saveBaseline, loadBaseline, classifyViolations } from '../utils/baselineManager.js';
 
 // -----------------------------------------------------------------------------
