@@ -6,7 +6,7 @@
  */
 
 import { STANDARDS } from '../../constants.js';
-import { createRtlViolation } from '../../utils/rtlValidator.js';
+import { createRtlViolation } from '../violations/rtlValidator.js';
 import { findLineNumber } from '../../utils/sourceMapper.js';
 
 /**

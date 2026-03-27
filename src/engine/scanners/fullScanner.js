@@ -24,7 +24,7 @@ import * as p from '@clack/prompts';
 import { resolveFiles } from '../../utils/fileResolver.js';
 import { MESSAGES, SCAN_MODES } from '../../constants.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
-import { processAxeViolations } from '../../utils/violationProcessor.js';
+import { processAxeViolations } from '../violations/violationProcessor.js';
 import { transformJsxToHtml } from '../transformers/jsxTransformer.js';
 import { detectCssInJs } from '../transformers/transformerUtils.js';
 import { transformVueToHtml } from '../transformers/vueTransformer.js';

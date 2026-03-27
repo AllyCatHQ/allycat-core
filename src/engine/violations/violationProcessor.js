@@ -4,11 +4,11 @@
  * Converts raw axe-core violation data into formatted result objects.
  * Resolves source line numbers using a 3-layer strategy for JSX/TSX files.
  *
- * @module utils/violationProcessor
+ * @module engine/violations/violationProcessor
  */
 
-import { findLineNumber } from './sourceMapper.js';
-import { HTML_WRAPPER_OFFSET } from '../engine/transformers/jsxTransformer.js';
+import { findLineNumber } from '../../utils/sourceMapper.js';
+import { HTML_WRAPPER_OFFSET } from '../transformers/transformerUtils.js';
 
 // Rules that require a complete HTML document context.
 // These are false positives when scanning JSX/TSX component fragments.
