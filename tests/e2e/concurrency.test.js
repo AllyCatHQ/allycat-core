@@ -8,4 +8,4 @@ const fullCeiling = getSafeConcurrencyCeiling('full');
 console.log(`Machine RAM: ${totalGb} GB`);
 console.log(`Quick ceiling: ${quickCeiling}`);
 console.log(`Full ceiling:  ${fullCeiling}`);
-console.log(`Full scanner hard cap: min(${fullCeiling}, 3) = ${Math.min(fullCeiling, 3)}`);
+console.log(`Full scanner hard cap: min(${fullCeiling}, 8) = ${Math.min(fullCeiling, 8)}`);

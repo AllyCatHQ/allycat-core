@@ -39,16 +39,17 @@ node src/index.js init
 - [ ] Wizard launches without error
 - [ ] All prompts appear in order: standard → scan mode → RTL → AI → concurrency
 - [ ] Selecting all defaults completes without crash
-- [ ] `a11y-config.json` is created in the project root
+- [ ] `allycat.config.json` is created in the project root
 - [ ] Re-running init offers: Overwrite / View / Delete options — not an instant overwrite
 
-**Expected `a11y-config.json` after accepting defaults:**
+**Expected `allycat.config.json` after accepting defaults:**
 ```json
 {
-  "standard": "wcag-aa",
-  "scanMode": "quick",
-  "rtl": false,
-  "aiEnabled": false
+  "selectedStandard": "wcag-aa",
+  "rules": { "rtl": false, "level": "AA" },
+  "scan": { "defaultMode": "quick" },
+  "ai": { "enabled": false, "agent": "generic" },
+  "performance": { "concurrency": null }
 }
 ```
 
@@ -193,14 +194,14 @@ Each standard enables a different axe rule set. Test the three supported values.
 
 ```bash
 node src/index.js scan tests/fixtures/sample.html
-# (uses wcag-aa from a11y-config.json)
+# (uses wcag-aa from allycat.config.json)
 ```
 - [ ] Runs without error, reports AA-level violations
 
 ### 5.2 WCAG 2.1 AAA
 
 ```bash
-# Temporarily set standard to wcag-aaa in a11y-config.json, then:
+# Temporarily set standard to wcag-aaa in allycat.config.json, then:
 node src/index.js scan tests/fixtures/sample.html
 ```
 - [ ] Scan header shows "WCAG 2.1 AAA"
@@ -210,7 +211,7 @@ node src/index.js scan tests/fixtures/sample.html
 ### 5.3 Israeli Standard (IS 5568)
 
 ```bash
-# Set standard to israel + rtl: true in a11y-config.json, then:
+# Set standard to israel + rtl: true in allycat.config.json, then:
 node src/index.js scan tests/samples/html/RtlBad.html
 ```
 
@@ -238,7 +239,7 @@ node src/index.js scan tests/samples/html/RtlGood.html
 Test RTL checking independently of the Israeli standard:
 
 ```bash
-# Set rtl: true and standard: wcag-aa in a11y-config.json, then:
+# Set rtl: true and standard: wcag-aa in allycat.config.json, then:
 node src/index.js scan tests/samples/react/jsx/RtlBad.jsx
 node src/index.js scan tests/samples/react/jsx/RtlGood.jsx
 ```
@@ -289,13 +290,13 @@ node src/index.js scan tests/fixtures/sample.html --json-file
 
 ### 7.5 HTML report
 
-The HTML report is auto-generated when `ai.enabled: true` in `a11y-config.json`. There is no `--report` flag.
+The HTML report is auto-generated when `ai.enabled: true` in `allycat.config.json`. There is no `--report` flag.
 
 ```bash
-# Set ai.enabled: true in a11y-config.json, then:
+# Set ai.enabled: true in allycat.config.json, then:
 node src/index.js scan tests/fixtures/sample.html
 ```
-- [ ] `a11y-report.html` created in project root
+- [ ] `allycat-report.html` created in project root
 - [ ] Open in browser — report renders without errors
 - [ ] Dark/light toggle works
 - [ ] Violation filter (by severity) works
@@ -345,7 +346,7 @@ node tests/e2e/concurrency.test.js
 
 - [ ] Prints machine RAM and computed quick/full ceilings
 - [ ] Quick ceiling ≥ 1
-- [ ] Full ceiling ≥ 1 and ≤ 3
+- [ ] Full ceiling ≥ 1 and ≤ 8
 - [ ] No crash
 
 **Manual scan of a directory (tests concurrency in practice):**
@@ -455,15 +456,16 @@ node src/index.js scan tests/fixtures/angular-edge-cases.component.html
 - [ ] `[attr.aria-label]` bindings do not produce false positives
 - [ ] At least 2 intentional violations are reported (missing img alt + empty button)
 
+
 ### 13.3 No config file
 
 ```bash
-# Temporarily rename a11y-config.json
-mv a11y-config.json a11y-config.json.bak
+# Temporarily rename allycat.config.json
+mv allycat.config.json allycat.config.json.bak
 
 node src/index.js scan tests/fixtures/sample.html
 
-mv a11y-config.json.bak a11y-config.json
+mv allycat.config.json.bak allycat.config.json
 ```
 
 - [ ] Tool does **not** crash — falls back to defaults (WCAG 2.1 AA, quick mode)

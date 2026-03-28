@@ -467,7 +467,7 @@ export function stripJsComments(source) {
  * @param {string} source - Raw HTML or Vue SFC content
  * @returns {string}
  */
-function stripHtmlComments(source) {
+export function stripHtmlComments(source) {
     return source.replace(/<!--[\s\S]*?-->/g, '');
 }
 

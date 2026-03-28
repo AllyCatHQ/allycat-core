@@ -54,7 +54,7 @@ file  +  rule  +  fingerprint  +  selector
 | `file` | Which source file | Stable unless file is renamed |
 | `rule` | Which axe-core rule (e.g. `image-alt`) | Always stable |
 | `fingerprint` | SHA-256 of `violation.html.trim()` | Stable across line shifts; changes only when the element markup changes |
-| `selector` | axe-core CSS path (e.g. `main > div:nth-child(2) > button`) | Unique per element instance; changes when DOM structure changes |
+| `selector` | Stable canonical DOM path (e.g. `body > button:nth-child(2)`) | Unique per element instance; always full positional path — see below |
 
 A violation matches a baseline entry only when **all four match exactly**.
 No fuzzy logic. No line numbers anywhere in the matching pipeline.
@@ -72,14 +72,27 @@ every edit that does not touch the element itself.
 
 ### `selector` closes the substitution loophole
 
-axe-core assigns a unique CSS path to each element instance. Even when 10 buttons have
-identical `violation.html`, each gets a different selector (`nth-child(1)` through
-`nth-child(10)`). Storing the selector as part of the identity means each baseline entry
-corresponds to exactly one element instance — not a count, a fingerprint registry.
+Instead of storing axe-core's raw CSS selector, AllyCat stores a **stable canonical selector**
+computed by walking the live DOM from the element up to `<body>`, always producing a full
+positional path with `tag:nth-child(n)` for every node.
+
+**Why not axe's raw selector?** axe-core generates the *shortest unique* selector for each
+element. A single `<button>` gets selector `button`; two identical buttons get
+`body > button:nth-child(2)` and `body > button:nth-child(3)`. When a second button is added,
+axe changes the first button's selector from `button` to `body > button:nth-child(2)` — even
+though the element was never touched — breaking composite-key matching.
+
+The stable selector is always in the same full positional format, so it is unaffected by
+whether there is one or many instances of an element.
+
+Even when 10 buttons have identical `violation.html`, each gets a different stable selector
+(`button:nth-child(n)` relative to its parent). Storing the stable selector as part of the
+identity means each baseline entry corresponds to exactly one element instance — not a count,
+a fingerprint registry.
 
 When a developer fixes button 1 and adds a new broken button at a new DOM position:
 - Button 1's entry is not matched (it no longer appears in the scan) → stale, ignored
-- New button has a new selector → no composite match in baseline → **NEW** ✅
+- New button has a new stable selector → no composite match in baseline → **NEW** ✅
 
 ### "Touch it, you own it"
 
@@ -137,7 +150,7 @@ time `--save-baseline` is run.
       "file": "src/components/Header.jsx",
       "rule": "image-alt",
       "fingerprint": "a3f2b1c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2",
-      "selector": "body > header > img:nth-child(2)",
+      "selector": "body > header:nth-child(1) > img:nth-child(2)",
       "element": "<img src=\"hero.jpg\" class=\"hero-banner\">"
     }
   ]
@@ -153,24 +166,19 @@ time `--save-baseline` is run.
 
 ---
 
-## Known Tradeoff: DOM Structural Changes
+## Remaining Limitation: Insert Before
 
-axe-core selectors use positional notation. If a sibling element is added or removed,
-the position of an existing broken element shifts — `nth-child(2)` becomes
-`nth-child(3)` — and the selector changes even though the broken element was not
-touched.
+The stable selector uses `tag:nth-child(n)` which reflects the element's position
+among its parent's children. If a new element is inserted **before** an existing
+violation, that violation's `:nth-child()` value shifts and the baseline entry no
+longer matches — producing a false positive.
 
-Under strict composite matching, this produces a false positive: the unchanged
-violation has a new selector, finds no match, and is flagged as NEW.
+This is a deliberate and logically correct outcome: the element's physical DOM
+position genuinely changed. Re-running `--save-baseline` resolves it in one command.
 
-**This tradeoff is explicitly accepted** for three reasons:
-
-1. DOM restructuring is less common than line-only edits (adding a function,
-   inserting a comment). The fingerprint approach already handles the more common case.
-2. The substitution loophole (the alternative) is a fundamental integrity failure.
-   A tool that silently misses real regressions is worse than one that occasionally
-   over-reports.
-3. When it occurs, `--save-baseline` resolves it in one command with no data loss.
+**This does not affect the common "add after" case.** Adding elements after an
+existing violation, or inside a new wrapper anywhere in the document, does not
+change the `:nth-child()` value of the existing violation.
 
 ---
 
@@ -208,7 +216,7 @@ with three public functions:
 | `classifyViolations(violations, baseline)` | Return `{ newViolations, baselineViolations, staleCount }` |
 
 `scanResultHandler.js` owns the orchestration: it calls these functions, passes
-the classification to `scanOutputters.js` for rendering, and enforces the exit code.
+the classification to `outputters/index.js` for rendering, and enforces the exit code.
 No scanner changes. No violation pipeline changes.
 
 ---

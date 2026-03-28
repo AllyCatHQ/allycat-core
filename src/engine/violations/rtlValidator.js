@@ -6,11 +6,11 @@
  *
  * Supports both Israeli Standard (IS 5568) and generic WCAG RTL checks.
  *
- * @module utils/rtlValidator
+ * @module engine/violations/rtlValidator
  */
 
-import { findLineNumber } from './sourceMapper.js';
-import { STANDARDS } from '../constants.js';
+import { findLineNumber } from '../../utils/sourceMapper.js';
+import { STANDARDS } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // RTL Violation Factories

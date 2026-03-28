@@ -97,18 +97,18 @@ The tool has two distinct scanning paths selected per invocation:
 ```
 src/index.js (Commander CLI)
   → src/commands/scan.js              # thin orchestrator: config → dispatch → result
-      → src/utils/configLoader.js     # loads a11y-config.json, clamps concurrency to RAM
+      → src/utils/configLoader.js     # loads allycat.config.json, clamps concurrency to RAM
       → src/commands/watchMode.js     # watch mode branch (--watch flag) — does not return
       → src/commands/scanDispatcher.js
           → resolveInputFiles()       # validates target path or builds --changed file list
               → src/utils/fileResolver.js  # glob-based discovery, ignores node_modules/dist/build
           → executeScan()             # selects quick or full scanner, runs the audit
               → quickScanner | fullScanner # runs axe-core, returns raw violations
-                  → src/utils/axeConfig.js          # maps WCAG AA/AAA/Israeli to axe tags
-                  → src/utils/rtlValidator.js       # adds RTL violations if standard requires it
-                  → src/utils/violationProcessor.js # 3-layer line resolution (see below)
+                  → src/utils/axeConfig.js                      # maps WCAG AA/AAA/Israeli to axe tags
+                  → src/engine/violations/rtlValidator.js      # adds RTL violations if standard requires it
+                  → src/engine/violations/violationProcessor.js # 3-layer line resolution (see below)
       → src/commands/scanResultHandler.js
-          → src/commands/scanOutputters.js  # routes to terminal / JSON / summary / HTML report
+          → src/commands/outputters/index.js  # routes to terminal / JSON / summary / HTML report
               → src/engine/report/generator.js  # self-contained HTML report (no external deps)
           → exitOnThreshold()         # enforces --fail-on-critical/serious/any exit codes
 ```
@@ -124,7 +124,7 @@ For JSX/TSX files, `src/engine/transformers/jsxTransformer.js` first converts JS
 
 ### Configuration
 
-Runtime config is stored in `a11y-config.json` (created by `allycat init`):
+Runtime config is stored in `allycat.config.json` (created by `allycat init`):
 - `selectedStandard`: `wcag-aa` | `wcag-aaa` | `israel`
 - `scan.defaultMode`: `quick` | `full`
 - `rules.rtl`: boolean

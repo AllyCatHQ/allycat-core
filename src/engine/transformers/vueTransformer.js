@@ -17,6 +17,7 @@
 
 import { parse, NodeTypes } from '@vue/compiler-dom';
 import { wrapInDocument, escapeAttr, HTML_TAGS, HTML_WRAPPER_OFFSET, registerOrdinalEntry } from './transformerUtils.js';
+import { stripHtmlComments } from '../../utils/cssResolver.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -71,7 +72,7 @@ export function isVueFile(filePath) {
  */
 export function extractStyleBlocks(sourceCode) {
     // Strip HTML comments so commented-out <style> blocks in <template> are ignored
-    const stripped = sourceCode.replace(/<!--[\s\S]*?-->/g, '');
+    const stripped = stripHtmlComments(sourceCode);
     const blocks = [];
     // Match <style> with any optional attributes (scoped, module, lang="scss", etc.)
     const pattern = /<style(?:\s[^>]*)?>([^]*?)<\/style>/gi;

@@ -1,7 +1,7 @@
 # Summary UI Design — Terminal Violation Summary
 
 **Component:** `formatSummary()` in `src/utils/violationFormatter.js`
-**Used by:** `outputSummaryOnly()`, `outputTerminal()`, `outputJsonFile()` in `src/commands/scanOutputters.js`
+**Used by:** `outputSummaryOnly()` in `src/commands/outputters/summaryOutputter.js`, `outputTerminal()` in `src/commands/outputters/terminalOutputter.js`, `outputJsonFile()` in `src/commands/outputters/jsonOutputter.js`
 
 ---
 

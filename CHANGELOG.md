@@ -55,3 +55,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Configuration
 - `allycat.config.json` project config — standard, scan mode, RTL, AI, concurrency
 - Version read dynamically from `package.json` — `--version` always matches the installed package
+
+#### Baseline (--save-baseline / --fail-on-new)
+- `--save-baseline` flag — saves a snapshot of current violations to `allycat-baseline.json`
+- `--fail-on-new` flag — exit code 4 if any violations are found that are not in the saved baseline
+- Composite fingerprint matching — violations matched by rule ID, file, element tag, and stable DOM path
+- Stable canonical selector (`stableSelector`) — deterministic DOM path that survives reordering and duplicate elements
+- Terminal output marks suppressed violations as `[BASELINE]` and new violations as `[NEW]`
+- `allycat-baseline.json` naming follows the `allycat-` prefix convention alongside `allycat.config.json` and `allycat-report.*`
+
+### Changed
+
+#### Architecture
+- Violation processing pipeline unified between quick and full scanner — single code path for line resolution, RTL injection, and output
+- `violationProcessor.js` and `rtlValidator.js` moved to `src/engine/violations/` layer for cleaner separation
+- `scanOutputters.js` split into focused modules under `src/commands/outputters/` (terminal, summary, JSON, index router)
+- `groupByFile` renamed to `countViolationsByFile` to accurately reflect its return shape
+- `stripHtmlComments` extracted from `cssResolver` and reused in `vueTransformer` instead of duplicating logic
+
+### Fixed
+- Duplicate-element baseline false positives — `stableSelector` now produces a stable canonical DOM path so two identical elements on the same page are matched correctly across baseline runs
+- Stale `a11y-config.json` references updated to `allycat.config.json` across CLAUDE.md, test scripts, and all documentation
+- Concurrency hard cap corrected from 3 to 8 in E2E concurrency test to match actual scanner behavior

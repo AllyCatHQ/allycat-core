@@ -4,11 +4,11 @@
  * Converts raw axe-core violation data into formatted result objects.
  * Resolves source line numbers using a 3-layer strategy for JSX/TSX files.
  *
- * @module utils/violationProcessor
+ * @module engine/violations/violationProcessor
  */
 
-import { findLineNumber } from './sourceMapper.js';
-import { HTML_WRAPPER_OFFSET } from '../engine/transformers/jsxTransformer.js';
+import { findLineNumber } from '../../utils/sourceMapper.js';
+import { HTML_WRAPPER_OFFSET } from '../transformers/transformerUtils.js';
 
 // Rules that require a complete HTML document context.
 // These are false positives when scanning JSX/TSX component fragments.
@@ -198,6 +198,53 @@ function resolveLineNumber(
 }
 
 // -----------------------------------------------------------------------------
+// Stable Selector
+// -----------------------------------------------------------------------------
+
+/**
+ * Compute a stable canonical selector for a DOM element.
+ *
+ * axe-core generates the shortest unique selector per element — a single
+ * <button> gets selector "button", but when two <button>s exist both get the
+ * full positional path "body > button:nth-child(n)".  The selector format
+ * therefore changes whenever a sibling is added, breaking composite-key
+ * matching in the baseline even though the original element was never touched.
+ *
+ * This function walks the live DOM from the element up to <body> and builds
+ * a full path using tag:nth-child(n) for every node — always the same format,
+ * regardless of how many siblings exist.
+ *
+ * @param {string}        cssSelector - axe-core CSS selector (node.target[0])
+ * @param {Document|null} domDocument - live DOM for querySelector
+ * @returns {string|null} "body > tag:nth-child(n) > ..." or null if unavailable
+ */
+function computeStableSelector(cssSelector, domDocument) {
+    if (!cssSelector || !domDocument) return null;
+
+    try {
+        const element = domDocument.querySelector(cssSelector);
+        if (!element) return null;
+
+        const parts = [];
+        let current = element;
+
+        while (current && current !== domDocument.body) {
+            const parent = current.parentElement;
+            if (!parent) break;
+
+            const tag = current.tagName.toLowerCase();
+            const position = Array.from(parent.children).indexOf(current) + 1;
+            parts.unshift(`${tag}:nth-child(${position})`);
+            current = parent;
+        }
+
+        return 'body > ' + parts.join(' > ');
+    } catch {
+        return null;
+    }
+}
+
+// -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------
 
@@ -242,6 +289,7 @@ export function createViolationFromNode(
         helpUrl: violation.helpUrl,
         wcagTags: violation.tags.filter(tag => tag.startsWith('wcag')),
         selector: cssSelector,
+        stableSelector: computeStableSelector(cssSelector, domDocument),
         html: htmlSnippet,
         lineNumber,
         failureSummary: node.failureSummary,
@@ -262,21 +310,25 @@ export function createViolationFromNode(
  */
 export function processAxeViolations(
     filePath, violations, sourceContent,
-    lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null
+    lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null,
+    nodeEnhancer = null
 ) {
-    const isJsxContext = lineMap && lineMap.size > 0;
+    // A component context means we have a transformed HTML string (JSX/Vue/Angular).
+    // Plain HTML files pass null for transformedHtml.
+    const isComponentContext = transformedHtml !== null;
     const results = [];
 
     for (const violation of violations) {
-        // Skip document-level rules for JSX/TSX component files.
+        // Skip document-level rules for component files (JSX/TSX/Vue/Angular).
         // A component is a fragment, not a full page — these rules don't apply.
-        if (isJsxContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
+        if (isComponentContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
 
         for (const node of violation.nodes) {
-            results.push(createViolationFromNode(
+            const base = createViolationFromNode(
                 filePath, violation, node, sourceContent,
                 lineMap, transformedHtml, ordinalIndex, domDocument
-            ));
+            );
+            results.push(nodeEnhancer ? nodeEnhancer(base, violation, node) : base);
         }
     }
 
