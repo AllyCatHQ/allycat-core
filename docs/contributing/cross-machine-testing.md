@@ -18,13 +18,14 @@
 
 ### Node.js Versions
 
-From `package.json` `engines: { "node": ">=18.0.0" }`:
+From `package.json` `engines: { "node": ">=20.0.0" }`:
 
 | Version | Status | Notes |
 |---|---|---|
-| Node 18 LTS | Required minimum | Oldest supported — must work |
-| Node 20 LTS | Primary | Current CI standard (GitHub Actions default) |
-| Node 22 LTS | Should pass | Current active LTS as of 2026 |
+| Node 20 LTS | Required minimum | Oldest supported — must work |
+| Node 22 LTS | Primary | Current active LTS as of 2026 |
+
+> Node 18 dropped: reached EOL April 2025. jsdom@28 dependency chain incompatible with Node 18 (`@exodus/bytes` ESM-only).
 
 ### Shell Environments
 
@@ -254,7 +255,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node: ['18', '20', '22']
+        node: ['20', '22']
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -462,14 +463,6 @@ For the complete feature-by-feature test list (all file types, output modes, sta
 
 Run these after switching Node versions (use `nvm use <version>`):
 
-- ⬜ **Node 18 — version check and quick scan**
-  ```bash
-  nvm use 18
-  node --version   # → v18.x.x
-  node src/index.js scan tests/fixtures/sample.html
-  ```
-  Expected: scan completes without syntax errors. ESM imports work. Exit 0.
-
 - ⬜ **Node 20 — version check and full suite**
   ```bash
   nvm use 20
@@ -550,7 +543,7 @@ rm ~/path/to/AllyCat-Core/allycat-1.0.0.tgz
 
 - ⬜ All Section 4 tests pass on Windows (dev machine)
 - ⬜ All Section 4 tests pass on macOS or Linux (second machine / Docker)
-- ⬜ Node 18, 20, 22 all pass quick scan and E2E thresholds test
+- ⬜ Node 20, 22 all pass quick scan and E2E thresholds test
 - ⬜ --full mode (Playwright) works on both Windows and non-Windows
 - ⬜ Chromium-not-found error message is clear and actionable
 - ⬜ BOM / UTF-16 files scanned without garbled output

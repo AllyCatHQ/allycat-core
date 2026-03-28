@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/AllyCatHQ/allycat-core/actions/workflows/ci.yml/badge.svg)](https://github.com/AllyCatHQ/allycat-core/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/badge/npm-v1.0.0-blue.svg)](https://www.npmjs.com/package/allycat)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > The accessibility tool that works the way developers work — terminal, watch mode, CI gates, and AI fix prompts in one.
@@ -64,7 +64,7 @@ full JavaScript execution to render dynamic content.
 
 ## Requirements
 
-- Node.js >= 18.0.0
+- Node.js >= 20.0.0
 - npm >= 9.0.0
 
 > Full scan mode (contrast checking) requires a Chromium browser — download it once with `npx playwright install chromium`.
