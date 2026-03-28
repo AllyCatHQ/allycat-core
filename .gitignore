@@ -6,5 +6,5 @@ allycat.config.json
 allycat-baseline.json
 test-page.html
 test-page2.html
-a11y-report.html
+allycat-report*.html
 docs/private/
