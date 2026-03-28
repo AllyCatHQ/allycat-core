@@ -1,0 +1,48 @@
+name: Cross-Platform
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    name: Node ${{ matrix.node }} / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['18', '20', '22']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Version check
+        run: node src/index.js --version
+
+      - name: Quick scan — HTML fixture
+        run: node src/index.js scan tests/fixtures/sample.html
+
+      - name: E2E — exit code thresholds
+        run: node tests/e2e/thresholds.test.js
+
+      - name: E2E — concurrency ceilings
+        run: node tests/e2e/concurrency.test.js
+
+      - name: Install Playwright Chromium (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: npx playwright install chromium --with-deps
+
+      - name: E2E — CSS delivery (Ubuntu only, requires Playwright)
+        if: matrix.os == 'ubuntu-latest'
+        run: node tests/e2e/css-delivery.test.js
