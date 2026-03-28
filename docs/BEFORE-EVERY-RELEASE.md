@@ -88,7 +88,60 @@ node src/index.js scan tests/fixtures/fail-on-clean.html
 
 ---
 
-## 4. Configuration Accuracy
+## 4. URL Verification
+
+Every URL visible to users — in the README, help output, HTML report, and package.json — must open the correct page.
+
+### `package.json`
+- [ ] `homepage` opens the correct GitHub repo page
+- [ ] `bugs.url` opens the GitHub Issues tab
+- [ ] `repository.url` is the correct git remote
+
+### `README.md`
+- [ ] All badge links open the correct target (npm page, CI workflow, license)
+- [ ] All code example links and external references resolve correctly
+- [ ] No `localhost`, placeholder, or expired URLs remain
+
+### `src/commands/helpContent.js`
+- [ ] Every URL printed in help output (`allycat --help`) opens the correct page
+- [ ] WCAG / IS 5568 reference links resolve
+- [ ] No dead links or placeholder URLs
+
+### `src/engine/report/generator.js` — HTML report
+- [ ] VS Code `vscode://` deep-links are correctly formatted
+- [ ] Any external links in the report (e.g. axe rule references) open the correct pages
+
+---
+
+## 5. Legal & Attribution Check
+
+Verify that all code and assets in the published bundle are legally cleared.
+
+### Dependency licenses
+```bash
+npx license-checker --production --summary
+```
+- [ ] All production dependencies use permissive licenses (MIT, ISC, BSD, Apache 2.0)
+- [ ] No GPL, LGPL, AGPL, or unknown-license packages in `dependencies` (devDependencies are excluded from the bundle)
+- [ ] If any copyleft license appears — stop and investigate before publishing
+
+### Code ownership
+- [ ] No copy-pasted code blocks from Stack Overflow, blog posts, or other projects without attribution
+- [ ] Any code adapted from open-source projects has the original license/author credited in a comment
+- [ ] No AI-generated code that reproduces verbatim copyrighted material
+
+### Assets
+- [ ] `assets/icon.png` — confirm you own or have a license for the logo
+- [ ] `assets/demo.gif` — confirm it only shows your own tool output (no third-party UI)
+- [ ] No fonts, icons, or images embedded in `src/engine/report/generator.js` that require attribution
+
+### axe-core
+- [ ] axe-core is MIT licensed — no special attribution required beyond listing it as a dependency
+- [ ] `axe-core` and `@axe-core/playwright` are in `dependencies` / `devDependencies` correctly
+
+---
+
+## 6. Configuration Accuracy
 
 - [ ] `allycat init` followed by `allycat scan .` works on a fresh project with no existing config
 - [ ] Config fields in generated `allycat.config.json` match what `configLoader.js` actually reads
@@ -97,7 +150,7 @@ node src/index.js scan tests/fixtures/fail-on-clean.html
 
 ---
 
-## 5. Version Bump Decision
+## 7. Version Bump Decision
 
 Decide which type of bump is correct before running `npm version`:
 
@@ -116,7 +169,7 @@ npm version patch   # or minor / major
 
 ---
 
-## 6. Package Content Check
+## 8. Package Content Check
 
 ```bash
 npm pack --dry-run
@@ -128,7 +181,7 @@ npm pack --dry-run
 
 ---
 
-## 7. Final Smoke Test (After Pack, Before Publish)
+## 9. Final Smoke Test (After Pack, Before Publish)
 
 ```bash
 npm pack
@@ -151,7 +204,7 @@ rm allycat-<version>.tgz
 
 ---
 
-## 8. Publish
+## 10. Publish
 
 ```bash
 npm whoami                   # confirm logged in
