@@ -47,7 +47,7 @@ export function saveBaseline(violations, config, scanMode) {
         file:        v.file,
         rule:        v.id,
         fingerprint: fingerprint(v.html),
-        selector:    v.selector,
+        selector:    v.stableSelector ?? v.selector,
         element:     (v.html || '').trim()   // human-readable only — not used for matching
     }));
 
@@ -98,12 +98,13 @@ export function classifyViolations(violations, baseline) {
     const baselineViolations = [];
 
     for (const v of violations) {
-        const fp  = fingerprint(v.html);
+        const fp        = fingerprint(v.html);
+        const vselector = v.stableSelector ?? v.selector;
         const idx = available.findIndex(
             e => e.file        === v.file &&
                  e.rule        === v.id   &&
                  e.fingerprint === fp     &&
-                 e.selector    === v.selector
+                 e.selector    === vselector
         );
 
         if (idx !== -1) {
