@@ -325,7 +325,7 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases, AxeB
             .withTags(getAxeTags(config))
             .analyze();
 
-        const domDocument = isComponent ? buildQueryDocument(scanContent) : null;
+        const domDocument = buildQueryDocument(scanContent);
         violations.push(...processAxeViolations(
             filePath,
             axeResults.violations,
