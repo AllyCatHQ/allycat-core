@@ -19,6 +19,38 @@
 
 ---
 
+## Table of Contents
+
+- [Features](#features)
+- [Why AllyCat vs @axe-core/cli](#why-allycat-vs-axe-corecli)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Commands](#commands)
+  - [allycat init](#allycat-init)
+  - [allycat scan](#allycat-scan-target)
+  - [allycat help](#allycat-help-topic)
+- [Configuration](#configuration)
+- [Supported File Types](#supported-file-types)
+- [Parallel Scanning & Performance](#parallel-scanning--performance)
+- [Accessibility Standards](#accessibility-standards)
+- [Output Formats](#output-formats)
+- [CI/CD Integration](#cicd-integration)
+  - [Exit Codes](#exit-codes)
+  - [Violation Baseline](#violation-baseline)
+  - [GitHub Actions](#github-actions)
+  - [GitLab CI](#gitlab-ci)
+  - [Jenkins](#jenkins)
+- [Path Handling](#path-handling)
+- [Troubleshooting](#troubleshooting)
+- [Project Structure](#project-structure)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+
+---
+
 ## Features
 
 | Feature | Description |
