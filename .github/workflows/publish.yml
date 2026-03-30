@@ -1,0 +1,47 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+
+      - name: Validate package contents
+        run: |
+          npm pack --dry-run 2>&1 | tee pack-preview.txt
+          # Fail if any test fixtures or dotfiles sneak in
+          if grep -E '(tests/|\.env|\.DS_Store)' pack-preview.txt; then
+            echo "❌ Unexpected files in package — check the 'files' field in package.json"
+            exit 1
+          fi
+          echo "✓ Package contents look clean"
+
+      - name: E2E — exit code thresholds
+        run: node tests/e2e/thresholds.test.js
+
+      - name: E2E — concurrency ceilings
+        run: node tests/e2e/concurrency.test.js
+
+      - name: Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
