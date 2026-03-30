@@ -7,7 +7,7 @@
     "allycat": "./src/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node tests/e2e/thresholds.test.js && node tests/e2e/concurrency.test.js",
     "dev": "node ./src/index.js",
     "lint": "eslint src/"
   },
