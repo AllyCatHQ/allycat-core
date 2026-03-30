@@ -36,8 +36,20 @@ function buildConcurrencyPresets(ceiling) {
 // Command
 // -----------------------------------------------------------------------------
 
+const ASCII_CAT = `  
+⠀   ⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⠀⠀⠀
+⠀   ⣿⣿⣿⣦⡀⠀⢀⣀⣀⣀⡀⢀⣴⣿⣿⣿⠀⠀⠀
+⠀   ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀
+   ⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡀⠀⠀
+   ⢸⣿⣿⡿⠋⣉⠙⢿⣿⣿⣿⡙⢿⠟⣹⣿⣿⡇⠀⠀
+   ⢸⣿⣿⡇⠸⣿⠇⢸⣿⣿⣿⠟⣠⡘⢿⣿⣿⡇⠀⠀
+   ⠘⣿⣿⣿⣷⣶⣾⣿⣿⣿⣿⣾⣿⣿⣾⣿⣿⠃⠀⠀
+⠀   ⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀
+⠀⠀   ⠀⠀⠙⠛⠿⠿⣿⣿⠿⠿⠛⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+`;
+
 export async function initCommand() {
-    console.log('');
+    console.log(ASCII_CAT);
     p.intro(`${chalk.bgBlue.white(UI.INTRO_SETUP)}`);
 
     // Read existing concurrency before overwrite — used as fallback if user rejects a custom override.
