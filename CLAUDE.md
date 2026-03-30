@@ -89,8 +89,8 @@ There is no build, lint, or format step configured.
 
 The tool has two distinct scanning paths selected per invocation:
 
-- **Quick scanner** (`src/engine/scanners/quickScanner.js`): JSDOM-based, ~1s per file, no contrast checking, default concurrency = 5
-- **Full scanner** (`src/engine/scanners/fullScanner.js`): Playwright/Chromium-based, full contrast checking, concurrency capped at 3
+- **Quick scanner** (`src/engine/scanners/quickScanner.js`): JSDOM-based, ~1s per file, no contrast checking, concurrency auto-computed (RAM/CPU-aware)
+- **Full scanner** (`src/engine/scanners/fullScanner.js`): Playwright/Chromium-based, full contrast checking, concurrency capped at 8
 
 ### Request Flow
 

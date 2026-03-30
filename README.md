@@ -635,9 +635,14 @@ allycat/
 │   ├── engine/
 │   │   ├── scanners/
 │   │   │   ├── quickScanner.js        # JSDOM-based scanner (parallel, p-limit)
-│   │   │   └── fullScanner.js         # Playwright-based scanner
+│   │   │   ├── fullScanner.js         # Playwright-based scanner
+│   │   │   ├── cssInjector.js         # CSS collection for full scan
+│   │   │   ├── rtlRunner.js           # RTL compliance runner (Playwright)
+│   │   │   └── scannerUtils.js        # Shared scanner utilities (file type detection)
 │   │   ├── transformers/
 │   │   │   ├── jsxTransformer.js      # JSX/TSX → HTML transformer (Babel)
+│   │   │   ├── jsxRenderer.js         # JSX AST → HTML rendering
+│   │   │   ├── jsxAttributeMapper.js  # React attribute normalization
 │   │   │   ├── vueTransformer.js      # Vue SFC → HTML transformer
 │   │   │   ├── angularTransformer.js  # Angular .component.html transformer
 │   │   │   ├── angularTsExtractor.js  # Angular inline template extractor
@@ -653,6 +658,7 @@ allycat/
 │   │       └── promptGenerator.js     # AI fix prompt builder
 │   └── utils/
 │       ├── configLoader.js            # Config load, save, RAM-aware concurrency clamping
+│       ├── baselineManager.js         # Baseline save/load/matching (SHA-256 fingerprinting)
 │       ├── fileResolver.js            # File discovery & extension filtering
 │       ├── fileUtils.js               # BOM-aware file reading (UTF-16 + UTF-8)
 │       ├── pathUtils.js               # Cross-platform path normalization
