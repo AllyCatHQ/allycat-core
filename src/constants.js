@@ -32,8 +32,8 @@ export const STANDARDS = {
 
 export const UI = {
     DIVIDER:             '─'.repeat(60),
-    INTRO_SCAN:          ' AllyCat Scan ',
-    INTRO_SETUP:         ' AllyCat Setup ',
+    INTRO_SCAN:          ' 🐾 AllyCat Scan ',
+    INTRO_SETUP:         ' 🐾 AllyCat Setup ',
     SCAN_LABEL_FULL:     'Full (with contrast)',
     SCAN_LABEL_QUICK:    'Quick (no contrast)',
     SCAN_LABEL_QUICK_FAST: 'Quick (fast)',
