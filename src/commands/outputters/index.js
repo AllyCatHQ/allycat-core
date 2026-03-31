@@ -37,7 +37,7 @@ export function outputResults(violations, config, scanMode, options, warnings = 
     } else if (options.output === 'json') {
         outputJson(violations, config, scanMode, warnings);
     } else if (options.summary) {
-        outputSummaryOnly(violations, scanMode, warnings);
+        outputSummaryOnly(violations, scanMode, warnings, options.summaryStyle);
     } else if (baselineResult) {
         outputTerminalWithBaseline(baselineResult, scanMode, options);
     } else {
