@@ -187,6 +187,13 @@ allycat scan ./src/pages/Home.tsx
 | `--changed` | `-c` | Scan only files changed since the last git commit |
 | `--watch` | `-w` | Watch for file changes and re-scan automatically |
 | `--existing` | `-e` | In watch mode: show full details of pre-existing violations on startup (default: counts only) |
+| `--ci` | | CI preset: activates all `--no-*` flags + `--summary-style compact` + `--fail-on-critical` |
+| `--no-snippet` | | Hide HTML snippet per violation |
+| `--no-help` | | Hide help text per violation |
+| `--no-wcag` | | Hide WCAG tags per violation |
+| `--no-selector` | | Hide element selector per violation |
+| `--no-affected` | | Hide affected element count per violation |
+| `--summary-style <style>` | | Summary display style: `default` (box) or `compact` (single line) |
 
 #### Examples
 
@@ -502,6 +509,53 @@ allycat scan --fail-on-new --fail-on-critical
 > Matching uses a composite key: file + rule + SHA-256(element HTML) + CSS selector.
 > No line numbers — stable across any edit that doesn't touch the element itself.
 
+### CI Mode
+
+The `--ci` flag is a single-flag preset for pipeline use. It strips developer-focused output noise and sets `--fail-on-critical`:
+
+```bash
+allycat scan --ci
+```
+
+Equivalent to:
+
+```bash
+allycat scan \
+  --no-snippet \
+  --no-help \
+  --no-wcag \
+  --no-selector \
+  --no-affected \
+  --summary-style compact \
+  --fail-on-critical
+```
+
+Output in CI mode:
+
+```
+✖ 3 violations (2 critical, 1 serious) in 2 files
+
+  CRITICAL  Image missing alt text
+    Rule: image-alt  ·  src/components/Hero.jsx:14
+
+  CRITICAL  Button has no accessible name
+    Rule: button-name  ·  src/App.jsx:32
+
+  SERIOUS  Link has no discernible text
+    Rule: link-name  ·  src/layout/Nav.jsx:8
+```
+
+Apply flags individually for partial suppression:
+
+| Flag | Effect |
+|---|---|
+| `--no-snippet` | Hide HTML snippet per violation |
+| `--no-help` | Hide help text per violation |
+| `--no-wcag` | Hide WCAG tags per violation |
+| `--no-selector` | Hide element selector per violation |
+| `--no-affected` | Hide affected element count per violation |
+| `--summary-style compact` | Single-line summary instead of the bordered box |
+
 ---
 
 ### GitHub Actions
@@ -529,7 +583,7 @@ jobs:
         run: npm install -g allycat
 
       - name: Run accessibility scan
-        run: allycat scan --fail-on-critical --json-file allycat-report
+        run: allycat scan --ci --json-file allycat-report
 
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -546,7 +600,7 @@ accessibility:
   script:
     - npm ci
     - npm install -g allycat
-    - allycat scan --fail-on-critical --json-file allycat-report
+    - allycat scan --ci --json-file allycat-report
   artifacts:
     paths:
       - allycat-report.json
@@ -558,7 +612,7 @@ accessibility:
 stage('Accessibility') {
   steps {
     sh 'npm install -g allycat'
-    sh 'allycat scan --fail-on-critical --json-file allycat-report'
+    sh 'allycat scan --ci --json-file allycat-report'
     archiveArtifacts artifacts: 'allycat-report.json'
   }
 }
