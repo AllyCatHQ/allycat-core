@@ -30,6 +30,17 @@ export async function scanCommand(target = null, options = {}) {
 
     if (target) target = expandUserPath(target);
 
+    // --ci preset: expand into constituent flags before any other code reads options
+    if (options.ci) {
+        options.snippet       = false;
+        options.help          = false;
+        options.wcag          = false;
+        options.selector      = false;
+        options.affected      = false;
+        options.summaryStyle  = 'compact';
+        options.failOnCritical = true;
+    }
+
     // Pass 1: Load with quick mode to read defaultMode; concurrency is re-clamped in pass 2.
     const preliminaryConfig = loadConfig(SCAN_MODES.QUICK);
 

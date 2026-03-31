@@ -77,6 +77,13 @@ program
   .option('-e, --existing', 'In watch mode: show full details of pre-existing violations on startup (default: counts only)')
   .option('--save-baseline', 'Save all current violations as a baseline — exits 0 always')
   .option('--fail-on-new', 'Exit code 4 if any violation is not in the baseline (requires --save-baseline to have been run first)')
+  .option('--no-snippet', 'Hide HTML snippet per violation')
+  .option('--no-help', 'Hide help text per violation')
+  .option('--no-wcag', 'Hide WCAG tags per violation')
+  .option('--no-selector', 'Hide element selector per violation')
+  .option('--no-affected', 'Hide affected element count per violation')
+  .option('--summary-style <style>', 'Summary display style: default, compact', 'default')
+  .option('--ci', 'CI preset: compact output + fail on critical (activates --no-snippet, --no-help, --no-wcag, --no-selector, --no-affected, --summary-style compact, --fail-on-critical)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan
@@ -112,6 +119,10 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} allycat scan --save-baseline      ${chalk.dim('# Snapshot all current violations to allycat-baseline.json')}
   ${chalk.cyan('$')} allycat scan --fail-on-new         ${chalk.dim('# Exit 4 if any violation is not in the baseline')}
   ${chalk.cyan('$')} allycat scan --fail-on-new --fail-on-critical ${chalk.dim('# Combine baseline gate with severity gate')}
+  ${chalk.cyan('$')} allycat scan --ci                  ${chalk.dim('# CI preset: compact output + fail on critical')}
+  ${chalk.cyan('$')} allycat scan --ci --fail-on-any    ${chalk.dim('# CI preset with strictest gate')}
+  ${chalk.cyan('$')} allycat scan --no-snippet --no-wcag ${chalk.dim('# Hide snippets and WCAG tags only')}
+  ${chalk.cyan('$')} allycat scan --summary-style compact ${chalk.dim('# Single-line summary')}
 `)
   .action((target, options) => scanCommand(target, options));
 
