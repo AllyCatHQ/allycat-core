@@ -338,7 +338,7 @@ For the complete feature-by-feature test list (all file types, output modes, sta
 
 ## 5. Platform-Specific Edge Cases
 
-### 6a. Path Separators (Windows vs macOS/Linux)
+### 5a. Path Separators (Windows vs macOS/Linux)
 
 - ⬜ **Backslash path on Windows**
   ```powershell
@@ -368,7 +368,7 @@ For the complete feature-by-feature test list (all file types, output modes, sta
   ```
   Expected: file found and scanned. Exit 0.
 
-### 6b. BOM-Encoded Files (Windows — ISSUE-001)
+### 5b. BOM-Encoded Files (Windows — ISSUE-001)
 
 - ⬜ **UTF-8 BOM file scanned correctly**
   ```bash
@@ -398,7 +398,7 @@ For the complete feature-by-feature test list (all file types, output modes, sta
   > **Note:** Never create test fixture files with the Write tool on this Windows machine —
   > it writes UTF-16 LE. Always use `node -e "require('fs').writeFileSync(..., 'utf8')"`.
 
-### 6c. Playwright Chromium Install Path Differences
+### 5c. Playwright Chromium Install Path Differences
 
 | OS | Chromium cache location |
 |---|---|
@@ -427,7 +427,7 @@ For the complete feature-by-feature test list (all file types, output modes, sta
   Expected: clear error message: "Chromium not found — run: `npx playwright install chromium`".
   Does not print a raw Node.js stack trace. Exits non-zero.
 
-### 6d. npm link / Global Install Paths
+### 5d. npm link / Global Install Paths
 
 - ⬜ **npm link — binary resolves correctly**
   ```bash

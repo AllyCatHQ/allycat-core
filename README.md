@@ -186,7 +186,7 @@ allycat scan ./src/pages/Home.tsx
 | `--fail-on-new` | | Exit code 4 if any violation is not in the saved baseline |
 | `--changed` | `-c` | Scan only files changed since the last git commit |
 | `--watch` | `-w` | Watch for file changes and re-scan automatically |
-| `--existing` | `-e` | In watch mode: show full details of pre-existing violations on startup (default: counts only) |
+| `--existing` | `-e` | In watch mode: show full details of pre-existing violations on startup (default: counts only) (requires `--watch`) |
 | `--ci` | | CI preset: activates all `--no-*` flags + `--summary-style compact` + `--fail-on-critical` |
 | `--no-snippet` | | Hide HTML snippet per violation |
 | `--no-help` | | Hide help text per violation |
@@ -737,7 +737,7 @@ allycat/
 
 Features planned or in progress:
 
-- **`--report` flag** — Expose the HTML report as a standalone CLI flag (`allycat scan --report`) so it can be generated without enabling `ai.enabled` in config.
+- **`--report` flag** — Expose the HTML report as a standalone CLI flag (`allycat scan --report`, not yet implemented) so it can be generated without enabling `ai.enabled` in config.
 - **UI preferences** — Per-project control over summary style and which violation fields are shown in terminal output, configurable via `allycat init ui`.
 - **Config validation** — Warn on unknown or misspelled keys in `allycat.config.json` instead of silently falling back to defaults.
 
