@@ -6,7 +6,7 @@
  */
 
 import { STANDARDS } from '../../constants.js';
-import { createRtlViolation } from '../violations/rtlValidator.js';
+import { createRtlViolation, RTL_LANG_PREFIXES, isRtlLanguage } from '../violations/rtlValidator.js';
 import { findLineNumber } from '../../utils/sourceMapper.js';
 
 /**
@@ -22,9 +22,18 @@ import { findLineNumber } from '../../utils/sourceMapper.js';
  */
 export async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, ordinalIndex, selectedStandard) {
     if (isComponent) {
+        // Step 1: dir="rtl" declared anywhere → compliant
         const hasRtl = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
         if (hasRtl) return null;
 
+        // Step 2: No RTL lang attribute anywhere → no RTL obligation in this component
+        const hasRtlLang = await page.evaluate((prefixes) => {
+            const selector = prefixes.map(l => `[lang^="${l}"]`).join(',');
+            return !!document.querySelector(selector);
+        }, RTL_LANG_PREFIXES);
+        if (!hasRtlLang) return null;
+
+        // Step 3: RTL language present but no dir declaration → genuine violation
         const rootInfo = await page.evaluate(() => {
             const root = document.body?.firstElementChild;
             return root
@@ -44,10 +53,16 @@ export async function checkRtlCompliancePlaywright(page, filePath, sourceContent
         return createRtlViolation(selectedStandard, filePath, rootInfo.html, lineNumber, rootInfo.tag, helpText);
     }
 
-    // Plain HTML file — check <html> element directly
-    const hasRtl = await page.evaluate(() => document.documentElement.getAttribute('dir') === 'rtl');
-    if (hasRtl) return null;
+    // Plain HTML file — apply 3-step algorithm
+    // Step 1: dir="rtl" declared anywhere → compliant
+    const hasRtlAnywhere = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
+    if (hasRtlAnywhere) return null;
 
+    // Step 2: Page language is not RTL → no obligation
+    const htmlLang = await page.evaluate(() => document.documentElement?.getAttribute('lang') ?? '');
+    if (!isRtlLanguage(htmlLang)) return null;
+
+    // Step 3: RTL-primary page with no dir declarations → genuine violation
     return createRtlViolation(
         selectedStandard,
         filePath,

@@ -13,6 +13,26 @@ import { findLineNumber } from '../../utils/sourceMapper.js';
 import { STANDARDS } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
+// RTL Language Detection
+// -----------------------------------------------------------------------------
+
+/** ISO 639-1/3 language codes whose primary script is right-to-left. */
+export const RTL_LANG_PREFIXES = ['he', 'ar', 'fa', 'ur', 'yi', 'dv', 'ps', 'sd', 'ug'];
+
+/**
+ * Returns true when a lang attribute value indicates an RTL language.
+ * Handles region subtags (e.g. "he-IL", "ar-SA") by comparing only the base tag.
+ *
+ * @param {string|null|undefined} lang
+ * @returns {boolean}
+ */
+export function isRtlLanguage(lang) {
+    if (!lang) return false;
+    const base = lang.toLowerCase().split('-')[0];
+    return RTL_LANG_PREFIXES.includes(base);
+}
+
+// -----------------------------------------------------------------------------
 // RTL Violation Factories
 // -----------------------------------------------------------------------------
 
@@ -68,9 +88,14 @@ export function createRtlViolation(selectedStandard, filePath, htmlOpenTag, line
 // -----------------------------------------------------------------------------
 
 export function checkRtlCompliance(document, filePath, sourceContent, htmlOpenTag, selectedStandard) {
-    const htmlElement = document.documentElement;
-    const hasRtlDirection = htmlElement && htmlElement.getAttribute('dir') === 'rtl';
-    if (hasRtlDirection) return null;
+    // Step 1: dir="rtl" declared anywhere (scoped or global) → compliant
+    if (document.querySelector('[dir="rtl"]')) return null;
+
+    // Step 2: Page language is not RTL → no obligation to declare RTL direction
+    const htmlLang = document.documentElement?.getAttribute('lang');
+    if (!isRtlLanguage(htmlLang)) return null;
+
+    // Step 3: RTL-primary page with no dir declarations → genuine violation
     return createRtlViolation(selectedStandard, filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
 }
 
@@ -90,9 +115,14 @@ export function checkRtlCompliance(document, filePath, sourceContent, htmlOpenTa
  * @returns {Object|null}
  */
 export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinalIndex, selectedStandard) {
-    const anyRtlElement = document.querySelector('[dir="rtl"]');
-    if (anyRtlElement) return null;
+    // Step 1: dir="rtl" declared anywhere → compliant
+    if (document.querySelector('[dir="rtl"]')) return null;
 
+    // Step 2: No element carries an RTL lang attribute → no RTL obligation in this component
+    const rtlLangSelector = RTL_LANG_PREFIXES.map(l => `[lang^="${l}"]`).join(',');
+    if (!document.querySelector(rtlLangSelector)) return null;
+
+    // Step 3: RTL language present but no dir declaration → genuine violation
     const rootElement = document.body?.firstElementChild;
     const rootTag = rootElement ? rootElement.tagName.toLowerCase() : 'div';
     const rootHtml = rootElement
