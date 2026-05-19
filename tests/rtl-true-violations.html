@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--
+  RTL TRUE VIOLATIONS FIXTURE
+  ===========================
+  Context: A Hebrew-first online store checkout page built without RTL in mind.
+  Purpose: Verifies that checkRtlCompliance correctly fires on a page that has
+           Hebrew content but NO dir="rtl" anywhere — not on <html>, not on any
+           sub-element.
+
+  Expected violations under Israeli Standard (--standard israel):
+    ✗ israel-rtl   — <html lang="he"> with no dir="rtl" anywhere in the document.
+                     The entire page is Hebrew UI with no directional attributes set.
+
+  NOT an edge case — this is a genuine RTL compliance failure.
+  All violations listed here should be REAL (true positives).
+-->
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>קופה — חנות הספרים המקוונת</title>
+  <style>
+    /* No direction CSS either — direction is fully absent from this page. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Arial Hebrew", Arial, sans-serif;
+      background: #f8f8f8;
+      color: #1a1a1a;
+      line-height: 1.7;
+      padding: 24px;
+    }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { font-size: 1.8rem; margin-bottom: 16px; }
+    h2 { font-size: 1.2rem; margin: 24px 0 12px; color: #2c3e8a; }
+    label { display: block; font-size: 0.9rem; margin-bottom: 4px; font-weight: 600; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+    }
+    .product-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .total { font-weight: bold; font-size: 1.1rem; margin-top: 16px; }
+    .btn-submit {
+      background: #2c3e8a;
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .error-msg { color: #c0392b; font-size: 0.88rem; margin-top: -10px; margin-bottom: 10px; }
+    nav a { margin-left: 16px; color: #2c3e8a; text-decoration: none; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <!--
+    ISSUE-008 — No dir="rtl" on <html> and no dir="rtl" anywhere in the document.
+    The entire UI is Hebrew. Text will render in wrong direction in browsers without
+    automatic bidirectional detection.
+  -->
+
+  <!-- Navigation — Hebrew labels, no direction -->
+  <nav aria-label="ניווט ראשי">
+    <a href="/">דף הבית</a>
+    <a href="/catalog">קטלוג</a>
+    <a href="/cart">עגלת הקניות</a>
+    <a href="/account">החשבון שלי</a>
+  </nav>
+
+  <div class="container">
+    <main id="main-content">
+      <h1>סיכום הזמנה</h1>
+
+      <!-- Order summary — Hebrew content, no direction set -->
+      <section aria-labelledby="order-heading">
+        <h2 id="order-heading">פרטי ההזמנה</h2>
+
+        <div class="product-row">
+          <span>מבוא לתכנות ב-Python — מהדורה שלישית</span>
+          <span>₪89.00</span>
+        </div>
+        <div class="product-row">
+          <span>עיצוב ממשקים נגישים — מדריך מעשי</span>
+          <span>₪124.00</span>
+        </div>
+        <div class="product-row">
+          <span>תורת הגרפים ויישומיה</span>
+          <span>₪67.50</span>
+        </div>
+
+        <p class="total">סה"כ לתשלום: ₪280.50</p>
+      </section>
+
+      <!-- Checkout form — labels and placeholders in Hebrew, no dir attribute anywhere -->
+      <section aria-labelledby="delivery-heading">
+        <h2 id="delivery-heading">פרטי משלוח</h2>
+
+        <form action="/checkout" method="post" novalidate>
+          <!--
+            Each label and input pair is in Hebrew. Without dir="rtl" the browser
+            may render the placeholder text and typed content in LTR alignment,
+            creating a confusing experience for Hebrew users.
+          -->
+
+          <label for="full-name">שם מלא</label>
+          <input type="text" id="full-name" name="full_name" placeholder="לדוגמה: ישראל ישראלי" autocomplete="name" required />
+
+          <label for="street">כתובת — רחוב ומספר</label>
+          <input type="text" id="street" name="street" placeholder="רחוב הרצל 12, דירה 3" autocomplete="street-address" required />
+
+          <label for="city">עיר</label>
+          <input type="text" id="city" name="city" placeholder="תל אביב" autocomplete="address-level2" required />
+
+          <label for="zip">מיקוד</label>
+          <!--
+            A 5-digit zip code is LTR by nature, but the label is Hebrew.
+            Without explicit direction on the parent form, the layout is unpredictable.
+          -->
+          <input type="text" id="zip" name="zip" placeholder="6100000" inputmode="numeric" maxlength="7" />
+
+          <label for="phone">מספר טלפון</label>
+          <input type="tel" id="phone" name="phone" placeholder="050-0000000" autocomplete="tel" required />
+
+          <label for="delivery-notes">הוראות מיוחדות למשלוח</label>
+          <textarea id="delivery-notes" name="delivery_notes" rows="3" placeholder="לדוגמה: להשאיר בתיבת הדואר אם לא נמצא בבית"></textarea>
+        </form>
+      </section>
+
+      <!-- Payment section — Hebrew UI, no direction -->
+      <section aria-labelledby="payment-heading">
+        <h2 id="payment-heading">תשלום</h2>
+
+        <form action="/pay" method="post">
+          <label for="card-number">מספר כרטיס אשראי</label>
+          <input type="text" id="card-number" name="card_number" placeholder="XXXX XXXX XXXX XXXX" inputmode="numeric" autocomplete="cc-number" required />
+          <p class="error-msg" role="alert" aria-live="polite"></p>
+
+          <label for="card-expiry">תוקף</label>
+          <input type="text" id="card-expiry" name="card_expiry" placeholder="MM/YY" inputmode="numeric" autocomplete="cc-exp" required />
+
+          <label for="card-cvv">CVV</label>
+          <input type="text" id="card-cvv" name="card_cvv" placeholder="3 ספרות" inputmode="numeric" autocomplete="cc-csc" required />
+
+          <label for="payment-method">שיטת תשלום</label>
+          <select id="payment-method" name="payment_method">
+            <option value="credit">כרטיס אשראי</option>
+            <option value="paypal">PayPal</option>
+            <option value="bit">Bit</option>
+          </select>
+
+          <button type="submit" class="btn-submit">אישור וביצוע תשלום</button>
+        </form>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>שירות לקוחות: support@bookstore-he.co.il | 03-0000000</p>
+      <p>כל הזכויות שמורות © 2026 חנות הספרים המקוונת</p>
+    </footer>
+  </div>
+</body>
+</html>
