@@ -291,6 +291,7 @@ export const GITHUB_ACTIONS_SNIPPET =
           run: allycat scan --fail-on-critical --json-file allycat-report
 
         - name: Upload report
+          if: always()
           uses: actions/upload-artifact@v4
           with:
             name: accessibility-report
