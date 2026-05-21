@@ -139,9 +139,9 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
         </div>
     </div>
     <div class="header-right">
-        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
-            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Switch to light mode">
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         </button>
         <div class="header-meta">
             <div>Standard: ${escapeHtml(standard)}</div>
@@ -158,7 +158,7 @@ function buildSidebar(files, byFile) {
         const name  = path.basename(file);
         const dir   = path.dirname(file);
         return `
-        <div class="file-tab ${i === 0 ? 'active' : ''}" onclick="switchTab(${i})" data-index="${i}" data-filename="${escapeHtml(name.toLowerCase())}">
+        <div role="button" tabindex="0" class="file-tab ${i === 0 ? 'active' : ''}" onclick="switchTab(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchTab(${i})}" data-index="${i}" data-filename="${escapeHtml(name.toLowerCase())}" aria-current="${i === 0 ? 'true' : 'false'}">
             <div class="file-tab-name">${escapeHtml(name)}</div>
             <div class="file-tab-path">${escapeHtml(dir)}</div>
             <span class="file-tab-badge">${count}</span>
@@ -173,6 +173,7 @@ function buildSidebar(files, byFile) {
                 id="sidebar-search"
                 type="text"
                 placeholder="Filter files…"
+                aria-label="Filter files"
                 oninput="filterSidebar(this.value)"
                 autocomplete="off"
                 spellcheck="false"
@@ -182,7 +183,7 @@ function buildSidebar(files, byFile) {
         <div class="sidebar-files" id="sidebar-files">
             ${tabs}
         </div>
-        <div class="sidebar-empty" id="sidebar-empty">No files match</div>
+        <div class="sidebar-empty" id="sidebar-empty" role="status" aria-live="polite">No files match</div>
     </nav>`;
 }
 
@@ -203,7 +204,7 @@ function buildPanels(files, byFile, promptMap) {
         const headerActions = prompt ? `
                 <div class="panel-header-right">
                     <button class="copy-pill" onclick="copyPrompt(${i}, this)">✦ Copy AI Prompt</button>
-                    <button class="expand-pill" onclick="openModal(${i})">⛶ Full View</button>
+                    <button class="expand-pill" onclick="openModal(${i})" aria-label="Open full prompt in a modal view">⛶ Full View</button>
                 </div>` : '';
 
         const promptSection = prompt ? buildPromptSection(prompt, i) : '';
@@ -222,7 +223,7 @@ function buildPanels(files, byFile, promptMap) {
             <div class="violations-wrap" id="violations-${i}">
                 ${cards}
             </div>
-            <div class="no-results" id="no-results-${i}">No violations match this filter</div>
+            <div class="no-results" id="no-results-${i}" role="status" aria-live="polite">No violations match this filter</div>
         </div>`;
     }).join('');
 }
@@ -259,11 +260,11 @@ function buildFilterBar(counts, panelIndex, violations) {
     const impactRow = showImpact ? `
         <div class="filter-row">
             <span class="filter-label">Severity:</span>
-            <button class="filter-btn active" data-filter="all" data-filter-type="impact" onclick="filterPanel(${panelIndex}, 'all', 'impact', this)">
+            <button class="filter-btn active" data-filter="all" data-filter-type="impact" aria-pressed="true" onclick="filterPanel(${panelIndex}, 'all', 'impact', this)">
                 All<span class="filter-count">${total}</span>
             </button>
             ${levels.map(l => `
-            <button class="filter-btn" data-filter="${l.key}" data-filter-type="impact" onclick="filterPanel(${panelIndex}, '${l.key}', 'impact', this)">
+            <button class="filter-btn" data-filter="${l.key}" data-filter-type="impact" aria-pressed="false" onclick="filterPanel(${panelIndex}, '${l.key}', 'impact', this)">
                 ${l.label}<span class="filter-count">${counts[l.key]}</span>
             </button>`).join('')}
         </div>` : '';
@@ -271,11 +272,11 @@ function buildFilterBar(counts, panelIndex, violations) {
     const wcagRow = showWcag ? `
         <div class="filter-row">
             <span class="filter-label">WCAG:</span>
-            <button class="filter-btn active" data-filter="all" data-filter-type="wcag" onclick="filterPanel(${panelIndex}, 'all', 'wcag', this)">
+            <button class="filter-btn active" data-filter="all" data-filter-type="wcag" aria-pressed="true" onclick="filterPanel(${panelIndex}, 'all', 'wcag', this)">
                 All<span class="filter-count">${total}</span>
             </button>
             ${wcagTags.map(({ tag, count }) => `
-            <button class="filter-btn" data-filter="${escapeHtml(tag)}" data-filter-type="wcag" onclick="filterPanel(${panelIndex}, '${escapeHtml(tag)}', 'wcag', this)">
+            <button class="filter-btn" data-filter="${escapeHtml(tag)}" data-filter-type="wcag" aria-pressed="false" onclick="filterPanel(${panelIndex}, '${escapeHtml(tag)}', 'wcag', this)">
                 ${escapeHtml(tag)}<span class="filter-count">${count}</span>
             </button>`).join('')}
         </div>` : '';
@@ -298,7 +299,7 @@ function buildPromptSection(prompt, index) {
             </div>
             <div class="prompt-bar-actions">
                 <button class="copy-btn" onclick="copyPrompt(${index}, this)">Copy</button>
-                <button class="expand-btn" title="Open full prompt (readable view)" onclick="openModal(${index})">⛶</button>
+                <button class="expand-btn" aria-label="Open full prompt in a readable view" onclick="openModal(${index})">⛶</button>
             </div>
         </div>
         <div class="prompt-preview-wrap">
@@ -340,7 +341,7 @@ function buildViolationCard(v) {
             <div class="vfield-full">
                 <div class="vfield-label">How to fix</div>
                 <div class="vfield-value">${escapeHtml(v.help)}${v.helpUrl
-                    ? ` <a class="help-link" href="${escapeHtml(v.helpUrl)}" target="_blank">Learn more ↗</a>`
+                    ? ` <a class="help-link" href="${escapeHtml(v.helpUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Learn more about this rule (opens in new tab)">Learn more ↗</a>`
                     : ''}</div>
             </div>
         </div>
@@ -358,7 +359,7 @@ function buildModal() {
             </div>
             <div class="modal-actions">
                 <button class="modal-copy-btn" id="modal-copy-btn" onclick="copyModalPrompt(this)">Copy Prompt</button>
-                <button class="modal-close" onclick="closeModal()" title="Close (Esc)">✕</button>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close modal">✕</button>
             </div>
         </div>
         <div class="modal-body" id="modal-body"></div>
