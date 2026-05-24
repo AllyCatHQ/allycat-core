@@ -1,6 +1,6 @@
 # AllyCat: Cross-Machine Testing Guide
 
-> Last updated: 2026-03-09
+> Last updated: 2026-05-24
 > Status legend: ✅ Done · ⬜ Still needed · 🔴 Blocker · 🟡 Should do · 🔵 Nice to have
 
 ---
@@ -177,10 +177,11 @@ Docker provides a clean Linux environment on any host OS (Windows, macOS, Linux)
 Create this file temporarily at the project root (do not commit it — it is not needed in the repo):
 
 ```dockerfile
-# Save as: Dockerfile.crosstest (do not commit)
+# Save as: Dockerfile.crosstest (do not commit — already in .gitignore)
 FROM node:20-bookworm-slim
 
-# Install Playwright system dependencies
+# Playwright system dependencies
+# Note: use libasound2 (not libasound2t64 — that is Debian 13/Trixie only)
 RUN apt-get update && apt-get install -y \
     libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
     libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 \
@@ -189,21 +190,23 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy the packed tarball (run npm pack first)
+# Install from tarball (simulates a real npm install -g)
 COPY allycat-*.tgz ./
-
-# Install globally from tarball
 RUN npm install -g allycat-*.tgz
 
 # Install Playwright Chromium inside the container
 RUN npx playwright install chromium --with-deps
 
-# Copy test fixtures into a test project directory
-COPY tests/fixtures/ /test-project/
+# Install local node_modules so `node src/index.js` works in e2e test scripts
+COPY package.json package-lock.json /app/
+RUN npm ci --omit=dev
 
-WORKDIR /test-project
+# Copy fixtures and E2E tests for in-container testing
+COPY tests/ /app/tests/
+COPY src/ /app/src/
 
-# Smoke test: run on entry
+WORKDIR /app
+
 CMD ["bash"]
 ```
 
@@ -234,10 +237,10 @@ allycat init   # (non-interactive — Ctrl+C after confirming it launches)
 # Run a one-liner smoke test (no interactive shell needed):
 docker run --rm allycat-crosstest \
   bash -c "allycat --version && \
-           allycat scan /test-project/sample.html && \
-           allycat scan /test-project/fail-on-critical.html --fail-on-critical; \
-           echo EXIT:$?"
-# Expected last line: EXIT:1
+           allycat scan /app/tests/fixtures/sample.html && \
+           node /app/tests/e2e/thresholds.test.js && \
+           node /app/tests/e2e/concurrency.test.js"
+# Expected: allycat version printed, 8 violations found, 8/8 passed, concurrency output
 ```
 
 ### 3d. GitHub Actions (CI Verification)
