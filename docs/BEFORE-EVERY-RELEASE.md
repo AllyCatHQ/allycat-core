@@ -125,6 +125,8 @@ npx license-checker --production --summary
 - [ ] No GPL, LGPL, AGPL, or unknown-license packages in `dependencies` (devDependencies are excluded from the bundle)
 - [ ] If any copyleft license appears — stop and investigate before publishing
 
+> **Known acceptable outlier:** `@babel/template` reports MPL-2.0 (Mozilla Public License). MPL-2.0 is **not** copyleft in the GPL sense — it only requires you to open-source modifications to the MPL-2.0 files themselves, not your entire project. Using and distributing it as an npm dependency is fully permitted. This entry is expected and does not block publish.
+
 ### Code ownership
 - [ ] No copy-pasted code blocks from Stack Overflow, blog posts, or other projects without attribution
 - [ ] Any code adapted from open-source projects has the original license/author credited in a comment
@@ -175,9 +177,9 @@ npm version patch   # or minor / major
 npm pack --dry-run
 ```
 
-- [ ] Only these paths appear: `src/`, `README.md`, `LICENSE`, `package.json`
+- [ ] Only these paths appear: `src/`, `README.md`, `LICENSE`, `package.json`, `CHANGELOG.md`
 - [ ] No `tests/`, `docs/`, `.claude/`, `.env`, or debug files leaked
-- [ ] `README.md` is included (check `.npmignore` has `!README.md`)
+- [ ] `README.md` and `CHANGELOG.md` are included (`.npmignore` allows both via `!README.md` and `!CHANGELOG.md`)
 
 ---
 
