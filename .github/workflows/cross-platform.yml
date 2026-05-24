@@ -2,7 +2,7 @@ name: Cross-Platform
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
 
 jobs:
@@ -33,16 +33,46 @@ jobs:
       - name: Quick scan — HTML fixture
         run: node src/index.js scan tests/fixtures/sample.html
 
+      - name: Quick scan — exit code on critical violations
+        run: node src/index.js scan tests/fixtures/fail-on-critical.html --fail-on-critical
+        continue-on-error: true
+
       - name: E2E — exit code thresholds
         run: node tests/e2e/thresholds.test.js
 
       - name: E2E — concurrency ceilings
         run: node tests/e2e/concurrency.test.js
 
-      - name: Install Playwright Chromium (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Path separator test (Windows only)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          node src/index.js scan tests\fixtures\sample.html
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: BOM UTF-8 file test
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const c = '<html lang=\"en\"><head><title>t</title></head><body><img src=\"x\"></body></html>';
+            fs.writeFileSync('/tmp/bom-test.html', '﻿' + c, 'utf8');
+          "
+          node src/index.js scan /tmp/bom-test.html
+        if: runner.os != 'Windows'
+
+      - name: BOM UTF-8 file test (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          node -e "const fs=require('fs'); const c='<html lang=""en""><head><title>t</title></head><body><img src=""x""></body></html>'; fs.writeFileSync(process.env.TEMP+'\\bom-test.html', '﻿'+c,'utf8');"
+          node src/index.js scan "$env:TEMP\bom-test.html"
+
+      - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
 
-      - name: E2E — CSS delivery (Ubuntu only, requires Playwright)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Full scan — Playwright smoke test
+        run: node src/index.js scan tests/fixtures/sample.html --full
+
+      - name: E2E — CSS delivery (requires Playwright)
         run: node tests/e2e/css-delivery.test.js
