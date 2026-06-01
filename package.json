@@ -1,6 +1,6 @@
 {
   "name": "allycat",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Accessibility tool for source files — scans JSX, Vue, Angular, and HTML without a running server. Exact line numbers, watch mode, CI gates, AI fix prompts. WCAG 2.1 AA/AAA and Israeli Standard IS 5568.",
   "main": "src/index.js",
   "bin": {
