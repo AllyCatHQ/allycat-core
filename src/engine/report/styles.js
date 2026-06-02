@@ -49,7 +49,7 @@ export function buildStyles() {
         --accent:       #5b4de0;
         --accent-dim:   #dddaf8;
         --text:         #18181f;
-        --text-dim:     #7070888;
+        --text-dim:     #707088;
         --input-bg:     #f0f0f5;
         --input-border: #ccccd8;
         --prompt-bg:    #f8f8fc;

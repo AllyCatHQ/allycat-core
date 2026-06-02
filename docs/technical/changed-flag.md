@@ -45,4 +45,4 @@ The target path is resolved via `path.resolve` so relative paths, `~`, and absol
 
 ## Implementation Reference
 
-`resolveChangedFiles()` in [src/commands/scan.js](../src/commands/scan.js) (line ~279).
+`resolveChangedFiles()` in [src/commands/scanDispatcher.js](../src/commands/scanDispatcher.js) (line ~87).

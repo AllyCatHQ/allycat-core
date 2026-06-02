@@ -115,7 +115,7 @@ Applied only to **directory** targets, just before building the glob pattern:
 './src/'     →  './src'
 ```
 
-### `validateAndResolveTarget()` — `src/commands/scan.js`
+### `validateAndResolveTarget()` — `src/commands/scanDispatcher.js`
 
 Single entry point for all path validation. Order of operations:
 

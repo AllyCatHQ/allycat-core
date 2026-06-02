@@ -25,43 +25,51 @@ import {
  * @returns {string} - Formatted string for terminal
  */
 export function formatViolation(violation, options = {}) {
-    const { showSnippet = true, showSelector = true } = options;
-    
+    const {
+        showSnippet  = true,
+        showSelector = true,
+        showHelp     = true,
+        showWcag     = true,
+        showAffected = true,
+    } = options;
+
     const lines = [];
-    
+
     // Header: Impact + Description
     const impactBadge = formatImpact(violation.impact);
     lines.push(`${impactBadge} ${violation.description}`);
-    
+
     // Rule ID
     lines.push(chalk.dim(`   Rule: ${violation.id}`));
-    
+
     // File location with line number (clickable in VS Code / iTerm2)
     const location = formatLocation(violation);
     lines.push(location);
-    
+
     // Element selector (simplified)
     if (showSelector && violation.selector) {
         const selector = simplifySelector(violation.selector);
         lines.push(chalk.dim(`   Element: ${selector}`));
     }
-    
+
     // HTML snippet (truncated)
     if (showSnippet && violation.html) {
         const snippet = truncateSnippet(violation.html, 60);
         lines.push(chalk.dim(`   HTML: ${chalk.yellow(snippet)}`));
     }
-    
+
     // Help text
-    lines.push(chalk.dim(`   Help: ${violation.help}`));
-    
+    if (showHelp) {
+        lines.push(chalk.dim(`   Help: ${violation.help}`));
+    }
+
     // WCAG tags
-    if (violation.wcagTags && violation.wcagTags.length > 0) {
+    if (showWcag && violation.wcagTags && violation.wcagTags.length > 0) {
         lines.push(chalk.dim(`   WCAG: ${violation.wcagTags.join(', ')}`));
     }
-    
+
     // Node count (if more than 1)
-    if (violation.nodeCount && violation.nodeCount > 1) {
+    if (showAffected && violation.nodeCount && violation.nodeCount > 1) {
         lines.push(chalk.dim(`   Affected: ${violation.nodeCount} elements`));
     }
     
@@ -222,7 +230,32 @@ export function formatViolationForJson(violation) {
  * @param {string} scanMode - 'quick' or 'full'
  * @returns {string} - Formatted summary
  */
-export function formatSummary(violations, scanMode) {
+function formatSummaryCompact(violations) {
+    if (violations.length === 0) {
+        return chalk.green('✔ No accessibility issues found!');
+    }
+
+    const { critical, serious, moderate, minor } = countByImpact(violations);
+    const fileCount = new Set(violations.map(v => v.file)).size;
+
+    const parts = [];
+    if (critical > 0) parts.push(`${critical} critical`);
+    if (serious  > 0) parts.push(`${serious} serious`);
+    if (moderate > 0) parts.push(`${moderate} moderate`);
+    if (minor    > 0) parts.push(`${minor} minor`);
+
+    const n = violations.length;
+    const f = fileCount;
+    const detail = parts.length ? ` (${parts.join(', ')})` : '';
+
+    return chalk.red(`✖ ${n} violation${n !== 1 ? 's' : ''}${detail} in ${f} file${f !== 1 ? 's' : ''}`);
+}
+
+export function formatSummary(violations, scanMode, style = 'default') {
+    if (style === 'compact') {
+        return formatSummaryCompact(violations);
+    }
+
     if (violations.length === 0) {
         return chalk.green('✔ No accessibility issues found!');
     }

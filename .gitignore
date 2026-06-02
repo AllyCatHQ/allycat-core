@@ -8,3 +8,23 @@ test-page.html
 test-page2.html
 allycat-report*.html
 docs/private/
+.claude/
+Dockerfile.crosstest
+*.tgz
+ReadmeOld.md
+# Environment / secrets
+.env
+.env.*
+*.local
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/settings.json

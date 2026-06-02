@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!--
+  RTL EDGE CASES FIXTURE — FALSE POSITIVE CATALOGUE
+  ==================================================
+  Context: A bilingual tech-company support portal (English primary, Israeli market).
+           English is the primary language. Hebrew content appears in specific scoped
+           sections only, each with correct per-element dir="rtl" and lang="he".
+
+  Purpose: Demonstrates the four edge cases that trigger FALSE POSITIVES in the
+           current checkRtlCompliance implementation (ISSUE-008).
+
+  Under the FIXED logic (ISSUE-008 proposed fix) this file should produce 0 RTL violations:
+    ✓ Edge case A — Per-section RTL: Hebrew block has dir="rtl" on its own container.
+                    The primary language is English; <html dir="rtl"> would be WRONG here.
+                    Current validator: fires. Fixed validator: passes (RTL present on sub-element).
+
+    ✓ Edge case B — CSS-only RTL: One section uses CSS `direction: rtl` (not the dir attribute).
+                    Current validator: fires (does not see the attribute).
+                    Fixed validator: no RTL Unicode content outside a scoped element → passes.
+                    NOTE: CSS direction without dir attribute is itself a separate a11y issue
+                    (screen readers ignore CSS direction), but that is a different rule.
+
+    ✓ Edge case C — English-only section: A standalone notice block has zero Hebrew/Arabic
+                    characters. No RTL obligation exists.
+                    Current validator: fires if the whole page lacks <html dir="rtl">.
+                    Fixed validator: no RTL Unicode content → passes.
+
+    ✓ Edge case D — Inline bidirectional text: Hebrew phrase embedded in an English sentence
+                    inside a <bdi> element, which is the correct WHATWG pattern for inline
+                    bidirectional isolation. No global dir="rtl" is needed.
+                    Current validator: fires.
+                    Fixed validator: RTL isolated in <bdi> / inline element → passes.
+
+  Summary of current (broken) behaviour:
+    checkRtlCompliance sees <html lang="en"> with no dir="rtl" and unconditionally fires:
+      [SERIOUS] Israeli law requires RTL direction for Hebrew interfaces.
+      Rule: israel-rtl  File: tests/rtl-edge-cases.html:2  Element: html
+
+    This is a false positive. The file is correctly structured.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support Center — TechCorp</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f9fafb;
+      color: #111827;
+      line-height: 1.75;
+      padding: 32px 20px;
+    }
+    .container { max-width: 780px; margin: 0 auto; }
+    h1 { font-size: 1.75rem; margin-bottom: 8px; }
+    h2 { font-size: 1.15rem; color: #1d4ed8; margin: 28px 0 12px; }
+    p  { font-size: 0.95rem; margin-bottom: 10px; color: #374151; }
+
+    /* ── Edge case A — Hebrew FAQ block ── */
+    .hebrew-faq {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin: 24px 0;
+      /* No CSS direction here — direction is set via the dir attribute below */
+    }
+    .hebrew-faq h2 { color: #1e40af; }
+    .hebrew-faq p  { color: #1e3a8a; font-size: 0.93rem; }
+
+    /* ── Edge case B — CSS-only R
+    TL section ── */
+    /*
+      This section uses CSS `direction: rtl` without a dir attribute.
+      It still contains Hebrew content, so a screen reader would encounter
+      RTL text with no programmatic direction signal. This is technically a
+      separate a11y issue (ARIA / 1.3.1), but it should NOT trigger the
+      israel-rtl rule — the RTL content is scoped and the page root is English.
+    */
+    .css-rtl-block {
+      direction: rtl;           /* CSS direction — not the HTML dir attribute */
+      background: #fefce8;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .css-rtl-block h2 { color: #92400e; }
+
+    /* ── Edge case C — English-only notice ── */
+    .notice {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 24px 0;
+      font-size: 0.93rem;
+    }
+
+    /* ── Edge case D — inline bidi ── */
+    bdi { unicode-bidi: isolate; }
+    .inline-demo { background: #f3f4f6; border-radius: 6px; padding: 12px 16px; margin: 16px 0; }
+
+    footer {
+      margin-top: 48px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+      font-size: 0.875rem;
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;
+     focus:auto;">Skip to main content</a>
+
+  <div class="container">
+    <header>
+      <h1>TechCorp Support Center</h1>
+      <p>Find answers, open tickets, and contact our team.</p>
+    </header>
+
+    <main id="main-content">
+
+      <!-- ================================================================
+           EDGE CASE A — Per-section RTL with dir="rtl" on the container.
+           This is the CORRECT pattern per WCAG 3.1.2 (Language of Parts).
+           The Hebrew content is fully scoped: lang="he" dir="rtl" are both
+           present on the wrapper div. The page root stays lang="en" (correct).
+           ================================================================ -->
+      <section aria-labelledby="faq-he-heading">
+        <div class="hebrew-faq" lang="he" dir="rtl">
+          <!--
+            Both lang and dir are set on this container — this is the right approach.
+            A screen reader will switch to Hebrew voice and RTL rendering here.
+            The <html> element correctly stays LTR because the primary content is English.
+          -->
+          <h2 id="faq-he-heading">שאלות נפוצות בעברית</h2>
+
+          <h3>כיצד אפשר לפתוח פנייה לתמיכה?</h3>
+          <p>לחצו על הכפתור "פתח פנייה" בפינה הימנית העליונה של הדף, מלאו את הטופס, ונציג יחזור אליכם תוך יום עסקים אחד.</p>
+
+          <h3>האם ניתן לשנות את שפת הממשק?</h3>
+          <p>כן. היכנסו להגדרות החשבון ← העדפות שפה, ובחרו עברית מהרשימה הנפתחת. השינוי ייכנס לתוקף מיידית.</p>
+
+          <h3>מה שעות הפעילות של התמיכה הטלפונית?</h3>
+          <p>ימים א׳–ה׳ בין השעות 08:00–20:00. בימי שישי ערב שבת — 08:00–13:00. בשבת ובחגים — תמיכה בצ׳אט בלבד.</p>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           EDGE CASE B — Hebrew content with CSS `direction: rtl` but NO
+           dir attribute on the element.
+           The current validator only inspects the dir attribute on <html>.
+           It fires here because <html> has no dir="rtl" — but the RTL
+           content is scoped to this block.
+           The FIXED validator should not fire (RTL scoped; no global obligation).
+           ================================================================ -->
+      <section aria-labelledby="css-rtl-heading">
+        <div class="css-rtl-block">
+          <!--
+            No dir="rtl" attribute — only CSS direction: rtl.
+            This is a real but different issue (screen readers ignore CSS direction),
+            but it should NOT trigger the israel-rtl rule.
+          -->
+          <h2 id="css-rtl-heading">הודעת מערכת</h2>
+          <p>שימו לב: הגרסה החדשה של הפלטפורמה תושק בתאריך 1 במאי 2026. אנא וודאו שהנתונים שלכם מגובים לפני המעבר.</p>
+          <p>לפרטים נוספים — פנו לצוות התמיכה.</p>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           EDGE CASE C — English-only section. Zero Hebrew/Arabic Unicode
+           characters. There is no RTL obligation here whatsoever.
+           The current validator still fires because <html> has no dir="rtl".
+           The FIXED validator should detect no RTL Unicode → no violation.
+           ================================================================ -->
+      <section aria-labelledby="notice-heading">
+        <div class="notice" role="note">
+          <h2 id="notice-heading">Scheduled Maintenance Notice</h2>
+          <p>
+            The TechCorp platform will be unavailable on <strong>Saturday, May 3rd 2026
+            from 02:00 to 06:00 UTC</strong> for routine infrastructure upgrades.
+          </p>
+          <p>
+            During this window, all API endpoints, the web dashboard, and mobile apps
+            will return <code>503 Service Unavailable</code>. Ongoing file uploads will
+            be safely paused and will resume automatically when the maintenance window ends.
+          </p>
+          <p>
+            If you have time-sensitive operations scheduled during this window, please
+            reschedule them or contact <a href="mailto:ops@techcorp.example">ops@techcorp.example</a>
+            at least 24 hours in advance.
+          </p>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           EDGE CASE D — Inline bidirectional text using <bdi>.
+           A Hebrew company name appears inside an English sentence.
+           <bdi> (Bidirectional Isolation) is the correct WHATWG pattern for
+           this exact scenario — it isolates the Hebrew text's directionality
+           without requiring a global dir="rtl" on the page.
+           ================================================================ -->
+      <section aria-labelledby="bidi-heading">
+        <h2 id="bidi-heading">Recent Activity</h2>
+        <div class="inline-demo">
+          <!--
+            The Hebrew text (חברת טכנולוגיות) is isolated inside <bdi>.
+            The browser renders it RTL inline within the LTR sentence.
+            No global dir attribute is needed or appropriate here.
+          -->
+          <p>
+            Your account was last accessed by a user from
+            <bdi>חברת טכנולוגיות בע"מ</bdi> on April 12, 2026 at 14:32 UTC.
+          </p>
+          <p>
+            The invoice was issued to <bdi>משרד עורכי דין כהן ושות׳</bdi>,
+            reference number <bdi dir="ltr">INV-2026-00847</bdi>.
+          </p>
+          <!--
+            The inner dir="ltr" on the invoice number is also correct:
+            an alphanumeric code inside an otherwise RTL container should be
+            explicitly LTR. This is intentional, not a violation.
+          -->
+        </div>
+      </section>
+
+      <!-- Standard English support content — no RTL involvement -->
+      <section aria-labelledby="contact-heading">
+        <h2 id="contact-heading">Contact Support</h2>
+        <p>Our support team is available via the following channels:</p>
+        <ul style="padding-left:22px; margin-bottom:12px;">
+          <li><strong>Live chat</strong> — available 24/7 from the dashboard</li>
+          <li><strong>Email</strong> — <a href="mailto:support@techcorp.example">support@techcorp.example</a> (response within 4 hours)</li>
+          <li><strong>Phone</strong> — +972-3-000-0000, Sunday–Thursday 08:00–20:00 IST</li>
+        </ul>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>TechCorp Ltd. &copy; 2026 &mdash; <a href="/privacy">Privacy Policy</a> &mdash; <a href="/terms">Terms of Service</a></p>
+    </footer>
+  </div>
+</body>
+</html>

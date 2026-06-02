@@ -17,8 +17,8 @@ import { formatSummary } from '../../utils/violationFormatter.js';
  * @param {string} scanMode - Current scan mode
  * @param {Array} warnings
  */
-export function outputSummaryOnly(violations, scanMode, warnings = []) {
-    const summary = formatSummary(violations, scanMode);
+export function outputSummaryOnly(violations, scanMode, warnings = [], summaryStyle = 'default') {
+    const summary = formatSummary(violations, scanMode, summaryStyle);
     console.log(summary);
 
     if (violations.length > 0) {

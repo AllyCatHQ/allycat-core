@@ -325,7 +325,7 @@ These tests probe failure modes and boundary conditions not covered by the main 
 
 ```bash
 # Write a corrupted baseline file
-node -e "require('fs').writeFileSync('allycat-baseline.json', 'NOT VALID JSON', 'utf8')"
+echo 'NOT VALID JSON' > allycat-baseline.json
 
 node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
 echo $LASTEXITCODE

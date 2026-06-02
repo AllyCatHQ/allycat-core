@@ -37,11 +37,11 @@ export function outputResults(violations, config, scanMode, options, warnings = 
     } else if (options.output === 'json') {
         outputJson(violations, config, scanMode, warnings);
     } else if (options.summary) {
-        outputSummaryOnly(violations, scanMode, warnings);
+        outputSummaryOnly(violations, scanMode, warnings, options.summaryStyle);
     } else if (baselineResult) {
-        outputTerminalWithBaseline(baselineResult, scanMode);
+        outputTerminalWithBaseline(baselineResult, scanMode, options);
     } else {
-        outputTerminal(violations, scanMode);
+        outputTerminal(violations, scanMode, options);
     }
     // AI report: terminal mode only — not in json, json-file, or summary modes
     if (!options.jsonFile && options.output !== 'json' && !options.summary) {

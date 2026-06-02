@@ -22,7 +22,7 @@ import { formatSummary, formatByFile } from '../../utils/violationFormatter.js';
  * @param {Array} violations - Scan violations
  * @param {string} scanMode - Current scan mode
  */
-export function outputTerminal(violations, scanMode) {
+export function outputTerminal(violations, scanMode, options = {}) {
     if (violations.length === 0) {
         console.log('');
         p.outro(chalk.green('✔ No accessibility issues found!'));
@@ -30,13 +30,25 @@ export function outputTerminal(violations, scanMode) {
         return;
     }
 
+    const {
+        snippet      = true,
+        help         = true,
+        wcag         = true,
+        selector     = true,
+        affected     = true,
+        summaryStyle = 'default',
+    } = options;
+
     const formattedOutput = formatByFile(violations, {
-        showSnippet: true,
-        showSelector: true
+        showSnippet:  snippet,
+        showSelector: selector,
+        showHelp:     help,
+        showWcag:     wcag,
+        showAffected: affected,
     });
     console.log(formattedOutput);
 
-    const summary = formatSummary(violations, scanMode);
+    const summary = formatSummary(violations, scanMode, summaryStyle);
     console.log(summary);
 
     displayTerminalTips(scanMode);
@@ -52,7 +64,7 @@ export function outputTerminal(violations, scanMode) {
  * @param {{ newViolations: Array, baselineViolations: Array, staleCount: number }} baselineResult
  * @param {string} scanMode
  */
-export function outputTerminalWithBaseline({ newViolations, baselineViolations, staleCount }, scanMode) {
+export function outputTerminalWithBaseline({ newViolations, baselineViolations, staleCount }, scanMode, options = {}) {
     const allViolations = [
         ...newViolations.map(v => ({ ...v, _baselineStatus: 'NEW' })),
         ...baselineViolations.map(v => ({ ...v, _baselineStatus: 'BASELINE' }))

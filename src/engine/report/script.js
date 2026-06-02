@@ -39,16 +39,21 @@ export function buildScript() {
     function applyTheme(theme) {
         document.documentElement.dataset.theme = theme;
         localStorage.setItem('a11y-theme', theme);
+        const toggle = document.getElementById('theme-toggle');
+        if (toggle) toggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
     }
 
     // ── Tab switching ──────────────────────────────────────────────
 
     function switchTab(index) {
-        document.querySelectorAll('.file-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.file-tab').forEach(t => {
+            t.classList.remove('active');
+            t.removeAttribute('aria-current');
+        });
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         const tab = document.querySelector('.file-tab[data-index="' + index + '"]');
         const panel = document.querySelector('.panel[data-index="' + index + '"]');
-        if (tab)   tab.classList.add('active');
+        if (tab)   { tab.classList.add('active'); tab.setAttribute('aria-current', 'true'); }
         if (panel) panel.classList.add('active');
     }
 
@@ -89,7 +94,9 @@ export function buildScript() {
         const bar = document.getElementById('filter-bar-' + panelIndex);
         if (bar) {
             bar.querySelectorAll('.filter-btn[data-filter-type="' + type + '"]').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.filter === value);
+                const isActive = btn.dataset.filter === value;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
             });
         }
 
@@ -146,6 +153,7 @@ export function buildScript() {
     // ── Modal ──────────────────────────────────────────────────────
 
     let currentModalIndex = null;
+    let _modalTrigger     = null;
 
     function openModal(index) {
         const text = rawPrompts[String(index)] || '';
@@ -156,15 +164,18 @@ export function buildScript() {
         copyBtn.textContent = 'Copy Prompt';
         copyBtn.classList.remove('copied');
 
+        _modalTrigger     = document.activeElement;
         currentModalIndex = index;
         document.getElementById('modal-overlay').classList.add('open');
         document.body.style.overflow = 'hidden';
+        copyBtn.focus();
     }
 
     function closeModal() {
         document.getElementById('modal-overlay').classList.remove('open');
         document.body.style.overflow = '';
         currentModalIndex = null;
+        if (_modalTrigger) { _modalTrigger.focus(); _modalTrigger = null; }
     }
 
     function closeModalOnOverlay(e) {
@@ -176,6 +187,26 @@ export function buildScript() {
         doCopy(rawPrompts[String(currentModalIndex)] || '', btn, 'Copy Prompt');
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    // Focus trap: keep keyboard focus inside the modal while it is open
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeModal(); return; }
+
+        const overlay = document.getElementById('modal-overlay');
+        if (e.key !== 'Tab' || !overlay.classList.contains('open')) return;
+
+        const focusable = [...overlay.querySelector('.modal').querySelectorAll(
+            'button:not([disabled]), [href], input, [tabindex]:not([tabindex="-1"])'
+        )].filter(el => !el.closest('[hidden]') && el.offsetParent !== null);
+
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last  = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+            if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+            if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+        }
+    });
     `;
 }

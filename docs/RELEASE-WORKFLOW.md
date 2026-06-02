@@ -39,6 +39,7 @@ Only uploads the files listed in `"files"` in `package.json`:
 - `src/**/*`
 - `README.md`
 - `LICENSE`
+- `CHANGELOG.md`
 
 Everything else (`docs/`, `tests/`, `.claude/`) is excluded via `.npmignore`.
 

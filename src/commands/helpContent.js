@@ -109,6 +109,24 @@ export const FAQ_ITEMS = [
    --fail-on-new emits a warning and exits 0 (safe first-run default)`
     },
     {
+        q: 'How do I reduce output noise in CI logs?',
+        a: `Use ${chalk.cyan('--ci')} to activate a CI-friendly preset in one flag:
+   ${chalk.yellow(`${CLI.SCAN} --ci`)}
+
+   This enables all of the following at once:
+   ${chalk.cyan('--no-snippet')}          ${chalk.dim('# hide HTML snippet per violation')}
+   ${chalk.cyan('--no-help')}             ${chalk.dim('# hide help text per violation')}
+   ${chalk.cyan('--no-wcag')}             ${chalk.dim('# hide WCAG tags per violation')}
+   ${chalk.cyan('--no-selector')}         ${chalk.dim('# hide element selector per violation')}
+   ${chalk.cyan('--no-affected')}         ${chalk.dim('# hide affected element count per violation')}
+   ${chalk.cyan('--summary-style compact')} ${chalk.dim('# single-line summary instead of box')}
+   ${chalk.cyan('--fail-on-critical')}    ${chalk.dim('# exit 1 if any critical violations found')}
+
+   Or apply flags individually for partial suppression:
+   ${chalk.yellow(`${CLI.SCAN} --no-snippet --no-wcag`)}    ${chalk.dim('# hide snippets and WCAG tags only')}
+   ${chalk.yellow(`${CLI.SCAN} --summary-style compact`)}   ${chalk.dim('# single-line summary only')}`
+    },
+    {
         q: 'How do I save the report to a file?',
         a: `Two options:
 
@@ -202,9 +220,13 @@ export const EXAMPLE_SECTIONS = [
     {
         title: 'CI/CD Integration',
         examples: [
+            { cmd: `${CLI.SCAN} --ci`,                            desc: 'CI preset — compact output + fail on critical' },
+            { cmd: `${CLI.SCAN} --ci --fail-on-any`,              desc: 'CI preset with strictest gate' },
             { cmd: `${CLI.SCAN} --fail-on-critical`,              desc: 'Block on critical violations only (exit 1)' },
             { cmd: `${CLI.SCAN} --fail-on-serious`,               desc: 'Block on serious or critical violations' },
             { cmd: `${CLI.SCAN} --fail-on-any`,                   desc: 'Block on any violation (strictest gate)' },
+            { cmd: `${CLI.SCAN} --no-snippet --no-wcag`,          desc: 'Hide snippets and WCAG tags only' },
+            { cmd: `${CLI.SCAN} --summary-style compact`,         desc: 'Single-line summary' },
             { cmd: `${CLI.SCAN} --json-file ci-report`,           desc: 'Generate report artifact' },
             { cmd: `${CLI.SCAN} -o json > report.json`,           desc: 'Redirect to file' }
         ]
@@ -269,6 +291,7 @@ export const GITHUB_ACTIONS_SNIPPET =
           run: allycat scan --fail-on-critical --json-file allycat-report
 
         - name: Upload report
+          if: always()
           uses: actions/upload-artifact@v4
           with:
             name: accessibility-report
