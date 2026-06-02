@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Scanners
-- **Quick scanner** — JSDOM-based, ~1s per file, no browser required, default concurrency 5
+- **Quick scanner** — JSDOM-based, ~1s per file, no browser required, concurrency auto-computed from RAM and CPU
 - **Full scanner** — Playwright/Chromium-based, full color contrast checking, concurrency capped at 8
 - RAM-aware concurrency auto-clamping — safe defaults computed from available system memory
 - Per-file error isolation — a single corrupted file logs a warning but does not halt the scan
