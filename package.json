@@ -66,9 +66,11 @@
     "p-limit": "^7.3.0"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
     "eslint": "^10.0.3",
-    "eslint-plugin-n": "^17.24.0",
+    "eslint-plugin-n": "^17.24.0"
+  },
+  "optionalDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "playwright": "^1.58.2"
   }
 }
