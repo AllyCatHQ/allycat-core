@@ -214,6 +214,9 @@ allycat scan --watch ./src
 # Watch mode with full pre-existing violation details on startup
 allycat scan --watch --existing
 
+# Watch mode with counts only — no descriptions in delta output
+allycat scan --watch --summary
+
 # After each save, watch mode shows a delta:
 #   [NEW]   — violation appeared since the last scan
 #   [FIXED] — violation was present before and is now resolved
@@ -263,7 +266,8 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
     "defaultMode": "quick"
   },
   "ai": {
-    "enabled": true
+    "enabled": true,
+    "agent": "claude"
   },
   "performance": {
     "concurrency": null
@@ -278,6 +282,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | `rules.level` | `AA`, `AAA` | WCAG conformance level |
 | `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |
 | `ai.enabled` | `true`, `false` | Generate HTML report with AI-ready fix prompts after each scan |
+| `ai.agent` | `claude`, `cursor`, `chatgpt`, `gemini`, `copilot`, `generic` | AI agent used to generate fix prompt style (set by `allycat init`) |
 | `performance.concurrency` | integer or `null` | Files scanned in parallel. `null` = auto (computed from RAM + CPU) |
 
 → See [Configuration Reference](docs/configuration.md) for all valid values and manual editing details.
@@ -381,6 +386,7 @@ allycat scan src\components
 - **No config?** → Run `allycat init`
 - **Full scan fails?** → `npx playwright install chromium`
 - **No contrast check?** → Contrast requires a real browser: `allycat scan --full`
+- **Contrast violations missing on styled-components / Emotion / styled-jsx projects?** → Runtime CSS-in-JS styles cannot be statically analyzed. The scanner will emit a warning per file — this is a known limitation.
 - **Files not scanned?** → Check supported extensions and ignored folders
 - **`--changed` fails?** → Must be in a git repo with ≥2 commits
 
