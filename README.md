@@ -24,6 +24,7 @@
 
 - [Features](#features)
 - [Why AllyCat vs @axe-core/cli](#why-allycat-vs-axe-corecli)
+- [Quick Start](#quick-start)
 - [Installation](#installation)
 - [Commands](#commands)
 - [Configuration](#configuration)
@@ -128,6 +129,8 @@ Prompts for:
 - RTL support (auto-enabled for Israeli standard)
 - Default scan mode (quick or full)
 - AI-ready fix prompts (enabled/disabled)
+- AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot (shown when AI is enabled)
+- Concurrency override (optional advanced setting)
 
 > No framework selection needed — the scanner automatically detects `.html`, `.jsx`, `.tsx`, `.vue`, and Angular template files.
 
