@@ -29,11 +29,8 @@
 - [Commands](#commands)
 - [Configuration](#configuration)
 - [Supported File Types](#supported-file-types)
-- [Parallel Scanning & Performance](#parallel-scanning--performance)
-- [Accessibility Standards](#accessibility-standards)
 - [Output Formats](#output-formats)
 - [CI/CD Integration](#cicd-integration)
-- [Path Handling](#path-handling)
 - [Troubleshooting](#troubleshooting)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -141,34 +138,75 @@ Prompts for:
 Scan files for accessibility violations.
 
 ```bash
-# Scan entire project
-allycat scan
-
-# Scan specific directory
-allycat scan ./src
-
-# Scan specific file
-allycat scan ./src/pages/Home.tsx
+allycat scan                        # entire project
+allycat scan ./src                  # specific directory
+allycat scan ./src/pages/Home.tsx   # specific file
 ```
 
-#### Options
+#### Scan Mode
 
 | Option | Short | Description |
 |---|---|---|
-| `--quick` | `-q` | Quick scan — fast, skips contrast check |
-| `--full` | `-f` | Full scan — includes contrast check via Playwright |
+| `--quick` | `-q` | Fast scan — no browser, skips contrast check (default) |
+| `--full` | `-f` | Full scan — real contrast checking via Playwright |
 | `--summary` | `-s` | Show violation counts only, no details |
-| `--output <format>` | `-o` | Output format: `terminal` (default) or `json` |
-| `--json-file [name]` | `-j` | Save report to a JSON file |
+
+```bash
+allycat scan            # quick scan (default)
+allycat scan --full     # full scan with contrast checking
+allycat scan --summary  # counts only — no per-violation details
+```
+
+#### Watch & Scope
+
+| Option | Short | Description |
+|---|---|---|
+| `--watch` | `-w` | Re-scan automatically on every file save |
+| `--existing` | `-e` | Show full details of pre-existing violations on startup (requires `--watch`) |
+| `--changed` | `-c` | Scan only files changed since the last git commit |
+
+```bash
+allycat scan --watch              # re-scans on every save
+allycat scan --watch --existing   # include pre-existing violations on startup
+allycat scan --watch --summary    # watch mode with counts only
+allycat scan --changed            # git-changed files only (great for pre-commit hooks)
+allycat scan --changed ./src      # scoped to a directory
+
+# After each save, watch mode shows a delta:
+#   [NEW]   — violation appeared since the last scan
+#   [FIXED] — violation was present before and is now resolved
+#   (no label) — violation is unchanged
+```
+
+#### CI & Gates
+
+| Option | Short | Description |
+|---|---|---|
+| `--ci` | | CI preset: compact output + `--fail-on-critical` |
 | `--fail-on-critical` | | Exit code 1 if any critical violations found |
 | `--fail-on-serious` | | Exit code 2 if any serious or critical violations found |
 | `--fail-on-any` | | Exit code 3 if any violations found (strictest gate) |
 | `--save-baseline` | | Snapshot current violations to `allycat-baseline.json` — exits 0 always |
 | `--fail-on-new` | | Exit code 4 if any violation is not in the saved baseline |
-| `--changed` | `-c` | Scan only files changed since the last git commit |
-| `--watch` | `-w` | Watch for file changes and re-scan automatically |
-| `--existing` | `-e` | In watch mode: show full details of pre-existing violations on startup (requires `--watch`) |
-| `--ci` | | CI preset: compact output + `--fail-on-critical` |
+| `--json-file [name]` | `-j` | Save report to a JSON file |
+
+```bash
+allycat scan --ci                                     # CI preset — compact output + critical gate
+allycat scan --fail-on-critical --json-file report    # block on critical, save report
+allycat scan --fail-on-any                            # strictest gate — block on any violation
+allycat scan --save-baseline                          # snapshot today's violations
+allycat scan --fail-on-new                            # only fail on violations not in baseline
+allycat scan --json-file                              # auto-named: allycat-report-2026-06-02-143052.json
+allycat scan --json-file ci-report                    # custom name: ci-report.json
+```
+
+→ See [CI/CD Integration Guide](docs/ci-integration.md) for exit code reference, baseline workflow, and full pipeline examples.
+
+#### Output
+
+| Option | Short | Description |
+|---|---|---|
+| `--output <format>` | `-o` | Output format: `terminal` (default) or `json` |
 | `--no-snippet` | | Hide HTML snippet per violation |
 | `--no-help` | | Hide help text per violation |
 | `--no-wcag` | | Hide WCAG tags per violation |
@@ -176,58 +214,13 @@ allycat scan ./src/pages/Home.tsx
 | `--no-affected` | | Hide affected element count per violation |
 | `--summary-style <style>` | | Summary style: `default` (box) or `compact` (single line) |
 
-Full reference: `allycat scan --help`
-
-#### Examples
-
 ```bash
-# Quick scan (default)
-allycat scan
-
-# Full scan with contrast checking
-allycat scan --full
-
-# Summary only — just violation counts
-allycat scan --summary
-
-# JSON to terminal (pipe-friendly)
-allycat scan -o json
-
-# Save JSON report — auto-generated filename
-allycat scan --json-file
-# → allycat-report-2025-05-27-143052.json
-
-# Save JSON report — custom filename
-allycat scan --json-file my-report
-# → my-report.json
-
-# Scan only git-changed files (great for pre-commit hooks)
-allycat scan --changed
-
-# Scoped to a directory
-allycat scan --changed ./src
-
-# Watch mode — re-scans on every save
-allycat scan --watch
-allycat scan --watch ./src
-
-# Watch mode with full pre-existing violation details on startup
-allycat scan --watch --existing
-
-# Watch mode with counts only — no descriptions in delta output
-allycat scan --watch --summary
-
-# After each save, watch mode shows a delta:
-#   [NEW]   — violation appeared since the last scan
-#   [FIXED] — violation was present before and is now resolved
-#   (no label) — violation is unchanged since the last scan
-
-# Block CI on critical violations and save report
-allycat scan --fail-on-critical --json-file ci-report
-
-# Strictest CI gate — block on any violation
-allycat scan --fail-on-any --json-file ci-report
+allycat scan -o json                   # JSON to terminal (pipe-friendly)
+allycat scan --no-snippet --no-help    # cleaner terminal output
+allycat scan --summary-style compact   # single-line summary
 ```
+
+Full reference: `allycat scan --help`
 
 ---
 
