@@ -275,16 +275,6 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 }
 ```
 
-| Option | Values | Description |
-|---|---|---|
-| `selectedStandard` | `wcag-aa`, `wcag-aaa`, `israel` | Accessibility ruleset to enforce |
-| `rules.rtl` | `true`, `false` | Enable RTL direction checking |
-| `rules.level` | `AA`, `AAA` | WCAG conformance level |
-| `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |
-| `ai.enabled` | `true`, `false` | Generate HTML report with AI-ready fix prompts after each scan |
-| `ai.agent` | `claude`, `cursor`, `chatgpt`, `gemini`, `copilot`, `generic` | AI agent used to generate fix prompt style (set by `allycat init`) |
-| `performance.concurrency` | integer or `null` | Files scanned in parallel. `null` = auto (computed from RAM + CPU) |
-
 → See [Configuration Reference](docs/configuration.md) for all valid values and manual editing details.
 
 ---
