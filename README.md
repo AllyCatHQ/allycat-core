@@ -217,6 +217,7 @@ allycat scan --watch --existing
 # After each save, watch mode shows a delta:
 #   [NEW]   — violation appeared since the last scan
 #   [FIXED] — violation was present before and is now resolved
+#   (no label) — violation is unchanged since the last scan
 
 # Block CI on critical violations and save report
 allycat scan --fail-on-critical --json-file ci-report
