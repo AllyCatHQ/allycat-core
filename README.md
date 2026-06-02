@@ -345,18 +345,6 @@ Run `allycat help standards` for a full breakdown, or see the official [WCAG 2.1
 
 ---
 
-## Path Handling
-
-AllyCat is cross-platform. Forward slashes and backslashes are both supported:
-
-```bash
-allycat scan ./src
-allycat scan .\src
-allycat scan src/components
-allycat scan src\components
-```
-
----
 
 ## Troubleshooting
 
@@ -368,6 +356,7 @@ allycat scan src\components
 - **Contrast violations missing on styled-components / Emotion / styled-jsx projects?** → Runtime CSS-in-JS styles cannot be statically analyzed. The scanner will emit a warning per file — this is a known limitation.
 - **Files not scanned?** → Check supported extensions and ignored folders
 - **`--changed` fails?** → Must be in a git repo with ≥2 commits
+- **Wrong path separator?** → Both `/` and `\` work: `allycat scan ./src` and `allycat scan .\src` are equivalent
 
 Run `allycat help faq` for more.
 
