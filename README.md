@@ -332,17 +332,6 @@ AllyCat is built for pipelines:
 
 ---
 
-## Parallel Scanning & Performance
-
-AllyCat auto-computes the parallel scan limit from your machine's RAM and CPU — no manual tuning needed. The resolved limit is shown on every run:
-
-```
-│ Parallel:  Auto → 24 files
-```
-
-→ See [Performance & Concurrency](docs/configuration.md#parallel-scanning--performance) for the formula, ceiling tables by machine, and the override workflow.
-
----
 
 ## Accessibility Standards
 
