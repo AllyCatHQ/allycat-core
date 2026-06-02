@@ -303,7 +303,7 @@ export const GITLAB_CI_SNIPPET =
     script:
       - npm ci
       - npm install -g allycat
-      - allycat scan --fail-on-critical --json-file allycat-report
+      - allycat scan --ci --json-file allycat-report
     artifacts:
       paths:
         - allycat-report.json`;
@@ -312,7 +312,7 @@ export const JENKINS_SNIPPET =
 `  stage('Accessibility') {
       steps {
         sh 'npm install -g allycat'
-        sh 'allycat scan --fail-on-critical --json-file allycat-report'
+        sh 'allycat scan --ci --json-file allycat-report'
         archiveArtifacts artifacts: 'allycat-report.json'
       }
     }`;
