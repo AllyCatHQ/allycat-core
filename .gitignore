@@ -8,6 +8,7 @@ test-page.html
 test-page2.html
 allycat-report*.html
 docs/private/
+CLAUDE.md
 .claude/
 Dockerfile.crosstest
 *.tgz
