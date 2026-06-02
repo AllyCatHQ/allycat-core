@@ -19,7 +19,8 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
     "defaultMode": "quick"
   },
   "ai": {
-    "enabled": true
+    "enabled": true,
+    "agent": "claude"
   },
   "performance": {
     "concurrency": null
@@ -38,6 +39,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | `rules.level` | `AA`, `AAA` | WCAG conformance level |
 | `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |
 | `ai.enabled` | `true`, `false` | Generate HTML report with AI-ready fix prompts after each scan |
+| `ai.agent` | `claude`, `cursor`, `chatgpt`, `gemini`, `copilot`, `generic` | AI agent used to generate fix prompt style (set by `allycat init`) |
 | `performance.concurrency` | integer or `null` | Files scanned in parallel. `null` = auto (computed from RAM + CPU) |
 
 ---
