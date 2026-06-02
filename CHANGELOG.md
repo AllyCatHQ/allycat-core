@@ -36,13 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--full` flag — switch to Playwright/Chromium scanner for contrast checking
 - `--watch` flag — watch mode with live re-scan on file save; NEW/FIXED delta labels
 - `--summary` flag — compact summary-only output for CI pipelines
-- `--json [file]` flag — output violations as JSON (stdout or named file)
+- `--json-file [filename]` flag — save violations as JSON to a file (auto-named if no filename given); use `-o json` for JSON to stdout
 - `--changed <scope>` flag — scan only files changed since last git commit
 - `--fail-on-critical` — exit code 1 if any critical violations found
 - `--fail-on-serious` — exit code 2 if any serious violations found
 - `--fail-on-any` — exit code 3 if any violations found
-- `--concurrency <n>` — override default file concurrency per run
-- `--standard <standard>` — override configured accessibility standard per run
 
 #### Output
 - Exact source line numbers for every violation

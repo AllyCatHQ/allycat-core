@@ -47,10 +47,11 @@ program
   .addHelpText('after', `
 ${chalk.bold('What it does:')}
   Creates ${chalk.cyan('allycat.config.json')} in your project root with:
-  • Framework type (React, Vue, Angular, HTML)
   • Accessibility standard (WCAG AA, AAA, Israeli)
   • RTL support settings
   • Default scan mode
+  • AI fix prompt preferences
+  • Concurrency override (optional)
 
 ${chalk.bold('Example:')}
   ${chalk.cyan('$')} allycat init

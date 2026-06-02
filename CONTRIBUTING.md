@@ -37,9 +37,9 @@ By participating in this project, you agree to maintain a respectful and inclusi
 ### Fork and Clone
 
 ```bash
-# Fork the repo on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/allycat.git
-cd allycat
+# Fork the repo at https://github.com/AllyCatHQ/allycat-core, then clone your fork:
+git clone https://github.com/<your-github-username>/allycat-core.git
+cd allycat-core
 ```
 
 ---
@@ -52,10 +52,11 @@ cd allycat
 npm install
 ```
 
-### 2. Install Optional Dependencies (for full scan testing)
+### 2. Install Playwright Browser (for full scan testing)
+
+`playwright` and `@axe-core/playwright` are in `optionalDependencies` — `npm install` already handles them. You only need to fetch the browser binary separately:
 
 ```bash
-npm install playwright @axe-core/playwright
 npx playwright install chromium
 ```
 
@@ -80,35 +81,71 @@ npm unlink -g allycat
 ## Project Structure
 
 ```
-allycat/
+allycat-core/
 ├── src/
-│   ├── index.js              # CLI entry point & command definitions
-│   ├── constants.js          # Shared constants
+│   ├── index.js                       # CLI entry point & command definitions
+│   ├── constants.js                   # Shared constants
 │   │
 │   ├── commands/
-│   │   ├── init.js           # `allycat init` command
-│   │   ├── scan.js           # `allycat scan` command
-│   │   └── help.js           # `allycat help` command
+│   │   ├── init.js                    # `allycat init` command
+│   │   ├── scan.js                    # `allycat scan` command
+│   │   ├── scanDispatcher.js          # Routes scan to quick/full scanner
+│   │   ├── scanResultHandler.js       # Post-scan output & exit codes
+│   │   ├── watchMode.js               # `--watch` mode orchestration
+│   │   ├── help.js                    # `allycat help` command
+│   │   └── outputters/
+│   │       ├── index.js               # Output format router
+│   │       ├── terminalOutputter.js   # Default terminal output
+│   │       ├── summaryOutputter.js    # `--summary` compact output
+│   │       ├── jsonOutputter.js       # `--json-file` / `-o json` output
+│   │       └── reportOutputter.js     # HTML report generation
 │   │
 │   ├── engine/
-│   │   ├── quickScanner.js   # JSDOM-based scanning (fast)
-│   │   └── fullScanner.js    # Playwright-based scanning (full)
+│   │   ├── scanners/
+│   │   │   ├── quickScanner.js        # JSDOM-based scanning (fast, default)
+│   │   │   ├── fullScanner.js         # Playwright-based scanning (--full)
+│   │   │   ├── scannerUtils.js        # Shared scanner utilities
+│   │   │   ├── cssInjector.js         # CSS injection for Playwright runs
+│   │   │   └── rtlRunner.js           # RTL rule execution
+│   │   │
+│   │   ├── violations/
+│   │   │   ├── violationProcessor.js  # Post-processing pipeline
+│   │   │   └── rtlValidator.js        # RTL violation detection
+│   │   │
+│   │   ├── transformers/
+│   │   │   ├── jsxTransformer.js      # JSX/TSX → HTML
+│   │   │   ├── vueTransformer.js      # Vue SFC → HTML
+│   │   │   ├── angularTransformer.js  # Angular template → HTML
+│   │   │   ├── angularTsExtractor.js  # Angular inline template extractor
+│   │   │   └── transformerUtils.js    # Shared transformer helpers
+│   │   │
+│   │   └── report/
+│   │       ├── generator.js           # HTML report entry point
+│   │       ├── html.js                # Report markup
+│   │       ├── styles.js              # Report CSS
+│   │       ├── script.js              # Report interactivity
+│   │       └── promptGenerator.js     # AI fix prompt builder
 │   │
 │   └── utils/
-│       ├── configLoader.js   # Config file operations
-│       ├── pathUtils.js      # Cross-platform path handling
-│       ├── scannerUtils.js   # Shared scanner utilities
-│       ├── sourceMapper.js   # Line number detection
-│       └── violationFormatter.js  # Output formatting
+│       ├── configLoader.js            # Config file operations
+│       ├── pathUtils.js               # Cross-platform path handling
+│       ├── sourceMapper.js            # Line number detection
+│       ├── violationFormatter.js      # Output formatting
+│       ├── fileResolver.js            # File discovery
+│       ├── fileUtils.js               # File reading (BOM-aware)
+│       ├── axeConfig.js               # axe-core rule configuration
+│       ├── baselineManager.js         # Baseline snapshot management
+│       ├── browserOpener.js           # Opens HTML report in browser
+│       └── cssResolver.js             # CSS extraction for scanning
 │
-├── test-files/               # Test HTML files (not published to npm)
+├── test-files/                        # Test HTML files (not published to npm)
 │   └── *.html
 │
 ├── .gitignore
 ├── .npmignore
 ├── package.json
 ├── README.md
-├── CONTRIBUTING.md           # This file
+├── CONTRIBUTING.md                    # This file
 └── LICENSE
 ```
 
@@ -398,11 +435,13 @@ What you expected to happen.
 - Node.js: [e.g., 20.11.0]
 - AllyCat: [e.g., 1.0.0]
 
-**Config file**
+**Config file** (`allycat.config.json`)
 ```json
 {
-  "framework": "...",
-  ...
+  "selectedStandard": "wcag-aa",
+  "scan": { "defaultMode": "quick" },
+  "rules": { "rtl": false },
+  "ai": { "enabled": false }
 }
 ```
 
@@ -441,7 +480,7 @@ Mockups, examples, references.
 
 ## Questions?
 
-- Open a [GitHub Discussion](https://github.com/YOUR_USERNAME/allycat/discussions)
+- Open a [GitHub Discussion](https://github.com/AllyCatHQ/allycat-core/discussions)
 - Check existing issues
 - Review the code and comments
 

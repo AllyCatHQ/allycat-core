@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icon.png" alt="AllyCat logo" width="200" />
+  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/icon.png" alt="AllyCat logo" width="200" />
 </p>
 
 # AllyCat
@@ -15,7 +15,7 @@
 **Supports**: JSX/TSX, Vue, Angular, HTML • Israeli IS 5568 + RTL • Quick (JSDOM) & Full (Playwright) modes
 
 <p align="center">
-  <img src="assets/demo.gif" alt="AllyCat scanning files — violations found and reported" />
+  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/demo.gif" alt="AllyCat scanning files — violations found and reported" />
 </p>
 
 ---
@@ -126,7 +126,7 @@ Prompts for:
 - RTL support (auto-enabled for Israeli standard)
 - Default scan mode (quick or full)
 - AI-ready fix prompts (enabled/disabled)
-- AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot (shown when AI is enabled)
+- AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot, Other (shown when AI is enabled)
 - Concurrency override (optional advanced setting)
 
 > No framework selection needed — the scanner automatically detects `.html`, `.jsx`, `.tsx`, `.vue`, and Angular template files.
