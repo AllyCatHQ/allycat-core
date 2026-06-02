@@ -399,6 +399,7 @@ echo "<!-- watch test -->" >> tests/fixtures/sample.html
 - [ ] Re-scan runs automatically
 - [ ] Violations that were already present show `[NEW]` only on first appearance
 - [ ] Violations that disappeared (if you fix one) show `[FIXED]`
+- [ ] Violations unchanged since the last scan show no label
 
 **Revert the test change:**
 ```bash
