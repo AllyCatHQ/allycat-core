@@ -124,7 +124,7 @@ export function outputTerminalWithBaseline({ newViolations, baselineViolations, 
         console.log(chalk.red(`✖ ${totalNew} new violation${totalNew !== 1 ? 's' : ''} — pipeline blocked`));
     }
     if (totalSup > 0) {
-        console.log(chalk.dim(`✓ ${totalSup} baseline violation${totalSup !== 1 ? 's' : ''} suppressed (run --save-baseline to clean up)`));
+        console.log(chalk.dim(`✓ ${totalSup} baseline violation${totalSup !== 1 ? 's' : ''} suppressed (run --save-baseline to update baseline)`));
     }
 
     displayTerminalTips(scanMode);
