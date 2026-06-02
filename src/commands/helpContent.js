@@ -288,7 +288,7 @@ export const GITHUB_ACTIONS_SNIPPET =
           run: npm install -g allycat
 
         - name: Run accessibility scan
-          run: allycat scan --fail-on-critical --json-file allycat-report
+          run: allycat scan --ci --json-file allycat-report
 
         - name: Upload report
           if: always()
