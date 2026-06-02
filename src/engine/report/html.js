@@ -11,7 +11,7 @@ import path from 'path';
 import { buildStyles } from './styles.js';
 import { buildScript } from './script.js';
 import { countByImpact } from '../../utils/violationFormatter.js';
-import { STANDARD_LABELS, STANDARDS } from '../../constants.js';
+import { STANDARD_LABELS, STANDARDS, UI } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // Data Helpers
@@ -145,7 +145,7 @@ function buildHeader(byFile, standard, scanMode, timestamp) {
         </button>
         <div class="header-meta">
             <div>Standard: ${escapeHtml(standard)}</div>
-            <div>Mode: ${scanMode === 'full' ? 'Full (contrast)' : 'Quick'}</div>
+            <div>Mode: ${scanMode === 'full' ? UI.SCAN_LABEL_FULL : UI.SCAN_LABEL_QUICK}</div>
             <div>${escapeHtml(timestamp)}</div>
         </div>
     </div>
