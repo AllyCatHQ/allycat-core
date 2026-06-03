@@ -135,14 +135,14 @@ async function resolveChangedFiles(target) {
  * @param {string[]|null} preResolvedFiles - Pre-resolved file list (--changed mode)
  * @returns {Promise<{violations: Array, warnings: Array}|null>} - Scan result or null on error
  */
-export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null) {
+export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null, excludes = []) {
     const spinner = p.spinner();
     spinner.start(MESSAGES.ANALYZING);
 
     try {
         const result = scanMode === SCAN_MODES.FULL
-            ? await runFullAudit(config, targetPath, preResolvedFiles)
-            : await runQuickAudit(config, targetPath, preResolvedFiles);
+            ? await runFullAudit(config, targetPath, preResolvedFiles, false, excludes)
+            : await runQuickAudit(config, targetPath, preResolvedFiles, false, excludes);
 
         spinner.stop(chalk.green(MESSAGES.ANALYSIS_COMPLETE));
         return result;
