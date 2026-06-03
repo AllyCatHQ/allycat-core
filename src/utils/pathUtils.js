@@ -97,3 +97,20 @@ export function expandUserPath(inputPath) {
 
     return inputPath;
 }
+
+/**
+ * Normalize user-supplied exclude paths into glob-ready patterns.
+ *
+ * Plain paths  → ['tests', 'tests/**']  (exclude folder and its contents)
+ * Glob patterns → passed through as-is
+ *
+ * @param {string[]} userPaths - Raw paths/globs from --exclude
+ * @returns {string[]} - Expanded glob patterns ready for the ignore list
+ */
+export function resolveExcludePatterns(userPaths = []) {
+    return userPaths.flatMap(p => {
+        const normalized = normalizeForGlob(expandUserPath(p));
+        const isGlob = /[*?{}\[\]!]/.test(normalized);
+        return isGlob ? [normalized] : [normalized, `${normalized}/**`];
+    });
+}
