@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+---
+
+## [1.1.0] - 2026-06-03
+
+### Added
+- `ai.reportBehavior` config option — controls how the fix-prompt report is delivered after each scan: `auto-open` (opens in browser), `path-only` (prints relative + absolute path to terminal), `ask` (prompts each time). Defaults to `path-only` on upgrade so existing installs never get a surprise browser open.
+- `allycat init` now includes a 3-choice delivery question (shown when AI fix prompts are enabled)
+
+### Fixed
+- `--fail-on-*` exit codes were bypassed in non-interactive environments (CI, piped stdin) when `ai.reportBehavior` was set to `ask` — `@clack/prompts` was calling `process.exit(0)` before the exit gate logic ran. Added a `process.stdin.isTTY` guard to fall back to `path-only` in non-interactive contexts.
+
+### Changed
+- **Fix prompts** — renamed from "AI fix suggestions" to "fix prompts for your AI agent" for clearer intent
+- **RTL** is now a standalone opt-in feature (`rules.rtl: true` in `allycat.config.json`), decoupled from any accessibility standard. Works for Hebrew, Arabic, Persian, and all other RTL languages. Violation rule ID renamed from `israel-rtl` → `rtl-direction`.
+
+### Removed
+- **Israeli Standard IS 5568** removed as a selectable accessibility standard. The standard caused naming friction and generated false positives on bilingual pages (ISSUE-008). RTL checking has been promoted to a standalone, language-agnostic opt-in feature independent of any regional standard. See `docs/archived/israeli-standard-is5568.md` for the full history and a step-by-step revival guide.
+
+---
+
 ## [1.0.0] - 2026-03-29
 
 ### Added

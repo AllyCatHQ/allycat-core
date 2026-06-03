@@ -5,7 +5,6 @@
  * and produces a structured violation if it does not.
  */
 
-import { STANDARDS } from '../../constants.js';
 import { createRtlViolation, RTL_LANG_PREFIXES, isRtlLanguage } from '../violations/rtlValidator.js';
 import { findLineNumber } from '../../utils/sourceMapper.js';
 
@@ -17,10 +16,9 @@ import { findLineNumber } from '../../utils/sourceMapper.js';
  * @param {string} sourceContent - Original source code
  * @param {boolean} isComponent - True for JSX/Vue/Angular files (checks body root, not <html>)
  * @param {Map<string,number[]>|null} ordinalIndex - Tag→line map for component root lookup
- * @param {string} selectedStandard - Accessibility standard (e.g. STANDARDS.ISRAEL)
  * @returns {Promise<Object|null>} - RTL violation object or null
  */
-export async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, ordinalIndex, selectedStandard) {
+export async function checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, ordinalIndex) {
     if (isComponent) {
         // Step 1: dir="rtl" declared anywhere → compliant
         const hasRtl = await page.evaluate(() => !!document.querySelector('[dir="rtl"]'));
@@ -46,11 +44,9 @@ export async function checkRtlCompliancePlaywright(page, filePath, sourceContent
             ? sourceLines[0]
             : findLineNumber(sourceContent, `<${rootInfo.tag}`);
 
-        const helpText = selectedStandard === STANDARDS.ISRAEL
-            ? 'Add dir="rtl" to your root element or to the <html> tag in index.html.'
-            : 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
+        const helpText = 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
 
-        return createRtlViolation(selectedStandard, filePath, rootInfo.html, lineNumber, rootInfo.tag, helpText);
+        return createRtlViolation(filePath, rootInfo.html, lineNumber, rootInfo.tag, helpText);
     }
 
     // Plain HTML file — apply 3-step algorithm
@@ -64,7 +60,6 @@ export async function checkRtlCompliancePlaywright(page, filePath, sourceContent
 
     // Step 3: RTL-primary page with no dir declarations → genuine violation
     return createRtlViolation(
-        selectedStandard,
         filePath,
         '<html>',
         findLineNumber(sourceContent, '<html')

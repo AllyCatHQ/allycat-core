@@ -402,7 +402,7 @@ allycat scan ./test-files/button-test.html
 | No violations | Create valid HTML, expect clean output |
 | Multiple violations | Create HTML with issues, verify all found |
 | Contrast issues | Use --full to detect contrast problems |
-| RTL compliance | Set Israeli standard, check dir="rtl" |
+| RTL compliance | Enable `rtl: true` in config, check `dir="rtl"` |
 | JSON output | `--json-file` and `-o json` |
 | Summary mode | `--summary` flag |
 

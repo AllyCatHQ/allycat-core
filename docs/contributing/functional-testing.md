@@ -208,29 +208,11 @@ node src/index.js scan tests/fixtures/sample.html
 - [ ] More violations may appear compared to AA (AAA has stricter rules)
 - [ ] No crash
 
-### 5.3 Israeli Standard (IS 5568)
+### 5.3 Israeli Standard (IS 5568) — Archived
 
-```bash
-# Set standard to israel + rtl: true in allycat.config.json, then:
-node src/index.js scan tests/samples/html/RtlBad.html
-```
-
-**Expected violations (5 total):**
-- `israel-rtl` · serious — `<html lang="he">` missing `dir="rtl"` (line 2)
-- `image-alt` · critical — `<img src="banner.png">` (line 24)
-- `label` · critical — `<input name="fullname">` (line 27)
-- `label` · critical — `<input name="email">` (line 28)
-- `button-name` · critical — `<button></button>` (line 29)
-
-- [ ] All 5 violations reported
-- [ ] `israel-rtl` violation appears (RTL-specific rule, not in AA/AAA)
-- [ ] Scan header shows "Israeli Standard IS 5568"
-
-**Confirm RTL-good file is clean:**
-```bash
-node src/index.js scan tests/samples/html/RtlGood.html
-```
-- [ ] No `israel-rtl` violation (file has `dir="rtl"` correctly set)
+> **This standard has been removed.** RTL checking is now a standalone opt-in feature
+> (`rules.rtl: true`) independent of any regional standard.
+> See `docs/archived/israeli-standard-is5568.md` for the full feature record and revival guide.
 
 ---
 
@@ -515,7 +497,7 @@ node src/index.js scan tests/samples/react/tsx/ComprehensiveTest.tsx
 | 4 | Full scan (Playwright) | ⬜ |
 | 5.1 | Standard: WCAG 2.1 AA | ⬜ |
 | 5.2 | Standard: WCAG 2.1 AAA | ⬜ |
-| 5.3 | Standard: Israeli IS 5568 | ⬜ |
+| 5.3 | ~~Standard: Israeli IS 5568~~ (archived — see docs/archived/) | — |
 | 6 | RTL detection | ⬜ |
 | 7.1 | Output: terminal | ⬜ |
 | 7.2 | Output: --summary | ⬜ |

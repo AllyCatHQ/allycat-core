@@ -2,7 +2,7 @@
 <!--
   RTL EDGE CASES FIXTURE — FALSE POSITIVE CATALOGUE
   ==================================================
-  Context: A bilingual tech-company support portal (English primary, Israeli market).
+  Context: A bilingual tech-company support portal (English primary, Hebrew secondary).
            English is the primary language. Hebrew content appears in specific scoped
            sections only, each with correct per-element dir="rtl" and lang="he".
 
@@ -33,8 +33,8 @@
 
   Summary of current (broken) behaviour:
     checkRtlCompliance sees <html lang="en"> with no dir="rtl" and unconditionally fires:
-      [SERIOUS] Israeli law requires RTL direction for Hebrew interfaces.
-      Rule: israel-rtl  File: tests/rtl-edge-cases.html:2  Element: html
+      [SERIOUS] RTL direction attribute missing for RTL language content.
+      Rule: rtl-direction  File: tests/rtl-edge-cases.html:2  Element: html
 
     This is a false positive. The file is correctly structured.
 -->
@@ -76,7 +76,7 @@
       It still contains Hebrew content, so a screen reader would encounter
       RTL text with no programmatic direction signal. This is technically a
       separate a11y issue (ARIA / 1.3.1), but it should NOT trigger the
-      israel-rtl rule — the RTL content is scoped and the page root is English.
+      rtl-direction rule — the RTL content is scoped and the page root is English.
     */
     .css-rtl-block {
       direction: rtl;           /* CSS direction — not the HTML dir attribute */
@@ -163,7 +163,7 @@
           <!--
             No dir="rtl" attribute — only CSS direction: rtl.
             This is a real but different issue (screen readers ignore CSS direction),
-            but it should NOT trigger the israel-rtl rule.
+            but it should NOT trigger the rtl-direction rule.
           -->
           <h2 id="css-rtl-heading">הודעת מערכת</h2>
           <p>שימו לב: הגרסה החדשה של הפלטפורמה תושק בתאריך 1 במאי 2026. אנא וודאו שהנתונים שלכם מגובים לפני המעבר.</p>

@@ -3,8 +3,8 @@
  *
  * TEST PURPOSE: RTL correctly declared in JSX.
  *
- * Expected violations with --standard israel:
- *   - NONE for israel-rtl (dir="rtl" is present on root)
+ * Expected violations with rtl: true:
+ *   - NONE for rtl-direction (dir="rtl" is present on root)
  *   - Line 12: <img> missing alt  → image-alt (CRITICAL)  [intentional, unrelated]
  */
 

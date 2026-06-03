@@ -141,7 +141,7 @@ export const FAQ_ITEMS = [
         q: 'What accessibility standards are supported?',
         a: `• ${chalk.cyan('WCAG 2.1 AA')} — Industry standard (default)
    • ${chalk.cyan('WCAG 2.1 AAA')} — Strictest level
-   • ${chalk.cyan('Israeli IS 5568')} — Israel accessibility law (includes RTL)`
+   • RTL support ${chalk.dim('(experimental)')} — Enable during ${chalk.cyan('allycat init')} for Hebrew, Arabic, Persian interfaces`
     },
     {
         q: 'Does AllyCat support Vue and Angular?',

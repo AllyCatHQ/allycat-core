@@ -25,7 +25,6 @@ export const SCAN_MODES = {
 export const STANDARDS = {
     WCAG_AA:  'wcag-aa',
     WCAG_AAA: 'wcag-aaa',
-    ISRAEL:   'israel',
 };
 
 // ─── UI Strings ───────────────────────────────────────────────────────────────
@@ -70,12 +69,19 @@ export const MESSAGES = {
 export const STANDARD_LABELS = {
     [STANDARDS.WCAG_AA]:  'WCAG 2.1 AA',
     [STANDARDS.WCAG_AAA]: 'WCAG 2.1 AAA',
-    [STANDARDS.ISRAEL]:   'Israeli Standard IS 5568 (WCAG 2.1 AA + RTL)',
 };
 
 // ─── Report File Names ────────────────────────────────────────────────────────
 
 export const DEFAULT_HTML_REPORT = 'allycat-report.html';
+
+// ─── AI Report Delivery Behaviors ─────────────────────────────────────────────
+
+export const AI_REPORT_BEHAVIORS = {
+    AUTO_OPEN:  'auto-open',
+    PATH_ONLY:  'path-only',
+    ASK:        'ask',
+};
 
 // ─── Supported File Extensions ────────────────────────────────────────────────
 // Single source of truth for all file types the scanner accepts.

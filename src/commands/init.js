@@ -2,7 +2,7 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import { configExists, saveConfig, getSafeConcurrencyCeiling, getConfigPath } from '../utils/configLoader.js';
-import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS } from '../constants.js';
+import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS, AI_REPORT_BEHAVIORS } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -91,13 +91,12 @@ export async function initCommand() {
                 options: [
                     { value: STANDARDS.WCAG_AA,  label: '🌍 Global Standard (WCAG 2.1 AA)',  hint: 'Industry Standard' },
                     { value: STANDARDS.WCAG_AAA, label: '🏥 Strict Mode (WCAG 2.1 AAA)',      hint: 'Government/Medical' },
-                    { value: STANDARDS.ISRAEL,   label: '🇮🇱 Israeli Standard (IS 5568)',      hint: 'AA + RTL Support' },
                 ],
             }),
-            checkRTL: ({ results }) => results.standard !== STANDARDS.ISRAEL ? p.confirm({
-                message: 'Check for RTL support? (For right-to-left languages, e.g. Hebrew, Arabic, Persian)',
+            checkRTL: () => p.confirm({
+                message: 'Check for RTL support? (experimental — for Hebrew, Arabic, Persian interfaces)',
                 initialValue: false,
-            }) : Promise.resolve(true),
+            }),
             scanMode: () => p.select({
                 message: 'Default scan mode:',
                 options: [
@@ -106,7 +105,7 @@ export async function initCommand() {
                 ],
             }),
             useAI: () => p.confirm({
-                message: 'Enable AI-powered fix suggestions?',
+                message: 'Enable fix prompts for your AI agent? (generates a ready-to-paste HTML report after each scan)',
                 initialValue: true,
             }),
             aiAgent: ({ results }) => !results.useAI
@@ -120,6 +119,16 @@ export async function initCommand() {
                         { value: 'gemini',   label: '🔴 Gemini',      hint: 'Google Gemini' },
                         { value: 'copilot',  label: '⚫ Copilot',     hint: 'GitHub Copilot' },
                         { value: 'generic',  label: '⚪ Other / Skip', hint: 'Generic prompt' },
+                    ],
+                }),
+            aiReportBehavior: ({ results }) => !results.useAI
+                ? Promise.resolve(AI_REPORT_BEHAVIORS.PATH_ONLY)
+                : p.select({
+                    message: 'How should the fix-prompt report be delivered after a scan?',
+                    options: [
+                        { value: AI_REPORT_BEHAVIORS.AUTO_OPEN, label: '🌐 Auto-open in browser',  hint: 'Opens automatically after every scan with violations' },
+                        { value: AI_REPORT_BEHAVIORS.PATH_ONLY, label: '📄 Save and print path',    hint: 'Saves the file and prints a clickable path in the terminal' },
+                        { value: AI_REPORT_BEHAVIORS.ASK,       label: '❓ Ask me each time',       hint: 'Prompts you after each scan with violations' },
                     ],
                 }),
             advancedOpts: () => p.confirm({
@@ -190,7 +199,7 @@ export async function initCommand() {
     const config = {
         selectedStandard: group.standard,
         rules: {
-            rtl: group.standard === STANDARDS.ISRAEL || group.checkRTL === true,
+            rtl: group.checkRTL === true,
             level: group.standard === STANDARDS.WCAG_AAA ? 'AAA' : 'AA'
         },
         scan: {
@@ -199,6 +208,7 @@ export async function initCommand() {
         ai: {
             enabled: group.useAI,
             agent: group.aiAgent,
+            reportBehavior: group.aiReportBehavior,
         },
         performance: {
             concurrency: finalConcurrency
@@ -228,8 +238,9 @@ export async function initCommand() {
         `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Default Mode: ${chalk.bold(config.scan.defaultMode === SCAN_MODES.FULL ? UI.SCAN_LABEL_FULL : UI.SCAN_LABEL_QUICK_FAST)}\n` +
-        `AI Suggestions: ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
-        (config.ai.enabled ? `AI Agent:     ${chalk.bold(config.ai.agent)}\n` : '') +
+        `Fix Prompts:   ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
+        (config.ai.enabled ? `AI Agent:      ${chalk.bold(config.ai.agent)}\n` : '') +
+        (config.ai.enabled ? `Report:        ${chalk.bold(config.ai.reportBehavior)}\n` : '') +
         `Concurrency: ${concurrencySummary}`,
         'Configuration Summary'
     );

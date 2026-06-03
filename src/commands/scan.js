@@ -81,7 +81,7 @@ export async function scanCommand(target = null, options = {}) {
     }
 
     const { violations, warnings } = result;
-    handleScanResult(violations, warnings, config, scanMode, options);
+    await handleScanResult(violations, warnings, config, scanMode, options);
 }
 
 // -----------------------------------------------------------------------------
