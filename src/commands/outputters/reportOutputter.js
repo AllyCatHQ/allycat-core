@@ -27,6 +27,12 @@ export async function outputAiReport(violations, config, scanMode) {
         const behavior = config?.ai?.reportBehavior ?? AI_REPORT_BEHAVIORS.PATH_ONLY;
 
         if (behavior === AI_REPORT_BEHAVIORS.ASK) {
+            // Non-interactive environments (CI, piped stdin) can't prompt — fall back to path-only
+            if (!process.stdin.isTTY) {
+                const reportPath = generateReport(violations, config, scanMode);
+                printReportPath(reportPath);
+                return;
+            }
             const open = await p.confirm({ message: 'Open fix-prompt report in browser?' });
             if (p.isCancel(open)) return;
             if (open) {

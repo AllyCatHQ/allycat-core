@@ -9,11 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Removed
-- **Israeli Standard IS 5568** removed as a selectable accessibility standard. The standard caused naming friction and generated false positives on bilingual pages (ISSUE-008). RTL checking has been promoted to a standalone, language-agnostic opt-in feature independent of any regional standard. See `docs/archived/israeli-standard-is5568.md` for the full history and a step-by-step revival guide.
+### Added
+- `ai.reportBehavior` config option — controls how the fix-prompt report is delivered after each scan: `auto-open` (opens in browser), `path-only` (prints relative + absolute path to terminal), `ask` (prompts each time). Defaults to `path-only` on upgrade so existing installs never get a surprise browser open.
+- `allycat init` now includes a 3-choice delivery question (shown when AI fix prompts are enabled)
 
 ### Changed
+- **Fix prompts** — renamed from "AI fix suggestions" to "fix prompts for your AI agent" for clearer intent
 - **RTL** is now a standalone opt-in feature (`rules.rtl: true` in `allycat.config.json`), decoupled from any accessibility standard. Works for Hebrew, Arabic, Persian, and all other RTL languages. Violation rule ID renamed from `israel-rtl` → `rtl-direction`.
+
+### Removed
+- **Israeli Standard IS 5568** removed as a selectable accessibility standard. The standard caused naming friction and generated false positives on bilingual pages (ISSUE-008). RTL checking has been promoted to a standalone, language-agnostic opt-in feature independent of any regional standard. See `docs/archived/israeli-standard-is5568.md` for the full history and a step-by-step revival guide.
 
 ---
 
@@ -57,7 +62,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clickable `vscode://` deep-links to open the exact file and line in VS Code
 - Self-contained HTML report with dark/light toggle, violation filters, and file search
 - AI fix prompt modals in the HTML report — copy a ready-to-use prompt for any violation
-- `ai.reportBehavior` config option — controls how the fix-prompt report is delivered after each scan: `auto-open` (browser), `path-only` (prints relative + absolute path), `ask` (prompts each time). Defaults to `path-only` on upgrade.
 - CSS-in-JS detection warning (styled-components, emotion, styled-jsx, stitches)
 - BOM-aware file reading — UTF-8 with and without BOM, UTF-16 LE/BE
 
