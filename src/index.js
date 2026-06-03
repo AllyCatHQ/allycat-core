@@ -2,13 +2,17 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { createRequire } from 'module';
+import updateNotifier from 'update-notifier';
 import { initCommand } from './commands/init.js';
 import { scanCommand } from './commands/scan.js';
 import { helpCommand } from './commands/help.js';
 import { UI, APP_LINKS, SUPPORTED_EXTENSIONS_DISPLAY } from './constants.js';
 
 const require = createRequire(import.meta.url);
-const { version } = require('../package.json');
+const pkg = require('../package.json');
+const { version } = pkg;
+
+updateNotifier({ pkg }).notify();
 
 const collectRepeatable = (val, acc) => [...acc, val];
 
