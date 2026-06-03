@@ -4,13 +4,12 @@
  * Checks RTL (right-to-left) compliance for HTML and JSX/TSX files.
  * Creates violation objects for missing dir="rtl" attributes.
  *
- * Supports both Israeli Standard (IS 5568) and generic WCAG RTL checks.
+ * Detects missing RTL direction declarations for right-to-left language content.
  *
  * @module engine/violations/rtlValidator
  */
 
 import { findLineNumber } from '../../utils/sourceMapper.js';
-import { STANDARDS } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // RTL Language Detection
@@ -37,27 +36,7 @@ export function isRtlLanguage(lang) {
 // -----------------------------------------------------------------------------
 
 /**
- * Create an RTL violation for Israeli Standard (IS 5568).
- * Used only when selectedStandard === STANDARDS.ISRAEL.
- */
-function createIsraeliRtlViolation(filePath, htmlOpenTag, lineNumber, selector = 'html', help = 'Add dir="rtl" to your <html> tag.') {
-    return {
-        file: filePath,
-        id: 'israel-rtl',
-        impact: 'serious',
-        description: 'Israeli law requires RTL direction for Hebrew interfaces.',
-        help,
-        helpUrl: 'https://www.gov.il/he/departments/policies/accessibility_standard',
-        wcagTags: ['israeli-standard'],
-        selector,
-        html: htmlOpenTag,
-        lineNumber,
-    };
-}
-
-/**
- * Create a generic RTL violation for non-Israeli standards.
- * Used when RTL check is enabled but the standard is WCAG-AA or WCAG-AAA.
+ * Create an RTL violation for missing dir="rtl" on RTL-language content.
  */
 function createGenericRtlViolation(filePath, htmlOpenTag, lineNumber, selector = 'html', help = 'Add dir="rtl" to the root element or <html> tag to support RTL languages (Hebrew, Arabic, Persian).') {
     return {
@@ -74,11 +53,7 @@ function createGenericRtlViolation(filePath, htmlOpenTag, lineNumber, selector =
     };
 }
 
-export function createRtlViolation(selectedStandard, filePath, htmlOpenTag, lineNumber, selector = 'html', help = undefined) {
-    if (selectedStandard === STANDARDS.ISRAEL) {
-        return createIsraeliRtlViolation(filePath, htmlOpenTag, lineNumber, selector,
-            help ?? 'Add dir="rtl" to your <html> tag.');
-    }
+export function createRtlViolation(filePath, htmlOpenTag, lineNumber, selector = 'html', help = undefined) {
     return createGenericRtlViolation(filePath, htmlOpenTag, lineNumber, selector,
         help ?? 'Add dir="rtl" to the root element to support RTL languages (Hebrew, Arabic, Persian).');
 }
@@ -87,7 +62,7 @@ export function createRtlViolation(selectedStandard, filePath, htmlOpenTag, line
 // HTML RTL Check
 // -----------------------------------------------------------------------------
 
-export function checkRtlCompliance(document, filePath, sourceContent, htmlOpenTag, selectedStandard) {
+export function checkRtlCompliance(document, filePath, sourceContent, htmlOpenTag) {
     // Step 1: dir="rtl" declared anywhere (scoped or global) → compliant
     if (document.querySelector('[dir="rtl"]')) return null;
 
@@ -96,7 +71,7 @@ export function checkRtlCompliance(document, filePath, sourceContent, htmlOpenTa
     if (!isRtlLanguage(htmlLang)) return null;
 
     // Step 3: RTL-primary page with no dir declarations → genuine violation
-    return createRtlViolation(selectedStandard, filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
+    return createRtlViolation(filePath, htmlOpenTag, findLineNumber(sourceContent, '<html'));
 }
 
 // -----------------------------------------------------------------------------
@@ -114,7 +89,7 @@ export function checkRtlCompliance(document, filePath, sourceContent, htmlOpenTa
  * @param {Map<string, number[]>|null} ordinalIndex - tag → [sourceLine, ...] in document order
  * @returns {Object|null}
  */
-export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinalIndex, selectedStandard) {
+export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinalIndex) {
     // Step 1: dir="rtl" declared anywhere → compliant
     if (document.querySelector('[dir="rtl"]')) return null;
 
@@ -134,9 +109,6 @@ export function checkJsxRtlCompliance(document, filePath, sourceContent, ordinal
         ? sourceLines[0]
         : findLineNumber(sourceContent, `<${rootTag}`);
 
-    const help = selectedStandard === STANDARDS.ISRAEL
-        ? 'Add dir="rtl" to your root element or to the <html> tag in index.html.'
-        : 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
-
-    return createRtlViolation(selectedStandard, filePath, rootHtml, lineNumber, rootTag, help);
+    const help = 'Add dir="rtl" to your root element to support RTL languages (Hebrew, Arabic, Persian).';
+    return createRtlViolation(filePath, rootHtml, lineNumber, rootTag, help);
 }

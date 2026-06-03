@@ -338,7 +338,7 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases, AxeB
         ));
 
         if (config.rules.rtl) {
-            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, isComponent ? ordinalIndex : null, config.selectedStandard);
+            const rtlViolation = await checkRtlCompliancePlaywright(page, filePath, sourceContent, isComponent, isComponent ? ordinalIndex : null);
             if (rtlViolation) violations.push(rtlViolation);
         }
 

@@ -192,8 +192,8 @@ async function scanSingleFile(filePath, config) {
 
         if (config.rules.rtl) {
             const rtlViolation = isComponent
-                ? checkJsxRtlCompliance(window.document, filePath, sourceContent, ordinalIndex, config.selectedStandard)
-                : checkRtlCompliance(window.document, filePath, sourceContent, getHtmlOpenTag(window.document), config.selectedStandard);
+                ? checkJsxRtlCompliance(window.document, filePath, sourceContent, ordinalIndex)
+                : checkRtlCompliance(window.document, filePath, sourceContent, getHtmlOpenTag(window.document));
             if (rtlViolation) violations.push(rtlViolation);
         }
 
