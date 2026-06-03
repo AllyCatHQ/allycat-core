@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -17,7 +18,9 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm for OIDC support
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm ci
@@ -28,7 +31,6 @@ jobs:
       - name: Validate package contents
         run: |
           npm pack --dry-run 2>&1 | tee pack-preview.txt
-          # Fail if any test fixtures or dotfiles sneak in
           if grep -E '(tests/|\.env|\.DS_Store)' pack-preview.txt; then
             echo "❌ Unexpected files in package — check the 'files' field in package.json"
             exit 1
@@ -42,6 +44,4 @@ jobs:
         run: node tests/e2e/concurrency.test.js
 
       - name: Publish
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
