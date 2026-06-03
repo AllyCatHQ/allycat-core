@@ -11,11 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.1] - 2026-06-04
+## [1.2.0] - 2026-06-04
 
 ### Added
 - `--exclude <path>` flag — exclude paths and glob patterns from the scan (repeatable).
   Stacks on top of built-in ignores (node_modules, dist, build). Works in normal scan and watch mode.
+- Update notifier — users running an outdated global install now see a banner prompting them to upgrade (`npm i -g allycat`).
 
 ---
 
