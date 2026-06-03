@@ -190,7 +190,7 @@ ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).j
    ${chalk.yellow(`${CLI.SCAN} --exclude "**/*.stories.*"`)}
 
    Stacks on top of the built-in ignores (node_modules, dist, build).
-   For permanent project-wide exclusions, use ${chalk.cyan('.allycatignore')} instead.`
+   Works in both normal scan and watch mode.`
     }
 ];
 

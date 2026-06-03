@@ -130,6 +130,7 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} allycat scan --exclude tests         ${chalk.dim('# Skip the tests folder')}
   ${chalk.cyan('$')} allycat scan --exclude tests --exclude src/generated ${chalk.dim('# Skip multiple paths')}
   ${chalk.cyan('$')} allycat scan --exclude "**/*.stories.*" ${chalk.dim('# Skip all Storybook stories')}
+  ${chalk.cyan('$')} allycat scan --watch --exclude tests  ${chalk.dim('# Watch mode — excluded paths ignored on every rescan too')}
 `)
   .action((target, options) => scanCommand(target, options));
 

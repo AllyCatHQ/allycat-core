@@ -183,6 +183,21 @@ allycat scan --changed ./src      # scoped to a directory
 #   (no label) — violation is unchanged
 ```
 
+#### Path Filtering
+
+| Option | Description |
+|---|---|
+| `--exclude <path>` | Exclude a path or glob from the scan. Repeatable. |
+
+```bash
+allycat scan --exclude tests                          # skip the tests folder
+allycat scan --exclude tests --exclude src/generated  # skip multiple paths
+allycat scan --exclude "**/*.stories.*"               # skip all Storybook stories (glob)
+allycat scan --watch --exclude tests                  # exclusion applies on every rescan too
+```
+
+Stacks on top of the built-in ignores (`node_modules/`, `dist/`, `build/`). Works in normal scan, watch, and `--changed` modes.
+
 #### CI & Gates
 
 | Option | Short | Description |
@@ -287,7 +302,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | Vue | `.vue` |
 | Angular | `.component.html`, `.component.ts` |
 
-Ignores `node_modules/`, `dist/`, `build/`.
+Ignores `node_modules/`, `dist/`, `build/` by default. Use `--exclude` to add more paths.
 
 ---
 
