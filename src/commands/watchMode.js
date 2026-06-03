@@ -43,7 +43,7 @@ import { clearScreen, printBanner, printBaselineSummary, printStatusLine, printR
  * @param {string}      scanMode  - 'quick' | 'full'
  */
 export async function watchMode(target, config, scanMode, options = {}) {
-    const files = await resolveFiles(config, target || null);
+    const files = await resolveFiles(config, target || null, options.exclude || []);
 
     if (files.length === 0) {
         p.log.warn('No scannable files found to watch.');
