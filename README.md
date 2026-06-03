@@ -12,7 +12,7 @@
 
 > **A source-first accessibility scanner** — catch WCAG violations in your editor, on every save, or as a CI gate that blocks inaccessible code from shipping.
 >
-> Around 1 in 4 adults has a disability and web accessibility lawsuits are on the rise. Yet most violations still make it into production because there's no real check in the development process. AllyCat closes that gap.
+> While 1 in 4 adults has a disability and web accessibility lawsuits are on the rise, most violations still make it into production. *Why?* There's no real check in the development process. *AllyCat closes that gap.*
 >
 > *Built for the way developers actually work — source files, pre-commit hooks, and CI pipelines. No deployed app required.*
 
