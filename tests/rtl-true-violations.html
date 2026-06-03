@@ -7,9 +7,9 @@
            Hebrew content but NO dir="rtl" anywhere — not on <html>, not on any
            sub-element.
 
-  Expected violations under Israeli Standard (--standard israel):
-    ✗ israel-rtl   — <html lang="he"> with no dir="rtl" anywhere in the document.
-                     The entire page is Hebrew UI with no directional attributes set.
+  Expected violations with RTL checking enabled (rtl: true):
+    ✗ rtl-direction — <html lang="he"> with no dir="rtl" anywhere in the document.
+                      The entire page is Hebrew UI with no directional attributes set.
 
   NOT an edge case — this is a genuine RTL compliance failure.
   All violations listed here should be REAL (true positives).

@@ -8,14 +8,13 @@
     [GENERAL] - Fails ALL standards (A, AA, AAA)
     [AA]      - Fails AA and above (not just A)
     [AAA]     - Fails ONLY AAA strict mode
-    [RTL]     - Fails Israeli RTL requirements
-    [ISRAEL]  - Specific to Israeli standard
+    [RTL]     - Fails RTL direction requirements
     
     Use this file to test different configurations.
 -->
 
 <html lang="en">
-<!-- [RTL] Missing dir="rtl" - Israeli standard requires this for Hebrew sites -->
+<!-- [RTL] Missing dir="rtl" - RTL checking requires this for Hebrew sites -->
 
 <head>
     <meta charset="UTF-8">
@@ -170,39 +169,38 @@
 
 
     <!-- ============================================== -->
-    <!-- SECTION 4: RTL / ISRAELI STANDARD ISSUES      -->
+    <!-- SECTION 4: RTL ISSUES                          -->
     <!-- ============================================== -->
-    
-    <h2>RTL and Israeli Standard Issues</h2>
-    
-    <!-- [ISRAEL/RTL] Hebrew content without proper RTL -->
+
+    <h2>RTL Issues</h2>
+
+    <!-- [RTL] Hebrew content without proper RTL -->
     <p>שלום וברוכים הבאים לאתר שלנו</p>
-    
-    <!-- [ISRAEL/RTL] Mixed content without bidi handling -->
+
+    <!-- [RTL] Mixed content without bidi handling -->
     <p>המספר הוא 12345 והתאריך 01/01/2024</p>
-    
-    <!-- [ISRAEL/RTL] Hebrew navigation without RTL -->
+
+    <!-- [RTL] Hebrew navigation without RTL -->
     <nav>
         <a href="/">בית</a>
         <a href="/about">אודות</a>
         <a href="/contact">צור קשר</a>
     </nav>
-    
-    <!-- [ISRAEL/RTL] Hebrew form without RTL alignment -->
+
+    <!-- [RTL] Hebrew form without RTL alignment -->
     <form>
         <label>שם מלא</label>
         <input type="text" name="fullname">
-        
+
         <label>כתובת אימייל</label>
         <input type="email" name="email">
-        
+
         <button type="submit">שלח</button>
     </form>
-    
-    <!-- [ISRAEL] Missing accessibility menu/widget -->
-    <!-- Israeli law requires accessibility adjustment options -->
-    
-    <!-- [ISRAEL/RTL] Table with Hebrew headers but no RTL -->
+
+    <!-- [RTL] Missing accessibility adjustment options -->
+
+    <!-- [RTL] Table with Hebrew headers but no RTL -->
     <table>
         <thead>
             <tr>
