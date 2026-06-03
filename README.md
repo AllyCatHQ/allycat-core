@@ -12,7 +12,7 @@
 
 > **The accessibility tool that works the way developers work** — scan source files directly, get exact line numbers, watch mode, CI gates, and AI-ready fix prompts in one.
 
-**Supports**: JSX/TSX, Vue, Angular, HTML • Israeli IS 5568 + RTL • Quick (JSDOM) & Full (Playwright) modes
+**Supports**: JSX/TSX, Vue, Angular, HTML • RTL support (experimental) • Quick (JSDOM) & Full (Playwright) modes
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/demo.gif" alt="AllyCat scanning files — violations found and reported" />
@@ -43,7 +43,7 @@
 
 - ⚡ **Lightning-fast** JSDOM scans (~1s/file, no browser needed)
 - 🔍 **Full browser** scans with real contrast checking via Playwright
-- 🇮🇱 **Israeli IS 5568** with mandatory RTL support
+- 🔤 **RTL support** (experimental) — opt-in for Hebrew, Arabic, Persian interfaces
 - 📍 **Exact line numbers** with clickable VS Code links
 - 📋 **AI-ready fix prompts** — copy-paste into your AI agent (no API key, no data sent)
 - ⚙️ **Watch mode** with NEW/FIXED delta detection
@@ -65,7 +65,7 @@
 | Angular templates | Yes — inline + external | No |
 | Exact source line numbers | Yes — clickable VS Code links | No — DOM selector only |
 | Watch + git-changed scoping | Yes | No |
-| Israeli IS 5568 + RTL | Yes | No |
+| RTL support (experimental) | Yes | No |
 | AI-ready fix prompts | Yes | No |
 | Quick scan (no browser) | Yes — JSDOM, ~1s/file | No — always full browser |
 
@@ -122,8 +122,8 @@ allycat init
 ```
 
 Prompts for:
-- Accessibility standard (WCAG AA, WCAG AAA, Israeli IS 5568)
-- RTL support (auto-enabled for Israeli standard)
+- Accessibility standard (WCAG AA, WCAG AAA)
+- RTL support (experimental, opt-in)
 - Default scan mode (quick or full)
 - AI-ready fix prompts (enabled/disabled)
 - AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot, Other (shown when AI is enabled)
@@ -231,7 +231,7 @@ allycat help           # List all topics
 allycat help faq       # Common questions and answers
 allycat help examples  # Real-world usage examples
 allycat help ci        # CI/CD integration guide
-allycat help standards # Standards explained (WCAG vs Israeli)
+allycat help standards # Standards explained (WCAG AA vs AAA)
 ```
 
 Command-specific help:
@@ -328,11 +328,12 @@ AllyCat is built for pipelines:
 
 ## Accessibility Standards
 
-| Standard | Contrast Ratio | RTL Required | Typical Use |
+| Standard | Contrast Ratio | RTL Support | Typical Use |
 |---|---|---|---|
-| WCAG 2.1 AA | 4.5:1 | No | Most websites |
-| WCAG 2.1 AAA | 7:1 | No | Government / Medical |
-| Israeli IS 5568 | 4.5:1 | **Yes** | Israeli websites (legally required) |
+| WCAG 2.1 AA | 4.5:1 | Optional | Most websites |
+| WCAG 2.1 AAA | 7:1 | Optional | Government / Medical |
+
+RTL support is available as an opt-in for all standards — enable it during `allycat init` for Hebrew, Arabic, Persian, and other RTL interfaces. *(experimental)*
 
 Run `allycat help standards` for a full breakdown, or see the official [WCAG 2.1](https://www.w3.org/TR/WCAG21/) specification.
 

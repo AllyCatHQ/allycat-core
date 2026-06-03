@@ -25,7 +25,7 @@ that default to UTF-8. HTML files are different — they frequently originate fr
 
 - Windows Notepad ("Unicode" mode = UTF-16 LE with BOM)
 - Legacy CMS exports (SharePoint, Drupal, older Dreamweaver)
-- Corporate and government tooling (relevant to IS 5568 target audience)
+- Corporate and government tooling (common in RTL-language markets)
 
 ### Failure mode
 

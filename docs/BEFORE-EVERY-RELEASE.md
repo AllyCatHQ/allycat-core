@@ -104,7 +104,7 @@ Every URL visible to users — in the README, help output, HTML report, and pack
 
 ### `src/commands/helpContent.js`
 - [ ] Every URL printed in help output (`allycat --help`) opens the correct page
-- [ ] WCAG / IS 5568 reference links resolve
+- [ ] WCAG reference links resolve
 - [ ] No dead links or placeholder URLs
 
 ### `src/engine/report/generator.js` — HTML report

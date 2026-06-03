@@ -34,7 +34,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 
 | Option | Values | Description |
 |---|---|---|
-| `selectedStandard` | `wcag-aa`, `wcag-aaa`, `israel` | Accessibility ruleset to enforce |
+| `selectedStandard` | `wcag-aa`, `wcag-aaa` | Accessibility ruleset to enforce |
 | `rules.rtl` | `true`, `false` | Enable RTL direction checking |
 | `rules.level` | `AA`, `AAA` | WCAG conformance level |
 | `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |

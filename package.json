@@ -1,7 +1,7 @@
 {
   "name": "allycat",
   "version": "1.0.0",
-  "description": "Accessibility tool for source files — scans JSX, Vue, Angular, and HTML without a running server. Exact line numbers, watch mode, CI gates, AI fix prompts. WCAG 2.1 AA/AAA and Israeli Standard IS 5568.",
+  "description": "Accessibility tool for source files — scans JSX, Vue, Angular, and HTML without a running server. Exact line numbers, watch mode, CI gates, AI fix prompts. WCAG 2.1 AA/AAA with optional RTL support.",
   "main": "src/index.js",
   "bin": {
     "allycat": "src/index.js"
@@ -21,7 +21,6 @@
     "testing",
     "audit",
     "compliance",
-    "israel",
     "rtl",
     "jsx",
     "vue",
