@@ -25,6 +25,7 @@ import chalk from 'chalk';
 import path from 'path';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../utils/fileResolver.js';
+import { resolveExcludePatterns, matchesExcludePatterns } from '../utils/pathUtils.js';
 import { SUPPORTED_EXTENSIONS, SCAN_MODES } from '../constants.js';
 import { runQuickAudit } from '../engine/scanners/quickScanner.js';
 import { runFullAudit } from '../engine/scanners/fullScanner.js';
@@ -43,7 +44,8 @@ import { clearScreen, printBanner, printBaselineSummary, printStatusLine, printR
  * @param {string}      scanMode  - 'quick' | 'full'
  */
 export async function watchMode(target, config, scanMode, options = {}) {
-    const files = await resolveFiles(config, target || null, options.exclude || []);
+    const excludes = options.exclude || [];
+    const files = await resolveFiles(config, target || null, excludes);
 
     if (files.length === 0) {
         p.log.warn('No scannable files found to watch.');
@@ -59,8 +61,8 @@ export async function watchMode(target, config, scanMode, options = {}) {
     const state = new Map(); // Map<normalizedPath, violation[]>
 
     const initialResult = scanMode === SCAN_MODES.FULL
-        ? await runFullAudit(config, target || null, null)
-        : await runQuickAudit(config, target || null, null);
+        ? await runFullAudit(config, target || null, files, false, excludes)
+        : await runQuickAudit(config, target || null, files, false, excludes);
 
     groupViolationsByFile(state, initialResult.violations);
 
@@ -81,9 +83,13 @@ export async function watchMode(target, config, scanMode, options = {}) {
     });
 
     const debounceTimers = new Map(); // debounce: filepath → timeout handle
+    const excludePatterns = resolveExcludePatterns(excludes);
 
     const scheduleRescan = (filepath) => {
         if (!SUPPORTED_EXTENSIONS.some(ext => filepath.endsWith(`.${ext}`))) return;
+
+        const rel = path.relative(process.cwd(), path.resolve(filepath)).replace(/\\/g, '/');
+        if (matchesExcludePatterns(rel, excludePatterns)) return;
 
         if (debounceTimers.has(filepath)) clearTimeout(debounceTimers.get(filepath));
 
