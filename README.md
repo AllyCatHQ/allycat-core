@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/icon.png" alt="AllyCat logo" width="200" />
-</p>
+<div align="center">
 
 # AllyCat
 
@@ -10,7 +8,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/npm/dm/allycat.svg)](https://www.npmjs.com/package/allycat)
 
-> **The accessibility tool that works the way developers work** — scan source files directly, get exact line numbers, watch mode, CI gates, and AI-ready fix prompts in one.
+</div>
+
+> **A source-first accessibility scanner** — catch WCAG violations in your editor, on every save, or as a CI gate that blocks inaccessible code from shipping.
+>
+> While 1 in 4 adults has a disability and web accessibility lawsuits are on the rise, most violations still make it into production. *Why?* There's no real check in the development process. *AllyCat closes that gap.*
+>
+> *Built for the way developers actually work — source files, pre-commit hooks, and CI pipelines. No deployed app required.*
 
 **Supports**: JSX/TSX, Vue, Angular, HTML • RTL support (experimental) • Quick (JSDOM) & Full (Playwright) modes
 
@@ -179,6 +183,21 @@ allycat scan --changed ./src      # scoped to a directory
 #   (no label) — violation is unchanged
 ```
 
+#### Path Filtering
+
+| Option | Description |
+|---|---|
+| `--exclude <path>` | Exclude a path or glob from the scan. Repeatable. |
+
+```bash
+allycat scan --exclude tests                          # skip the tests folder
+allycat scan --exclude tests --exclude src/generated  # skip multiple paths
+allycat scan --exclude "**/*.stories.*"               # skip all Storybook stories (glob)
+allycat scan --watch --exclude tests                  # exclusion applies on every rescan too
+```
+
+Stacks on top of the built-in ignores (`node_modules/`, `dist/`, `build/`). Works in normal scan, watch, and `--changed` modes.
+
 #### CI & Gates
 
 | Option | Short | Description |
@@ -283,7 +302,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | Vue | `.vue` |
 | Angular | `.component.html`, `.component.ts` |
 
-Ignores `node_modules/`, `dist/`, `build/`.
+Ignores `node_modules/`, `dist/`, `build/` by default. Use `--exclude` to add more paths.
 
 ---
 
@@ -385,3 +404,9 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md)
 ## License
 
 MIT © 2026 Dotan Siman Tov
+
+---
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/icon.png" alt="AllyCat logo" width="120" />
+</p>

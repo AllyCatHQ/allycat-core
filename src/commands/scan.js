@@ -75,7 +75,7 @@ export async function scanCommand(target = null, options = {}) {
 
     displayScanConfiguration(config, scanMode, options, target);
 
-    const result = await executeScan(config, scanMode, targetPath, preResolvedFiles);
+    const result = await executeScan(config, scanMode, targetPath, preResolvedFiles, options.exclude || []);
     if (result === null) {
         return;
     }
@@ -136,11 +136,16 @@ function displayScanConfiguration(config, scanMode, options, target) {
             ? `Baseline:  ${chalk.cyan('Active → fail on NEW violations (exit 4)')}\n`
             : '';
 
+    const excludeLine = options.exclude?.length
+        ? `Excluding: ${chalk.yellow(options.exclude.join(', '))}\n`
+        : '';
+
     p.note(
         `Mode:      ${modeDisplay}\n` +
         scopeLine +
         exitGateLine +
         baselineLine +
+        excludeLine +
         `Standard:  ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Output:    ${chalk.bold(options.output || 'terminal')}\n` +

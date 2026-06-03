@@ -181,6 +181,16 @@ ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).j
    ${chalk.green('[NEW]')}   — violation appeared since the last scan
    ${chalk.red('[FIXED]')} — violation was present before and is now resolved
    No label  — violation is unchanged since the last scan`
+    },
+    {
+        q: 'How do I exclude a folder or file from the scan?',
+        a: `Use ${chalk.cyan('--exclude')} — repeatable, accepts paths and glob patterns:
+   ${chalk.yellow(`${CLI.SCAN} --exclude tests`)}
+   ${chalk.yellow(`${CLI.SCAN} --exclude tests --exclude src/generated`)}
+   ${chalk.yellow(`${CLI.SCAN} --exclude "**/*.stories.*"`)}
+
+   Stacks on top of the built-in ignores (node_modules, dist, build).
+   Works in both normal scan and watch mode.`
     }
 ];
 
@@ -249,6 +259,14 @@ export const EXAMPLE_SECTIONS = [
             { cmd: `${CLI.SCAN} --watch ./src`,        desc: 'Watch specific folder' },
             { cmd: `${CLI.SCAN} --watch --existing`,   desc: 'Watch — show full details of pre-existing violations on startup' },
             { cmd: `${CLI.SCAN} --watch --summary`,    desc: 'Watch with counts only — no descriptions for delta output' }
+        ]
+    },
+    {
+        title: 'Path Filtering',
+        examples: [
+            { cmd: `${CLI.SCAN} --exclude tests`,                         desc: 'Skip the tests folder' },
+            { cmd: `${CLI.SCAN} --exclude tests --exclude src/generated`,  desc: 'Skip multiple paths' },
+            { cmd: `${CLI.SCAN} --exclude "**/*.stories.*"`,               desc: 'Skip all Storybook stories (glob)' }
         ]
     },
     {

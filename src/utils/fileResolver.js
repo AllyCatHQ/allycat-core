@@ -11,7 +11,7 @@ import { glob } from 'glob';
 import { statSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
-import { normalizeForGlob } from './pathUtils.js';
+import { normalizeForGlob, resolveExcludePatterns } from './pathUtils.js';
 import { SUPPORTED_EXTENSIONS } from '../constants.js';
 
 export { SUPPORTED_EXTENSIONS };
@@ -23,21 +23,23 @@ export { SUPPORTED_EXTENSIONS };
  * @param {string|null} targetPath - Optional specific file or directory
  * @returns {Promise<string[]>} - Resolved file paths
  */
-export async function resolveFiles(config, targetPath) {
+export async function resolveFiles(config, targetPath, excludes = []) {
     if (targetPath) {
-        return await resolveTargetPath(targetPath, SUPPORTED_EXTENSIONS);
+        return await resolveTargetPath(targetPath, SUPPORTED_EXTENSIONS, excludes);
     }
 
+    const ignore = [
+        '**/node_modules/**', '**/dist/**', '**/build/**',
+        ...resolveExcludePatterns(excludes)
+    ];
+
     const patterns = SUPPORTED_EXTENSIONS.map(ext => `**/*.${ext}`);
-    const files = await glob(patterns, {
-        ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
-        dot: false
-    });
+    const files = await glob(patterns, { ignore, dot: false });
 
     return files;
 }
 
-export async function resolveTargetPath(targetPath, extensions) {
+export async function resolveTargetPath(targetPath, extensions, excludes = []) {
     const stats = statSync(targetPath);
 
     if (stats.isFile()) {
@@ -52,9 +54,11 @@ export async function resolveTargetPath(targetPath, extensions) {
     if (stats.isDirectory()) {
         const normalizedPath = normalizeForGlob(targetPath);
         const globPattern = `${normalizedPath}/**/*.{${extensions.join(',')}}`;
-        return await glob(globPattern, {
-            ignore: ['**/node_modules/**', '**/dist/**', '**/build/**']
-        });
+        const ignore = [
+            '**/node_modules/**', '**/dist/**', '**/build/**',
+            ...resolveExcludePatterns(excludes)
+        ];
+        return await glob(globPattern, { ignore });
     }
 
     return [];

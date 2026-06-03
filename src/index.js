@@ -2,13 +2,19 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { createRequire } from 'module';
+import updateNotifier from 'update-notifier';
 import { initCommand } from './commands/init.js';
 import { scanCommand } from './commands/scan.js';
 import { helpCommand } from './commands/help.js';
 import { UI, APP_LINKS, SUPPORTED_EXTENSIONS_DISPLAY } from './constants.js';
 
 const require = createRequire(import.meta.url);
-const { version } = require('../package.json');
+const pkg = require('../package.json');
+const { version } = pkg;
+
+updateNotifier({ pkg }).notify();
+
+const collectRepeatable = (val, acc) => [...acc, val];
 
 const program = new Command();
 
@@ -84,6 +90,7 @@ program
   .option('--no-selector', 'Hide element selector per violation')
   .option('--no-affected', 'Hide affected element count per violation')
   .option('--summary-style <style>', 'Summary display style: default, compact', 'default')
+  .option('--exclude <path>', 'Exclude a path or glob from the scan (repeatable)', collectRepeatable, [])
   .option('--ci', 'CI preset: compact output + fail on critical (activates --no-snippet, --no-help, --no-wcag, --no-selector, --no-affected, --summary-style compact, --fail-on-critical)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
@@ -124,6 +131,10 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} allycat scan --ci --fail-on-any    ${chalk.dim('# CI preset with strictest gate')}
   ${chalk.cyan('$')} allycat scan --no-snippet --no-wcag ${chalk.dim('# Hide snippets and WCAG tags only')}
   ${chalk.cyan('$')} allycat scan --summary-style compact ${chalk.dim('# Single-line summary')}
+  ${chalk.cyan('$')} allycat scan --exclude tests         ${chalk.dim('# Skip the tests folder')}
+  ${chalk.cyan('$')} allycat scan --exclude tests --exclude src/generated ${chalk.dim('# Skip multiple paths')}
+  ${chalk.cyan('$')} allycat scan --exclude "**/*.stories.*" ${chalk.dim('# Skip all Storybook stories')}
+  ${chalk.cyan('$')} allycat scan --watch --exclude tests  ${chalk.dim('# Watch mode — excluded paths ignored on every rescan too')}
 `)
   .action((target, options) => scanCommand(target, options));
 

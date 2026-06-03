@@ -13,6 +13,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { runQuickAudit } from '../engine/scanners/quickScanner.js';
 import { runFullAudit, checkPlaywrightAvailable } from '../engine/scanners/fullScanner.js';
+import { resolveExcludePatterns, matchesExcludePatterns } from '../utils/pathUtils.js';
 import { SUPPORTED_EXTENSIONS, MESSAGES, SCAN_MODES } from '../constants.js';
 
 // -----------------------------------------------------------------------------
@@ -135,14 +136,21 @@ async function resolveChangedFiles(target) {
  * @param {string[]|null} preResolvedFiles - Pre-resolved file list (--changed mode)
  * @returns {Promise<{violations: Array, warnings: Array}|null>} - Scan result or null on error
  */
-export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null) {
+export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null, excludes = []) {
+    if (preResolvedFiles && excludes.length) {
+        const patterns = resolveExcludePatterns(excludes);
+        preResolvedFiles = preResolvedFiles.filter(
+            f => !matchesExcludePatterns(f.replace(/\\/g, '/'), patterns)
+        );
+    }
+
     const spinner = p.spinner();
     spinner.start(MESSAGES.ANALYZING);
 
     try {
         const result = scanMode === SCAN_MODES.FULL
-            ? await runFullAudit(config, targetPath, preResolvedFiles)
-            : await runQuickAudit(config, targetPath, preResolvedFiles);
+            ? await runFullAudit(config, targetPath, preResolvedFiles, false, excludes)
+            : await runQuickAudit(config, targetPath, preResolvedFiles, false, excludes);
 
         spinner.stop(chalk.green(MESSAGES.ANALYSIS_COMPLETE));
         return result;

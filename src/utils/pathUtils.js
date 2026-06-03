@@ -97,3 +97,38 @@ export function expandUserPath(inputPath) {
 
     return inputPath;
 }
+
+/**
+ * Normalize user-supplied exclude paths into glob-ready patterns.
+ *
+ * Plain paths  → ['tests', 'tests/**']  (exclude folder and its contents)
+ * Glob patterns → passed through as-is
+ *
+ * @param {string[]} userPaths - Raw paths/globs from --exclude
+ * @returns {string[]} - Expanded glob patterns ready for the ignore list
+ */
+export function resolveExcludePatterns(userPaths = []) {
+    return userPaths.flatMap(p => {
+        const normalized = normalizeForGlob(expandUserPath(p));
+        const isGlob = /[*?{}\[\]!]/.test(normalized);
+        return isGlob ? [normalized] : [normalized, `${normalized}/**`];
+    });
+}
+
+/**
+ * Returns true if a (relative, forward-slash) file path matches any resolved exclude pattern.
+ * Handles both plain-path patterns (prefix match) and glob patterns (exact match only —
+ * callers wanting full glob matching should pre-filter with resolveExcludePatterns + glob).
+ *
+ * @param {string}   filepath - Relative path with forward slashes
+ * @param {string[]} patterns - Output of resolveExcludePatterns()
+ * @returns {boolean}
+ */
+export function matchesExcludePatterns(filepath, patterns) {
+    if (!patterns.length) return false;
+    return patterns.some(pat => {
+        if (pat.endsWith('/**')) return filepath.startsWith(pat.slice(0, -3) + '/');
+        if (/[*?{}\[\]!]/.test(pat)) return false; // true glob — needs a glob lib; skip
+        return filepath === pat || filepath.startsWith(pat + '/');
+    });
+}

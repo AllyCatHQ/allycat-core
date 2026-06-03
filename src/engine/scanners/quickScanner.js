@@ -44,8 +44,8 @@ const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
  * @param {string|null} targetPath - Optional specific file/folder to scan
  * @returns {Promise<Array>} - Array of violation objects
  */
-export async function runQuickAudit(config, targetPath = null, files = null, silent = false) {
-    const filesToScan = files ?? await resolveFiles(config, targetPath);
+export async function runQuickAudit(config, targetPath = null, files = null, silent = false, excludes = []) {
+    const filesToScan = files ?? await resolveFiles(config, targetPath, excludes);
 
     if (filesToScan.length === 0) {
         if (!silent) p.log.warn(MESSAGES.NO_FILES_FOUND);
