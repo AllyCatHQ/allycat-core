@@ -145,23 +145,21 @@ function showStandards() {
   • No timing limits
 `);
 
-    console.log(chalk.bold.yellow('Israeli Standard IS 5568') + chalk.dim(' (Israel)'));
-    console.log(`  Based on WCAG 2.1 AA with additional requirements.
-  Mandatory for Israeli websites by law.
+    console.log(chalk.bold.white('RTL Support') + chalk.dim(' (experimental)'));
+    console.log(`  Optional RTL (right-to-left) checking available for all standards.
+  Enable during ${chalk.cyan('allycat init')} — applies to Hebrew, Arabic, Persian, and other RTL interfaces.
 
-  ${chalk.dim('Adds:')}
-  • RTL (right-to-left) support required
-  • Hebrew language accessibility
-  • dir="rtl" attribute on <html>
+  ${chalk.dim('Checks:')}
+  • Missing dir="rtl" on the root element
+  • RTL language detected via lang attribute (he, ar, fa, ur, and more)
 `);
 
     console.log(chalk.bold.white('Comparison Table'));
     console.log('');
-    console.log(chalk.dim('  Standard     │ Contrast │ RTL Required │ Use Case'));
-    console.log(chalk.dim('  ────────────────────────────────────────────────────────'));
-    console.log(chalk.dim('  WCAG AA      │ 4.5:1    │ No           │ Most websites'));
-    console.log(chalk.dim('  WCAG AAA     │ 7:1      │ No           │ Government/Medical'));
-    console.log(chalk.dim('  Israeli 5568 │ 4.5:1    │ Yes          │ Israeli websites'));
+    console.log(chalk.dim('  Standard  │ Contrast │ RTL Support │ Use Case'));
+    console.log(chalk.dim('  ─────────────────────────────────────────────────'));
+    console.log(chalk.dim('  WCAG AA   │ 4.5:1    │ Optional    │ Most websites'));
+    console.log(chalk.dim('  WCAG AAA  │ 7:1      │ Optional    │ Government/Medical'));
     console.log('');
 
     console.log(divider);

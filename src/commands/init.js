@@ -91,13 +91,12 @@ export async function initCommand() {
                 options: [
                     { value: STANDARDS.WCAG_AA,  label: '🌍 Global Standard (WCAG 2.1 AA)',  hint: 'Industry Standard' },
                     { value: STANDARDS.WCAG_AAA, label: '🏥 Strict Mode (WCAG 2.1 AAA)',      hint: 'Government/Medical' },
-                    { value: STANDARDS.ISRAEL,   label: '🇮🇱 Israeli Standard (IS 5568)',      hint: 'AA + RTL Support' },
                 ],
             }),
-            checkRTL: ({ results }) => results.standard !== STANDARDS.ISRAEL ? p.confirm({
-                message: 'Check for RTL support? (For right-to-left languages, e.g. Hebrew, Arabic, Persian)',
+            checkRTL: () => p.confirm({
+                message: 'Check for RTL support? (experimental — for Hebrew, Arabic, Persian interfaces)',
                 initialValue: false,
-            }) : Promise.resolve(true),
+            }),
             scanMode: () => p.select({
                 message: 'Default scan mode:',
                 options: [
@@ -190,7 +189,7 @@ export async function initCommand() {
     const config = {
         selectedStandard: group.standard,
         rules: {
-            rtl: group.standard === STANDARDS.ISRAEL || group.checkRTL === true,
+            rtl: group.checkRTL === true,
             level: group.standard === STANDARDS.WCAG_AAA ? 'AAA' : 'AA'
         },
         scan: {
