@@ -11,7 +11,7 @@
  *   --fail-on-new       → terminal with NEW / BASELINE labels
  *   (default)           → full terminal output
  *
- * AI report is appended in terminal mode when ai.enabled is true.
+ * Fix-prompt report is appended in terminal mode when ai.enabled is true.
  *
  * @module commands/outputters
  */
@@ -31,7 +31,7 @@ import { outputAiReport } from './reportOutputter.js';
  * @param {Array}       warnings       - Scan warnings
  * @param {Object|null} baselineResult - Classified violations from baselineManager, or null
  */
-export function outputResults(violations, config, scanMode, options, warnings = [], baselineResult = null) {
+export async function outputResults(violations, config, scanMode, options, warnings = [], baselineResult = null) {
     if (options.jsonFile) {
         outputJsonFile(violations, config, scanMode, options.jsonFile, warnings);
     } else if (options.output === 'json') {
@@ -43,10 +43,10 @@ export function outputResults(violations, config, scanMode, options, warnings = 
     } else {
         outputTerminal(violations, scanMode, options);
     }
-    // AI report: terminal mode only — not in json, json-file, or summary modes
+    // Fix-prompt report: terminal mode only — not in json, json-file, or summary modes
     if (!options.jsonFile && options.output !== 'json' && !options.summary) {
         if (config?.ai?.enabled && violations.length > 0) {
-            outputAiReport(violations, config, scanMode);
+            await outputAiReport(violations, config, scanMode);
         }
     }
 }

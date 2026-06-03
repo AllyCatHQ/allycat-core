@@ -23,7 +23,7 @@ import { saveBaseline, loadBaseline, classifyViolations } from '../utils/baselin
  * @param {string} scanMode - 'quick' or 'full'
  * @param {Object} options - CLI options
  */
-export function handleScanResult(violations, warnings, config, scanMode, options) {
+export async function handleScanResult(violations, warnings, config, scanMode, options) {
     // --save-baseline: snapshot current violations and always exit 0
     if (options.saveBaseline) {
         const dest = saveBaseline(violations, config, scanMode);
@@ -46,7 +46,7 @@ export function handleScanResult(violations, warnings, config, scanMode, options
         }
     }
 
-    outputResults(violations, config, scanMode, options, warnings, baselineResult);
+    await outputResults(violations, config, scanMode, options, warnings, baselineResult);
 
     // Exit code 4 takes priority over severity gates
     if (baselineResult && baselineResult.newViolations.length > 0) {

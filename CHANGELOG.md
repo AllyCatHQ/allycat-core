@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clickable `vscode://` deep-links to open the exact file and line in VS Code
 - Self-contained HTML report with dark/light toggle, violation filters, and file search
 - AI fix prompt modals in the HTML report — copy a ready-to-use prompt for any violation
+- `ai.reportBehavior` config option — controls how the fix-prompt report is delivered after each scan: `auto-open` (browser), `path-only` (prints relative + absolute path), `ask` (prompts each time). Defaults to `path-only` on upgrade.
 - CSS-in-JS detection warning (styled-components, emotion, styled-jsx, stitches)
 - BOM-aware file reading — UTF-8 with and without BOM, UTF-16 LE/BE
 

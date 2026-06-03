@@ -75,6 +75,14 @@ export const STANDARD_LABELS = {
 
 export const DEFAULT_HTML_REPORT = 'allycat-report.html';
 
+// ─── AI Report Delivery Behaviors ─────────────────────────────────────────────
+
+export const AI_REPORT_BEHAVIORS = {
+    AUTO_OPEN:  'auto-open',
+    PATH_ONLY:  'path-only',
+    ASK:        'ask',
+};
+
 // ─── Supported File Extensions ────────────────────────────────────────────────
 // Single source of truth for all file types the scanner accepts.
 // Used by fileResolver, scan display, watchMode, and helpContent.

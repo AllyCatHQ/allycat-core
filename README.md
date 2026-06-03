@@ -127,6 +127,7 @@ Prompts for:
 - Default scan mode (quick or full)
 - AI-ready fix prompts (enabled/disabled)
 - AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot, Other (shown when AI is enabled)
+- Report delivery — Auto-open in browser / Save and print path / Ask each time (shown when AI is enabled)
 - Concurrency override (optional advanced setting)
 
 > No framework selection needed — the scanner automatically detects `.html`, `.jsx`, `.tsx`, `.vue`, and Angular template files.
@@ -260,7 +261,8 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
   },
   "ai": {
     "enabled": true,
-    "agent": "claude"
+    "agent": "claude",
+    "reportBehavior": "path-only"
   },
   "performance": {
     "concurrency": null
