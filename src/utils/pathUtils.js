@@ -114,3 +114,21 @@ export function resolveExcludePatterns(userPaths = []) {
         return isGlob ? [normalized] : [normalized, `${normalized}/**`];
     });
 }
+
+/**
+ * Returns true if a (relative, forward-slash) file path matches any resolved exclude pattern.
+ * Handles both plain-path patterns (prefix match) and glob patterns (exact match only —
+ * callers wanting full glob matching should pre-filter with resolveExcludePatterns + glob).
+ *
+ * @param {string}   filepath - Relative path with forward slashes
+ * @param {string[]} patterns - Output of resolveExcludePatterns()
+ * @returns {boolean}
+ */
+export function matchesExcludePatterns(filepath, patterns) {
+    if (!patterns.length) return false;
+    return patterns.some(pat => {
+        if (pat.endsWith('/**')) return filepath.startsWith(pat.slice(0, -3) + '/');
+        if (/[*?{}\[\]!]/.test(pat)) return false; // true glob — needs a glob lib; skip
+        return filepath === pat || filepath.startsWith(pat + '/');
+    });
+}
