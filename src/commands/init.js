@@ -89,8 +89,9 @@ export async function initCommand() {
             standard: () => p.select({
                 message: 'Which accessibility standard do you need?',
                 options: [
-                    { value: STANDARDS.WCAG_AA,  label: '🌍 Global Standard (WCAG 2.1 AA)',  hint: 'Industry Standard' },
-                    { value: STANDARDS.WCAG_AAA, label: '🏥 Strict Mode (WCAG 2.1 AAA)',      hint: 'Government/Medical' },
+                    { value: STANDARDS.WCAG_AA,    label: '🌍 Global Standard (WCAG 2.1 AA)',              hint: 'Industry Standard' },
+                    { value: STANDARDS.WCAG_22_AA, label: '🆕 WCAG 2.2 AA (automated rules)',              hint: 'Industry Frontier — 2025 standard for new projects' },
+                    { value: STANDARDS.WCAG_AAA,   label: '🏥 Strict Mode (WCAG AAA, automated rules)',    hint: 'Government/Medical — full AAA requires a manual audit' },
                 ],
             }),
             checkRTL: () => p.confirm({
