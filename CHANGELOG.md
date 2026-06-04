@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-06-04
+
+### Fixed
+- `playwright` and `@axe-core/playwright` moved from `devDependencies` to `dependencies` — `allycat scan --full` now works correctly after a global install (`npm install -g allycat`) without requiring users to separately install the playwright npm package.
+
+---
+
 ## [1.2.0] - 2026-06-04
 
 ### Added
