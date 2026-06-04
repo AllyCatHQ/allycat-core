@@ -99,10 +99,10 @@ See all options with `allycat scan --help`.
 ## Installation
 
 ```bash
-# Global (recommended)
+# Global — for personal use
 npm install -g allycat
 
-# Or as a dev dependency
+# Per-project — recommended for teams and CI/CD (version-pinned per project)
 npm install --save-dev allycat
 ```
 
