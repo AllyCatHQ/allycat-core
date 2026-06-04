@@ -10,6 +10,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 
 ```json
 {
+  "configVersion": 1,
   "selectedStandard": "wcag-aa",
   "rules": {
     "rtl": false,
@@ -35,6 +36,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 
 | Option | Values | Description |
 |---|---|---|
+| `configVersion` | integer | Schema version written by `allycat init`. Read by the tool to detect outdated configs and auto-migrate. Never edit this manually. |
 | `selectedStandard` | `wcag-aa`, `wcag-aaa` | Accessibility ruleset to enforce |
 | `rules.rtl` | `true`, `false` | Enable RTL direction checking |
 | `rules.level` | `AA`, `AAA` | WCAG conformance level |
@@ -43,6 +45,35 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | `ai.agent` | `claude`, `cursor`, `chatgpt`, `gemini`, `copilot`, `generic` | AI agent used to generate fix prompt style (set by `allycat init`) |
 | `ai.reportBehavior` | `auto-open`, `path-only`, `ask` | How the fix-prompt HTML report is delivered after each scan. `auto-open` = opens in browser automatically, `path-only` = prints relative + absolute path to terminal, `ask` = prompts you each time. Defaults to `path-only` if unset. |
 | `performance.concurrency` | integer or `null` | Files scanned in parallel. `null` = auto (computed from RAM + CPU) |
+
+---
+
+## Config Versioning
+
+`allycat.config.json` carries a `configVersion` integer. On every run, the tool compares this against its own `CURRENT_CONFIG_VERSION` and handles three cases:
+
+| Situation | What happens |
+|---|---|
+| Config has no `configVersion` (pre-v1) | Auto-stamped silently, one log line printed |
+| Config version is behind the tool | Auto-migrated and saved. User is told to run `allycat init` to review |
+| Config version is ahead of the tool | Warning printed, scan continues (update the tool) |
+| Config is valid JSON and version matches | Loads normally, zero overhead |
+| Config is corrupt / invalid JSON | Error message printed with file path, falls back to defaults |
+
+Users do not need to do anything manually — migration is automatic and non-destructive.
+
+### For developers: when to bump `configVersion`
+
+> **This is a release-time responsibility. See the checklist in [`docs/BEFORE-EVERY-RELEASE.md`](../BEFORE-EVERY-RELEASE.md) — Section 6.**
+
+When you change the shape of `allycat.config.json` (add a required key, rename a key, remove a key, change a value format):
+
+1. Bump `CURRENT_CONFIG_VERSION` in `src/constants.js`
+2. Add a migration block in `migrateConfig()` in `src/utils/configLoader.js`
+3. Update `DEFAULT_CONFIG` in `configLoader.js` if the new key needs a default for fresh installs
+4. Update the Field Reference table and JSON example in this file
+
+`configVersion` does **not** move on bug fixes, performance changes, or new CLI flags — only when the config file's schema changes.
 
 ---
 

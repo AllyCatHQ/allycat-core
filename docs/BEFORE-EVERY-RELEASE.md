@@ -145,6 +145,21 @@ npx license-checker --production --summary
 
 ## 6. Configuration Accuracy
 
+### Config schema versioning — check this on every release
+
+Ask yourself: **did the shape of `allycat.config.json` change in this release?**
+(Added a key, renamed a key, removed a key, changed a value format — any of these count.)
+
+- [ ] **If YES:** `CURRENT_CONFIG_VERSION` in `src/constants.js` was bumped
+- [ ] **If YES:** A migration block was added in `migrateConfig()` in `src/utils/configLoader.js`
+- [ ] **If YES:** `DEFAULT_CONFIG` in `configLoader.js` updated if the new key needs a default for fresh installs
+- [ ] **If YES:** `docs/configuration.md` field reference and JSON example updated
+- [ ] **If NO:** `CURRENT_CONFIG_VERSION` was NOT touched (correct — it only moves with schema changes)
+
+Full workflow documented in: [`docs/configuration.md` → Config Versioning section](./configuration.md#config-versioning)
+
+### General config checks
+
 - [ ] `allycat init` followed by `allycat scan .` works on a fresh project with no existing config
 - [ ] Config fields in generated `allycat.config.json` match what `configLoader.js` actually reads
 - [ ] Concurrency: run `allycat init` and confirm the displayed parallel count is correct for this machine
