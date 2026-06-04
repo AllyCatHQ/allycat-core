@@ -27,8 +27,9 @@ export const SCAN_MODES = {
 // ─── Accessibility Standards ──────────────────────────────────────────────────
 
 export const STANDARDS = {
-    WCAG_AA:  'wcag-aa',
-    WCAG_AAA: 'wcag-aaa',
+    WCAG_AA:    'wcag-aa',
+    WCAG_AAA:   'wcag-aaa',
+    WCAG_22_AA: 'wcag-22-aa',
 };
 
 // ─── UI Strings ───────────────────────────────────────────────────────────────
@@ -71,8 +72,9 @@ export const MESSAGES = {
 // Human-readable labels used in prompts and reports. Keyed by STANDARDS values.
 
 export const STANDARD_LABELS = {
-    [STANDARDS.WCAG_AA]:  'WCAG 2.1 AA',
-    [STANDARDS.WCAG_AAA]: 'WCAG 2.1 AAA',
+    [STANDARDS.WCAG_AA]:    'WCAG 2.1 AA',
+    [STANDARDS.WCAG_AAA]:   'WCAG AAA (automated rules)',
+    [STANDARDS.WCAG_22_AA]: 'WCAG 2.2 AA',
 };
 
 // ─── Report File Names ────────────────────────────────────────────────────────
