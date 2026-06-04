@@ -76,3 +76,14 @@ jobs:
 
       - name: E2E — CSS delivery (requires Playwright)
         run: node tests/e2e/css-delivery.test.js
+
+      - name: Production install smoke test (no devDependencies)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          TARBALL=$(npm pack --quiet)
+          INSTALL_DIR=$(mktemp -d)
+          cd "$INSTALL_DIR"
+          npm install --omit=dev "$OLDPWD/$TARBALL"
+          npx playwright install chromium --with-deps
+          node_modules/.bin/allycat scan "$OLDPWD/tests/fixtures/sample.html" --full
