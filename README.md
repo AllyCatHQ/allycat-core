@@ -187,13 +187,16 @@ allycat scan --changed ./src      # scoped to a directory
 
 | Option | Description |
 |---|---|
-| `--exclude <path>` | Exclude a path or glob from the scan. Repeatable. |
+| `--exclude <path>` | Exclude a path or glob from the scan. Repeatable. When scanning a scoped path, `--exclude` names are automatically resolved relative to that target — no need to type the full path. |
 
 ```bash
 allycat scan --exclude tests                          # skip the tests folder
 allycat scan --exclude tests --exclude src/generated  # skip multiple paths
 allycat scan --exclude "**/*.stories.*"               # skip all Storybook stories (glob)
 allycat scan --watch --exclude tests                  # exclusion applies on every rescan too
+allycat scan scripts --exclude test.html              # scans scripts/ — auto-resolves to scripts/test.html
+allycat scan src/components --exclude fixtures        # auto-resolves to src/components/fixtures (entire folder)
+allycat scan src/test --exclude __mocks__             # auto-resolves to src/test/__mocks__
 ```
 
 Stacks on top of the built-in ignores (`node_modules/`, `dist/`, `build/`). Works in normal scan, watch, and `--changed` modes.

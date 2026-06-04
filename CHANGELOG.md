@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-06-04
+
+### Added
+- `--exclude` auto-scoping — when scanning a scoped path (e.g. `allycat scan scripts`),
+  plain names in `--exclude` are automatically resolved relative to that target.
+  No need to type the full path: `--exclude test.html` becomes `scripts/test.html`,
+  `--exclude fixtures` becomes `scripts/fixtures`, etc.
+
+### Fixed
+- Watch mode now applies the same scoped excludes for real-time file-change filtering.
+  Previously, excluded files could still trigger a rescan because the watcher was using
+  the original unscoped paths instead of the resolved ones.
+
+---
+
 ## [1.2.1] - 2026-06-04
 
 ### Fixed

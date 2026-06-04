@@ -188,9 +188,13 @@ ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).j
    ${chalk.yellow(`${CLI.SCAN} --exclude tests`)}
    ${chalk.yellow(`${CLI.SCAN} --exclude tests --exclude src/generated`)}
    ${chalk.yellow(`${CLI.SCAN} --exclude "**/*.stories.*"`)}
+   ${chalk.yellow(`${CLI.SCAN} scripts --exclude test.html`)}        ${chalk.dim('→ scripts/test.html')}
+   ${chalk.yellow(`${CLI.SCAN} src/components --exclude fixtures`)}  ${chalk.dim('→ src/components/fixtures (entire folder)')}
+   ${chalk.yellow(`${CLI.SCAN} src/test --exclude __mocks__`)}       ${chalk.dim('→ src/test/__mocks__')}
 
    Stacks on top of the built-in ignores (node_modules, dist, build).
-   Works in both normal scan and watch mode.`
+   Works in both normal scan and watch mode.
+   When scanning a scoped path, --exclude names are automatically resolved relative to that target — no need to type the full path.`
     }
 ];
 
@@ -266,7 +270,10 @@ export const EXAMPLE_SECTIONS = [
         examples: [
             { cmd: `${CLI.SCAN} --exclude tests`,                         desc: 'Skip the tests folder' },
             { cmd: `${CLI.SCAN} --exclude tests --exclude src/generated`,  desc: 'Skip multiple paths' },
-            { cmd: `${CLI.SCAN} --exclude "**/*.stories.*"`,               desc: 'Skip all Storybook stories (glob)' }
+            { cmd: `${CLI.SCAN} --exclude "**/*.stories.*"`,               desc: 'Skip all Storybook stories (glob)' },
+            { cmd: `${CLI.SCAN} scripts --exclude test.html`,              desc: 'Scan scripts/ — auto-resolves to scripts/test.html' },
+            { cmd: `${CLI.SCAN} src/components --exclude fixtures`,        desc: 'Scan src/components — auto-resolves to src/components/fixtures' },
+            { cmd: `${CLI.SCAN} src/test --exclude __mocks__`,             desc: 'Scan src/test — auto-resolves to src/test/__mocks__' }
         ]
     },
     {
