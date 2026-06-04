@@ -11,7 +11,7 @@ import { glob } from 'glob';
 import { statSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
-import { normalizeForGlob, resolveExcludePatterns } from './pathUtils.js';
+import { normalizeForGlob, expandUserPath, resolveExcludePatterns } from './pathUtils.js';
 import { SUPPORTED_EXTENSIONS } from '../constants.js';
 
 export { SUPPORTED_EXTENSIONS };
@@ -54,9 +54,22 @@ export async function resolveTargetPath(targetPath, extensions, excludes = []) {
     if (stats.isDirectory()) {
         const normalizedPath = normalizeForGlob(targetPath);
         const globPattern = `${normalizedPath}/**/*.{${extensions.join(',')}}`;
+
+        // When the target is a relative path, resolve plain exclude paths relative to it.
+        // e.g. scan scripts --exclude test.html → treated as scripts/test.html
+        // Glob patterns, already-prefixed paths, and absolute targets pass through unchanged.
+        const scopedExcludes = path.isAbsolute(targetPath)
+            ? excludes
+            : excludes.map(excl => {
+                if (/[*?{}\[\]!]/.test(excl)) return excl;
+                const norm = normalizeForGlob(expandUserPath(excl));
+                if (norm.startsWith(normalizedPath + '/') || norm === normalizedPath) return excl;
+                return `${normalizedPath}/${norm}`;
+            });
+
         const ignore = [
             '**/node_modules/**', '**/dist/**', '**/build/**',
-            ...resolveExcludePatterns(excludes)
+            ...resolveExcludePatterns(scopedExcludes)
         ];
         return await glob(globPattern, { ignore });
     }
