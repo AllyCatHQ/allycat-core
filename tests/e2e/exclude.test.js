@@ -19,9 +19,10 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const CLI      = path.join(__dirname, '../..', 'src', 'index.js');
-const FIXTURES = path.join(__dirname, '../fixtures');
-const CRITICAL = path.join(__dirname, '../fixtures', 'fail-on-critical.html');
+const CLI          = path.join(__dirname, '../..', 'src', 'index.js');
+const FIXTURES     = path.join(__dirname, '../fixtures');       // absolute — for most tests
+const RELTEST      = 'tests/fixtures/reltest';                 // relative — for scoping tests (one file: violation.html)
+const CRITICAL     = path.join(__dirname, '../fixtures', 'fail-on-critical.html');
 
 // -----------------------------------------------------------------------------
 // Runner
@@ -113,10 +114,10 @@ console.log('\n-- glob pattern exclusion ---------------------------------------
 {
     const { status } = run([
         FIXTURES,
-        '--exclude', 'tests/fixtures/*.html',
-        '--exclude', 'tests/fixtures/*.jsx',
-        '--exclude', 'tests/fixtures/*.vue',
-        '--exclude', 'tests/fixtures/*.ts',
+        '--exclude', 'tests/fixtures/**/*.html',
+        '--exclude', 'tests/fixtures/**/*.jsx',
+        '--exclude', 'tests/fixtures/**/*.vue',
+        '--exclude', 'tests/fixtures/**/*.ts',
         '--fail-on-critical'
     ]);
     assertExit('glob excludes all file types → exit 0', status, 0);
@@ -124,6 +125,28 @@ console.log('\n-- glob pattern exclusion ---------------------------------------
 {
     const { output } = run([FIXTURES, '--exclude', 'tests/fixtures/*.html', '--summary']);
     assertContains('glob pattern shown as-is in config panel', output, 'tests/fixtures/*.html');
+}
+
+// -- Relative exclude paths (no target prefix needed) -------------------------
+// RELTEST contains a single file (violation.html) with a critical violation.
+// Excluding it by short name — without repeating the folder prefix — should
+// leave zero files to scan → exit 0 even with --fail-on-critical.
+
+console.log('\n-- relative exclude paths (short form) ---------------------------');
+{
+    // Baseline: the subfolder has a critical violation
+    const { status } = run([RELTEST, '--fail-on-critical']);
+    assertExit('reltest baseline → exit 1 (violation.html has critical)', status, 1);
+}
+{
+    // Short form: no need to write "tests/fixtures/reltest/violation.html"
+    const { status } = run([RELTEST, '--exclude', 'violation.html', '--fail-on-critical']);
+    assertExit('short exclude (no prefix) resolves relative to target → exit 0', status, 0);
+}
+{
+    // Full-path form still works — should not double-prefix
+    const { status } = run([RELTEST, '--exclude', 'tests/fixtures/reltest/violation.html', '--fail-on-critical']);
+    assertExit('full-path exclude still works → exit 0 (no double-prefix)', status, 0);
 }
 
 // -- Non-matching exclude does not affect scan --------------------------------
