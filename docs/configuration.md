@@ -48,6 +48,42 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 
 ---
 
+## Accessibility Standards & Automation Limits
+
+The `selectedStandard` field controls which axe-core rules run. The three options differ in breadth:
+
+| Standard value | Wizard label | axe-core tags | Rules run | Adds over previous |
+|---|---|---|---|---|
+| `wcag-aa` | Global Standard (WCAG 2.1 AA) | wcag2a, wcag2aa, wcag21a, wcag21aa | 68 | — (baseline) |
+| `wcag-22-aa` | WCAG 2.2 AA | + wcag22aa | 69 | +1 rule (SC 2.5.8 Target Size) |
+| `wcag-aaa` | Strict Mode (WCAG AAA) | + wcag2aaa | 71 | +2 rules (SC 2.4.9, SC 2.2.4/3.2.5) |
+
+### What "automated rules" means
+
+axe-core can only automate a subset of WCAG criteria. Many success criteria require human judgment and cannot be tested programmatically. AllyCat catches what can be caught automatically — it does not and cannot replace a manual audit.
+
+**Examples of criteria that cannot be automated:**
+
+| WCAG level | Criterion | Why it needs human review |
+|---|---|---|
+| AAA | 1.2.6 Sign Language | Requires a human to evaluate sign language interpretation |
+| AAA | 3.1.5 Reading Level | Requires a human to assess text complexity |
+| 2.2 AA | 2.4.11 Focus Appearance | Visual judgment required |
+| 2.2 AA | 2.5.7 Dragging Movements | Interaction testing required |
+| 2.2 AA | 3.2.6 Consistent Help | Page layout review required |
+| 2.2 AA | 3.3.7 Redundant Entry | Form flow review required |
+| 2.2 AA | 3.3.8 Accessible Authentication | Authentication flow review required |
+
+### WCAG 2.2 AA honest coverage
+
+`wcag-22-aa` adds exactly **1 automated rule** over `wcag-aa`: `target-size` (SC 2.5.8 — minimum 24×24 px for interactive elements). The other new WCAG 2.2 success criteria are not yet automatable by axe-core v4.11.1. As axe-core adds more 2.2 rules in future versions, AllyCat picks them up automatically — no config change needed.
+
+### Recommended workflow
+
+Use AllyCat in CI to catch all automatable violations before deployment. Pair with a manual audit checklist for the criteria that require human review — especially if targeting AAA or full WCAG 2.2 compliance for regulated industries.
+
+---
+
 ## Config Versioning
 
 `allycat.config.json` carries a `configVersion` integer. On every run, the tool compares this against its own `CURRENT_CONFIG_VERSION` and handles three cases:
