@@ -2,7 +2,7 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import { configExists, saveConfig, getSafeConcurrencyCeiling, getConfigPath } from '../utils/configLoader.js';
-import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS, AI_REPORT_BEHAVIORS } from '../constants.js';
+import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS, AI_REPORT_BEHAVIORS, CURRENT_CONFIG_VERSION } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -197,6 +197,7 @@ export async function initCommand() {
 
     // Build configuration object
     const config = {
+        configVersion: CURRENT_CONFIG_VERSION,
         selectedStandard: group.standard,
         rules: {
             rtl: group.checkRTL === true,

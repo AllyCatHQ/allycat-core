@@ -11,6 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-06-04
+
+### Added
+- `--exclude` auto-scoping — when scanning a scoped path (e.g. `allycat scan scripts`),
+  plain names in `--exclude` are automatically resolved relative to that target.
+  No need to type the full path: `--exclude test.html` becomes `scripts/test.html`,
+  `--exclude fixtures` becomes `scripts/fixtures`, etc.
+- `configVersion` field in `allycat.config.json` — the tool now stamps a schema version
+  into every config file written by `allycat init`. On each run, the version is checked
+  and the config is automatically migrated if it is behind the current format. Users do
+  not need to do anything — migration is silent and non-destructive. Protects against
+  silent fallback-to-defaults when a global install is updated and the local config
+  format has changed.
+
+### Fixed
+- Watch mode now applies the same scoped excludes for real-time file-change filtering.
+  Previously, excluded files could still trigger a rescan because the watcher was using
+  the original unscoped paths instead of the resolved ones.
+- Config files containing invalid JSON now produce a clear error message with the file
+  path instead of a raw Node.js stack trace. The tool falls back to defaults so the
+  scan still runs.
+
+---
+
 ## [1.2.1] - 2026-06-04
 
 ### Fixed

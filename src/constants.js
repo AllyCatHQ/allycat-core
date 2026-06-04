@@ -4,6 +4,10 @@ export const CONFIG_FILE_NAME  = 'allycat.config.json';
 export const BASELINE_FILE     = 'allycat-baseline.json';
 export const DEFAULT_REPORT_NAME = 'allycat-report';
 
+// Bump ONLY when allycat.config.json schema changes (not on every release).
+// Add a migration case in migrateConfig() in src/utils/configLoader.js.
+export const CURRENT_CONFIG_VERSION = 1;
+
 // ─── CLI Command Strings ──────────────────────────────────────────────────────
 
 export const CLI = {

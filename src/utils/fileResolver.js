@@ -11,7 +11,7 @@ import { glob } from 'glob';
 import { statSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
-import { normalizeForGlob, resolveExcludePatterns } from './pathUtils.js';
+import { normalizeForGlob, expandUserPath, resolveExcludePatterns, scopeExcludesTo } from './pathUtils.js';
 import { SUPPORTED_EXTENSIONS } from '../constants.js';
 
 export { SUPPORTED_EXTENSIONS };
@@ -54,9 +54,12 @@ export async function resolveTargetPath(targetPath, extensions, excludes = []) {
     if (stats.isDirectory()) {
         const normalizedPath = normalizeForGlob(targetPath);
         const globPattern = `${normalizedPath}/**/*.{${extensions.join(',')}}`;
+
+        const scopedExcludes = scopeExcludesTo(excludes, targetPath);
+
         const ignore = [
             '**/node_modules/**', '**/dist/**', '**/build/**',
-            ...resolveExcludePatterns(excludes)
+            ...resolveExcludePatterns(scopedExcludes)
         ];
         return await glob(globPattern, { ignore });
     }

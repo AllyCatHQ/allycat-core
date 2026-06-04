@@ -10,7 +10,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { CONFIG_FILE_NAME, SCAN_MODES, STANDARDS } from '../constants.js';
+import { CONFIG_FILE_NAME, SCAN_MODES, STANDARDS, CURRENT_CONFIG_VERSION } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Default Configuration
@@ -111,6 +111,50 @@ function sanitizeConfig(raw, scanMode) {
 }
 
 // -----------------------------------------------------------------------------
+// Config Migration
+// ⚠️  DEVELOPER NOTICE — READ BEFORE EDITING THIS SECTION OR allycat.config.json
+// -----------------------------------------------------------------------------
+// If you change the shape of allycat.config.json (add/rename/remove a key,
+// change a value format), you MUST do ALL of the following:
+//
+//   1. Bump CURRENT_CONFIG_VERSION in src/constants.js
+//   2. Add an `if (from < N)` block in migrateConfig() below
+//   3. Update DEFAULT_CONFIG above if the new key needs a default for fresh installs
+//   4. Update the field reference and JSON example in docs/configuration.md
+//   5. Check the release checklist in docs/BEFORE-EVERY-RELEASE.md — Section 6
+//
+// Do NOT bump CURRENT_CONFIG_VERSION for bug fixes, new CLI flags, or anything
+// that does not change the structure of allycat.config.json.
+// -----------------------------------------------------------------------------
+
+/**
+ * Migrate a config object from any prior version up to CURRENT_CONFIG_VERSION.
+ * Each version block is additive and runs in order on a single pass.
+ *
+ * HOW TO ADD A MIGRATION:
+ *   1. Bump CURRENT_CONFIG_VERSION in src/constants.js
+ *   2. Add an `if (from < N)` block below with the schema transformation
+ *   3. Update DEFAULT_CONFIG if the new key needs a default for fresh installs
+ *
+ * @param {Object} raw - Raw config from disk (may lack configVersion)
+ * @returns {Object} - Config stamped at CURRENT_CONFIG_VERSION
+ */
+function migrateConfig(raw) {
+    let config = { ...raw };
+    const from = config.configVersion ?? 0;
+
+    // v0 → v1: configVersion field introduced; no schema changes.
+    // if (from < 1) { /* nothing to transform */ }
+
+    // v1 → v2: add data transforms here when the next schema change lands.
+
+    // Stamp unconditionally so individual blocks never need to manage bookkeeping.
+    // A forgotten stamp would cause re-migration on every load.
+    config.configVersion = CURRENT_CONFIG_VERSION;
+    return config;
+}
+
+// -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------
 
@@ -133,7 +177,44 @@ export function loadConfig(scanMode = SCAN_MODES.QUICK) {
         return { ...sanitizeConfig(DEFAULT_CONFIG, scanMode), configIsDefault: true };
     }
 
-    const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    let raw;
+    try {
+        raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch {
+        console.error(
+            `[allycat] Config file is not valid JSON — run \`allycat init\` to reset it.\n` +
+            `  Path: ${configPath}`
+        );
+        return { ...sanitizeConfig(DEFAULT_CONFIG, scanMode), configIsDefault: true };
+    }
+
+    const version = raw.configVersion ?? 0;
+
+    if (version > CURRENT_CONFIG_VERSION) {
+        console.warn(
+            `[allycat] Your config was created by a newer version of allycat ` +
+            `(config v${version}, this tool supports v${CURRENT_CONFIG_VERSION}).\n` +
+            `  Some settings may be ignored. Update allycat: npm install -g allycat`
+        );
+        return { ...sanitizeConfig(raw, scanMode), configIsDefault: false };
+    }
+
+    if (version < CURRENT_CONFIG_VERSION) {
+        const migrated = migrateConfig(raw);
+        saveConfig(migrated);
+        // First-time stamp only (v0→v1): no schema changes, no action needed from the user.
+        // Any later migration means real field changes happened — tell them to review.
+        if (version === 0 && CURRENT_CONFIG_VERSION === 1) {
+            console.log(`[allycat] Config updated to v1 — your settings are unchanged.`);
+        } else {
+            console.log(
+                `[allycat] Config migrated from v${version} → v${CURRENT_CONFIG_VERSION}. ` +
+                `Run \`allycat init\` to review your settings.`
+            );
+        }
+        return { ...sanitizeConfig(migrated, scanMode), configIsDefault: false };
+    }
+
     return { ...sanitizeConfig(raw, scanMode), configIsDefault: false };
 }
 
