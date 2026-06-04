@@ -8,6 +8,7 @@
  */
 
 import os from 'os';
+import path from 'path';
 
 /**
  * Normalize path separators to forward slashes
@@ -112,6 +113,36 @@ export function resolveExcludePatterns(userPaths = []) {
         const normalized = normalizeForGlob(expandUserPath(p));
         const isGlob = /[*?{}\[\]!]/.test(normalized);
         return isGlob ? [normalized] : [normalized, `${normalized}/**`];
+    });
+}
+
+/**
+ * Scope plain exclude paths to a target directory.
+ *
+ * When the user scans a subdirectory and passes --exclude with a plain filename
+ * (e.g. scan scripts --exclude test.html), the exclude must be resolved relative
+ * to that target so the glob ignore list actually matches.
+ *
+ * Pass-through rules (path returned unchanged):
+ *  - Absolute targets     — scoping doesn't apply
+ *  - Glob patterns        — user wrote them explicitly, don't touch
+ *  - Paths containing ../ — parent-traversal; don't transform
+ *  - Already-prefixed     — would double-prefix otherwise
+ *
+ * @param {string[]} excludes   - Raw --exclude values from the CLI
+ * @param {string}   targetPath - The scan target directory
+ * @returns {string[]}
+ */
+export function scopeExcludesTo(excludes, targetPath) {
+    if (!excludes.length || path.isAbsolute(targetPath)) return excludes;
+    const normalizedTarget = normalizeForGlob(targetPath);
+    return excludes.map(excl => {
+        if (!excl) return excl;
+        if (/[*?{}\[\]!]/.test(excl)) return excl;
+        const norm = normalizeForGlob(expandUserPath(excl));
+        if (norm.includes('../')) return excl;
+        if (norm.startsWith(normalizedTarget + '/') || norm === normalizedTarget) return excl;
+        return `${normalizedTarget}/${norm}`;
     });
 }
 
