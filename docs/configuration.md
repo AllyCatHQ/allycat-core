@@ -37,7 +37,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | Option | Values | Description |
 |---|---|---|
 | `configVersion` | integer | Schema version written by `allycat init`. Read by the tool to detect outdated configs and auto-migrate. Never edit this manually. |
-| `selectedStandard` | `wcag-aa`, `wcag-aaa` | Accessibility ruleset to enforce |
+| `selectedStandard` | `wcag-aa`, `wcag-22-aa`, `wcag-aaa` | Accessibility ruleset to enforce (`wcag-aa` = WCAG 2.1 AA, `wcag-22-aa` = WCAG 2.2 AA automated rules, `wcag-aaa` = AAA automated rules) |
 | `rules.rtl` | `true`, `false` | Enable RTL direction checking |
 | `rules.level` | `AA`, `AAA` | WCAG conformance level |
 | `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |
