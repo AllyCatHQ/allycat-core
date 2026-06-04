@@ -273,6 +273,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 
 ```json
 {
+  "configVersion": 1,
   "selectedStandard": "wcag-aa",
   "rules": {
     "rtl": false,
