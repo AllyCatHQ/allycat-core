@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.4.0] - 2026-06-05
+
+### Added
+- **WCAG 2.2 AA scanning mode** — new `wcag-22-aa` standard option selectable in `allycat init`
+  and by setting `"selectedStandard": "wcag-22-aa"` in `allycat.config.json`.
+  Uses axe-core tag set `wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa`. In axe-core v4.11.1
+  this adds one additional automated rule over WCAG 2.1 AA: `target-size` (SC 2.5.8 —
+  minimum 24×24px touch target). Recommended for new projects targeting the 2025+ standard.
+
+### Fixed
+- Removed ghost tag `wcag21aaa` from the WCAG AAA axe-core tag set. The tag does not exist
+  in axe-core v4.11.1 (verified against bundled source) and was silently contributing zero
+  rules while appearing in code as if it covered something.
+- `allycat init` confirmation summary now displays the correct human-readable standard name
+  (`WCAG 2.1 AA`, `WCAG 2.2 AA`, `WCAG AAA (automated rules)`) instead of the raw config
+  value (`wcag-aa`, `wcag-22-aa`, `wcag-aaa`).
+
+### Changed
+- AAA mode relabeled from `"Strict Mode (WCAG 2.1 AAA)"` to `"Strict Mode (WCAG AAA, automated rules)"`
+  in the `allycat init` wizard and from `"WCAG 2.1 AAA"` to `"WCAG AAA (automated rules)"` in
+  constants, reports, and all help text. The previous label overstated coverage — there are no
+  WCAG-2.1-specific AAA rules in axe-core. The tool automates 2 of 3 general AAA rules
+  (contrast-enhanced is suppressed in quick mode where JSDOM cannot compute real styles).
+  Full AAA conformance always requires a manual audit alongside automated tooling.
 
 ---
 

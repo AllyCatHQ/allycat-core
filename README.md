@@ -126,11 +126,11 @@ allycat init
 ```
 
 Prompts for:
-- Accessibility standard (WCAG AA, WCAG AAA)
+- Accessibility standard (WCAG 2.1 AA, WCAG 2.2 AA, WCAG AAA)
 - RTL support (experimental, opt-in)
 - Default scan mode (quick or full)
 - AI-ready fix prompts (enabled/disabled)
-- AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot, Other (shown when AI is enabled)
+- AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot, Other / Skip (shown when AI is enabled)
 - Report delivery — Auto-open in browser / Save and print path / Ask each time (shown when AI is enabled)
 - Concurrency override (optional advanced setting)
 
@@ -293,6 +293,8 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 }
 ```
 
+Valid values for `selectedStandard`: `wcag-aa` (default), `wcag-22-aa`, `wcag-aaa`.
+
 → See [Configuration Reference](docs/configuration.md) for all valid values and manual editing details.
 
 ---
@@ -355,12 +357,13 @@ AllyCat is built for pipelines:
 
 | Standard | Contrast Ratio | RTL Support | Typical Use |
 |---|---|---|---|
-| WCAG 2.1 AA | 4.5:1 | Optional | Most websites |
-| WCAG 2.1 AAA | 7:1 | Optional | Government / Medical |
+| WCAG 2.1 AA | 4.5:1 | Optional | Most websites — current legal baseline (ADA, EN 301 549) |
+| WCAG 2.2 AA | 4.5:1 | Optional | New projects — 2025 industry frontier, adds 9 new criteria |
+| WCAG AAA (automated) | 7:1 | Optional | Government / Medical — full AAA requires a manual audit |
 
 RTL support is available as an opt-in for all standards — enable it during `allycat init` for Hebrew, Arabic, Persian, and other RTL interfaces. *(experimental)*
 
-Run `allycat help standards` for a full breakdown, or see the official [WCAG 2.1](https://www.w3.org/TR/WCAG21/) specification.
+Run `allycat help standards` for a full breakdown, or see the official [WCAG 2.1](https://www.w3.org/TR/WCAG21/) and [WCAG 2.2](https://www.w3.org/TR/WCAG22/) specifications.
 
 ---
 

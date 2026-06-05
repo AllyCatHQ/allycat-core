@@ -37,7 +37,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | Option | Values | Description |
 |---|---|---|
 | `configVersion` | integer | Schema version written by `allycat init`. Read by the tool to detect outdated configs and auto-migrate. Never edit this manually. |
-| `selectedStandard` | `wcag-aa`, `wcag-aaa` | Accessibility ruleset to enforce |
+| `selectedStandard` | `wcag-aa`, `wcag-22-aa`, `wcag-aaa` | Accessibility ruleset to enforce (`wcag-aa` = WCAG 2.1 AA, `wcag-22-aa` = WCAG 2.2 AA automated rules, `wcag-aaa` = AAA automated rules) |
 | `rules.rtl` | `true`, `false` | Enable RTL direction checking |
 | `rules.level` | `AA`, `AAA` | WCAG conformance level |
 | `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |
@@ -45,6 +45,42 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | `ai.agent` | `claude`, `cursor`, `chatgpt`, `gemini`, `copilot`, `generic` | AI agent used to generate fix prompt style (set by `allycat init`) |
 | `ai.reportBehavior` | `auto-open`, `path-only`, `ask` | How the fix-prompt HTML report is delivered after each scan. `auto-open` = opens in browser automatically, `path-only` = prints relative + absolute path to terminal, `ask` = prompts you each time. Defaults to `path-only` if unset. |
 | `performance.concurrency` | integer or `null` | Files scanned in parallel. `null` = auto (computed from RAM + CPU) |
+
+---
+
+## Accessibility Standards & Automation Limits
+
+The `selectedStandard` field controls which axe-core rules run. The three options differ in breadth:
+
+| Standard value | Wizard label | axe-core tags | Rules run | Adds over previous |
+|---|---|---|---|---|
+| `wcag-aa` | Global Standard (WCAG 2.1 AA) | wcag2a, wcag2aa, wcag21a, wcag21aa | 68 | — (baseline) |
+| `wcag-22-aa` | WCAG 2.2 AA | + wcag22aa | 69 | +1 rule (SC 2.5.8 Target Size) |
+| `wcag-aaa` | Strict Mode (WCAG AAA) | + wcag2aaa | 71 | +2 rules (SC 2.4.9, SC 2.2.4/3.2.5) |
+
+### What "automated rules" means
+
+axe-core can only automate a subset of WCAG criteria. Many success criteria require human judgment and cannot be tested programmatically. AllyCat catches what can be caught automatically — it does not and cannot replace a manual audit.
+
+**Examples of criteria that cannot be automated:**
+
+| WCAG level | Criterion | Why it needs human review |
+|---|---|---|
+| AAA | 1.2.6 Sign Language | Requires a human to evaluate sign language interpretation |
+| AAA | 3.1.5 Reading Level | Requires a human to assess text complexity |
+| 2.2 AA | 2.4.11 Focus Appearance | Visual judgment required |
+| 2.2 AA | 2.5.7 Dragging Movements | Interaction testing required |
+| 2.2 AA | 3.2.6 Consistent Help | Page layout review required |
+| 2.2 AA | 3.3.7 Redundant Entry | Form flow review required |
+| 2.2 AA | 3.3.8 Accessible Authentication | Authentication flow review required |
+
+### WCAG 2.2 AA honest coverage
+
+`wcag-22-aa` adds exactly **1 automated rule** over `wcag-aa`: `target-size` (SC 2.5.8 — minimum 24×24 px for interactive elements). The other new WCAG 2.2 success criteria are not yet automatable by axe-core v4.11.1. As axe-core adds more 2.2 rules in future versions, AllyCat picks them up automatically — no config change needed.
+
+### Recommended workflow
+
+Use AllyCat in CI to catch all automatable violations before deployment. Pair with a manual audit checklist for the criteria that require human review — especially if targeting AAA or full WCAG 2.2 compliance for regulated industries.
 
 ---
 

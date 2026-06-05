@@ -2,7 +2,7 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import { configExists, saveConfig, getSafeConcurrencyCeiling, getConfigPath } from '../utils/configLoader.js';
-import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS, AI_REPORT_BEHAVIORS, CURRENT_CONFIG_VERSION } from '../constants.js';
+import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS, AI_REPORT_BEHAVIORS, CURRENT_CONFIG_VERSION, STANDARD_LABELS } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -89,8 +89,9 @@ export async function initCommand() {
             standard: () => p.select({
                 message: 'Which accessibility standard do you need?',
                 options: [
-                    { value: STANDARDS.WCAG_AA,  label: '🌍 Global Standard (WCAG 2.1 AA)',  hint: 'Industry Standard' },
-                    { value: STANDARDS.WCAG_AAA, label: '🏥 Strict Mode (WCAG 2.1 AAA)',      hint: 'Government/Medical' },
+                    { value: STANDARDS.WCAG_AA,    label: '🌍 Global Standard (WCAG 2.1 AA)',              hint: 'Industry Standard' },
+                    { value: STANDARDS.WCAG_22_AA, label: '🆕 WCAG 2.2 AA (automated rules)',              hint: 'Industry Frontier — 2025 standard for new projects' },
+                    { value: STANDARDS.WCAG_AAA,   label: '🏥 Strict Mode (WCAG AAA, automated rules)',    hint: 'Government/Medical — full AAA requires a manual audit' },
                 ],
             }),
             checkRTL: () => p.confirm({
@@ -236,7 +237,7 @@ export async function initCommand() {
 
     // Show summary
     p.note(
-        `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
+        `Standard: ${chalk.bold(STANDARD_LABELS[config.selectedStandard])}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Default Mode: ${chalk.bold(config.scan.defaultMode === SCAN_MODES.FULL ? UI.SCAN_LABEL_FULL : UI.SCAN_LABEL_QUICK_FAST)}\n` +
         `Fix Prompts:   ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +

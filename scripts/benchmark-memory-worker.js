@@ -98,7 +98,7 @@ async function main() {
     }
 
     const config = {
-        selectedStandard: 'wcag2aa',
+        selectedStandard: 'wcag-aa',
         rules:       { rtl: false, level: 'AA' },
         scan:        { defaultMode: 'quick' },
         ai:          { enabled: false },

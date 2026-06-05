@@ -140,7 +140,8 @@ export const FAQ_ITEMS = [
     {
         q: 'What accessibility standards are supported?',
         a: `• ${chalk.cyan('WCAG 2.1 AA')} — Industry standard (default)
-   • ${chalk.cyan('WCAG 2.1 AAA')} — Strictest level
+   • ${chalk.cyan('WCAG 2.2 AA')} — Industry frontier; adds target size check (SC 2.5.8)
+   • ${chalk.cyan('WCAG AAA (automated rules)')} — Maximum automation; full AAA requires a manual audit
    • RTL support ${chalk.dim('(experimental)')} — Enable during ${chalk.cyan('allycat init')} for Hebrew, Arabic, Persian interfaces`
     },
     {

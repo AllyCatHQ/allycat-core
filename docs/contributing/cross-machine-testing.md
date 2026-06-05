@@ -51,8 +51,8 @@ nvm use 20
 node --version   # → v20.x.x
 
 # 2. Clone or copy the project
-git clone https://github.com/AllyCat/AllyCat-Core.git
-cd AllyCat-Core
+git clone https://github.com/AllyCatHQ/allycat-core.git
+cd allycat-core
 
 # 3. Install dependencies
 npm install
@@ -86,8 +86,8 @@ sudo apt-get install -y \
   libasound2 libatspi2.0-0 libxfixes3 libxext6
 
 # 3. Clone or copy the project
-git clone https://github.com/AllyCat/AllyCat-Core.git
-cd AllyCat-Core
+git clone https://github.com/AllyCatHQ/allycat-core.git
+cd allycat-core
 
 # 4. Install dependencies
 npm install
@@ -114,8 +114,8 @@ nvm use 20
 node --version
 
 # 2. Clone the project
-git clone https://github.com/AllyCat/AllyCat-Core.git
-cd "AllyCat-Core"
+git clone https://github.com/AllyCatHQ/allycat-core.git
+cd allycat-core
 
 # 3. Install dependencies
 npm install
