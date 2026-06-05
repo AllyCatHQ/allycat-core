@@ -53,7 +53,7 @@ program
   .addHelpText('after', `
 ${chalk.bold('What it does:')}
   Creates ${chalk.cyan('allycat.config.json')} in your project root with:
-  • Accessibility standard (WCAG AA, WCAG AAA)
+  • Accessibility standard (WCAG 2.1 AA, WCAG 2.2 AA, WCAG AAA)
   • RTL support settings
   • Default scan mode
   • AI fix prompt preferences
