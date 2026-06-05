@@ -9,6 +9,8 @@
 
 import os from 'os';
 import path from 'path';
+import { minimatch } from 'minimatch';
+import { NEVER_SCAN } from '../constants.js';
 
 /**
  * Normalize path separators to forward slashes
@@ -161,5 +163,21 @@ export function matchesExcludePatterns(filepath, patterns) {
         if (pat.endsWith('/**')) return filepath.startsWith(pat.slice(0, -3) + '/');
         if (/[*?{}\[\]!]/.test(pat)) return false; // true glob — needs a glob lib; skip
         return filepath === pat || filepath.startsWith(pat + '/');
+    });
+}
+
+/**
+ * Filter a file list against NEVER_SCAN patterns.
+ * Applied unconditionally to any pre-resolved file list so that system-level
+ * exclusions (e.g. allycat-report.html, node_modules) are enforced regardless
+ * of how the list was assembled (--changed, --staged, etc.).
+ *
+ * @param {string[]} files - Absolute or relative file paths
+ * @returns {string[]} - Files with NEVER_SCAN matches removed
+ */
+export function filterNeverScan(files) {
+    return files.filter(f => {
+        const normalized = f.replace(/\\/g, '/');
+        return !NEVER_SCAN.some(pattern => minimatch(normalized, pattern, { matchBase: false }));
     });
 }
