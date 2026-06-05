@@ -40,11 +40,12 @@ node src/index.js init
 - [ ] All prompts appear in order: standard → scan mode → RTL → AI → concurrency
 - [ ] Selecting all defaults completes without crash
 - [ ] `allycat.config.json` is created in the project root
-- [ ] Re-running init offers: Overwrite / View / Delete options — not an instant overwrite
+- [ ] Re-running init offers: Overwrite / Delete / Cancel options — not an instant overwrite
 
 **Expected `allycat.config.json` after accepting defaults:**
 ```json
 {
+  "configVersion": 1,
   "selectedStandard": "wcag-aa",
   "rules": { "rtl": false, "level": "AA" },
   "scan": { "defaultMode": "quick" },

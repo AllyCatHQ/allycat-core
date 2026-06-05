@@ -438,10 +438,12 @@ What you expected to happen.
 **Config file** (`allycat.config.json`)
 ```json
 {
+  "configVersion": 1,
   "selectedStandard": "wcag-aa",
+  "rules": { "rtl": false, "level": "AA" },
   "scan": { "defaultMode": "quick" },
-  "rules": { "rtl": false },
-  "ai": { "enabled": false }
+  "ai": { "enabled": false, "agent": "generic" },
+  "performance": { "concurrency": null }
 }
 ```
 
