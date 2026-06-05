@@ -134,15 +134,25 @@ function showStandards() {
   • Consistent navigation
 `);
 
-    console.log(chalk.bold.yellow('WCAG 2.1 Level AAA') + chalk.dim(' (Strictest)'));
-    console.log(`  The highest level of accessibility compliance.
-  Often required for government/medical sites.
+    console.log(chalk.bold.yellow('WCAG 2.2 Level AA') + chalk.dim(' (Industry Frontier)'));
+    console.log(`  Everything in WCAG 2.1 AA plus one additional automated check.
+  Recommended for new projects started in 2025+.
 
-  ${chalk.dim('Adds:')}
+  ${chalk.dim('Adds (automated):')}
+  • Target size minimum 24×24px (SC 2.5.8)
+
+  ${chalk.dim('Note:')} WCAG 2.2 introduced 9 new criteria. axe-core currently automates only SC 2.5.8.
+  Full 2.2 AA conformance requires a manual audit for the remaining new criteria.
+`);
+
+    console.log(chalk.bold.yellow('WCAG AAA (automated rules)') + chalk.dim(' (Extended)'));
+    console.log(`  All AA rules plus every AAA criterion axe-core can automate.
+  Often required for government/medical sites. Full AAA requires a manual audit.
+
+  ${chalk.dim('Adds (automated):')}
   • Enhanced contrast (7:1 for normal text)
-  • Sign language for audio
-  • Extended audio descriptions
-  • No timing limits
+  • Identical links must have the same purpose
+  • No meta-refresh redirects
 `);
 
     console.log(chalk.bold.white('RTL Support') + chalk.dim(' (experimental)'));
@@ -156,10 +166,11 @@ function showStandards() {
 
     console.log(chalk.bold.white('Comparison Table'));
     console.log('');
-    console.log(chalk.dim('  Standard  │ Contrast │ RTL Support │ Use Case'));
-    console.log(chalk.dim('  ─────────────────────────────────────────────────'));
-    console.log(chalk.dim('  WCAG AA   │ 4.5:1    │ Optional    │ Most websites'));
-    console.log(chalk.dim('  WCAG AAA  │ 7:1      │ Optional    │ Government/Medical'));
+    console.log(chalk.dim('  Standard     │ Contrast │ RTL Support │ Use Case'));
+    console.log(chalk.dim('  ──────────────────────────────────────────────────────'));
+    console.log(chalk.dim('  WCAG 2.1 AA  │ 4.5:1    │ Optional    │ Most websites'));
+    console.log(chalk.dim('  WCAG 2.2 AA  │ 4.5:1    │ Optional    │ New projects (2025+)'));
+    console.log(chalk.dim('  WCAG AAA     │ 7:1      │ Optional    │ Government/Medical (automated subset)'));
     console.log('');
 
     console.log(divider);
