@@ -12,7 +12,7 @@ import { statSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
 import { normalizeForGlob, expandUserPath, resolveExcludePatterns, scopeExcludesTo } from './pathUtils.js';
-import { SUPPORTED_EXTENSIONS } from '../constants.js';
+import { SUPPORTED_EXTENSIONS, NEVER_SCAN } from '../constants.js';
 
 export { SUPPORTED_EXTENSIONS };
 
@@ -28,10 +28,7 @@ export async function resolveFiles(config, targetPath, excludes = []) {
         return await resolveTargetPath(targetPath, SUPPORTED_EXTENSIONS, excludes);
     }
 
-    const ignore = [
-        '**/node_modules/**', '**/dist/**', '**/build/**',
-        ...resolveExcludePatterns(excludes)
-    ];
+    const ignore = [...NEVER_SCAN, ...resolveExcludePatterns(excludes)];
 
     const patterns = SUPPORTED_EXTENSIONS.map(ext => `**/*.${ext}`);
     const files = await glob(patterns, { ignore, dot: false });
@@ -57,10 +54,7 @@ export async function resolveTargetPath(targetPath, extensions, excludes = []) {
 
         const scopedExcludes = scopeExcludesTo(excludes, targetPath);
 
-        const ignore = [
-            '**/node_modules/**', '**/dist/**', '**/build/**',
-            ...resolveExcludePatterns(scopedExcludes)
-        ];
+        const ignore = [...NEVER_SCAN, ...resolveExcludePatterns(scopedExcludes)];
         return await glob(globPattern, { ignore });
     }
 

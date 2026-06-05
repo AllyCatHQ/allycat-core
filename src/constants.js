@@ -81,6 +81,18 @@ export const STANDARD_LABELS = {
 
 export const DEFAULT_HTML_REPORT = 'allycat-report.html';
 
+// ─── Scan Ignore Patterns ─────────────────────────────────────────────────────
+// Glob patterns that are always excluded from scanning — never touch these.
+// Single source of truth used by fileResolver and watchMode.
+// Add new entries here; both scanners and watch mode pick them up automatically.
+
+export const NEVER_SCAN = [
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/build/**',
+    `**/${DEFAULT_HTML_REPORT}`,
+];
+
 // ─── AI Report Delivery Behaviors ─────────────────────────────────────────────
 
 export const AI_REPORT_BEHAVIORS = {
