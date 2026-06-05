@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.4.0] - 2026-06-05
 
 ### Added
 - **WCAG 2.2 AA scanning mode** — new `wcag-22-aa` standard option selectable in `allycat init`
@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed ghost tag `wcag21aaa` from the WCAG AAA axe-core tag set. The tag does not exist
   in axe-core v4.11.1 (verified against bundled source) and was silently contributing zero
   rules while appearing in code as if it covered something.
+- `allycat init` confirmation summary now displays the correct human-readable standard name
+  (`WCAG 2.1 AA`, `WCAG 2.2 AA`, `WCAG AAA (automated rules)`) instead of the raw config
+  value (`wcag-aa`, `wcag-22-aa`, `wcag-aaa`).
 
 ### Changed
 - AAA mode relabeled from `"Strict Mode (WCAG 2.1 AAA)"` to `"Strict Mode (WCAG AAA, automated rules)"`

@@ -69,9 +69,8 @@ npm run lint    # expect: no output, exit 0
 
 ### E2E Tests — automated, must all pass
 ```bash
-node tests/e2e/thresholds.test.js    # exit codes — expect 8/8 passed
-node tests/e2e/concurrency.test.js   # RAM-aware ceilings — expect no crash
-node tests/e2e/css-delivery.test.js  # CSS features — expect 15/15 passed
+npm test              # thresholds, concurrency, exclude, standards
+npm run test:full     # above + css-delivery (requires Playwright + Chromium)
 ```
 
 ### Minimum manual spot-check

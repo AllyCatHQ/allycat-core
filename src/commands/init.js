@@ -2,7 +2,7 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import fs from 'fs';
 import { configExists, saveConfig, getSafeConcurrencyCeiling, getConfigPath } from '../utils/configLoader.js';
-import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS, AI_REPORT_BEHAVIORS, CURRENT_CONFIG_VERSION } from '../constants.js';
+import { UI, MESSAGES, SCAN_MODES, STANDARDS, CLI, SUPPORTED_FRAMEWORKS, AI_REPORT_BEHAVIORS, CURRENT_CONFIG_VERSION, STANDARD_LABELS } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -237,7 +237,7 @@ export async function initCommand() {
 
     // Show summary
     p.note(
-        `Standard: ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
+        `Standard: ${chalk.bold(STANDARD_LABELS[config.selectedStandard])}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Default Mode: ${chalk.bold(config.scan.defaultMode === SCAN_MODES.FULL ? UI.SCAN_LABEL_FULL : UI.SCAN_LABEL_QUICK_FAST)}\n` +
         `Fix Prompts:   ${config.ai.enabled ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
