@@ -126,11 +126,11 @@ allycat init
 ```
 
 Prompts for:
-- Accessibility standard (WCAG AA, WCAG AAA)
+- Accessibility standard (WCAG 2.1 AA, WCAG 2.2 AA, WCAG AAA)
 - RTL support (experimental, opt-in)
 - Default scan mode (quick or full)
 - AI-ready fix prompts (enabled/disabled)
-- AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot, Other (shown when AI is enabled)
+- AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot, Other / Skip (shown when AI is enabled)
 - Report delivery — Auto-open in browser / Save and print path / Ask each time (shown when AI is enabled)
 - Concurrency override (optional advanced setting)
 
