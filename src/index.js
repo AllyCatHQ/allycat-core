@@ -25,7 +25,7 @@ program
   .description(`
 ${chalk.bold('AllyCat')} — Professional CLI for accessibility compliance testing.
 
-Supports ${chalk.cyan('WCAG 2.1 AA/AAA')} with optional RTL support (experimental).
+Supports ${chalk.cyan('WCAG 2.1 AA')}, ${chalk.cyan('WCAG 2.2 AA')}, and ${chalk.cyan('WCAG AAA')} (automated rules) with optional RTL support (experimental).
 Fast scanning with precise error locations and clickable VS Code links.
     `.trim())
   .version(version, '-v, --version', 'Display version number')
