@@ -63,7 +63,7 @@ const demoViolations = [
 // ---------------------------------------------------------------------------
 
 const demoConfig = {
-    selectedStandard: 'wcag2aa',
+    selectedStandard: 'wcag-aa',
     ai: {
         agent: 'claude',
     },
