@@ -7,7 +7,7 @@
     "allycat": "src/index.js"
   },
   "scripts": {
-    "test": "node tests/e2e/thresholds.test.js && node tests/e2e/concurrency.test.js && node tests/e2e/exclude.test.js && node tests/e2e/standards.test.js",
+    "test": "node tests/e2e/thresholds.test.js && node tests/e2e/concurrency.test.js && node tests/e2e/exclude.test.js && node tests/e2e/standards.test.js && node tests/e2e/never-scan.test.js",
     "test:full": "npm test && node tests/e2e/css-delivery.test.js",
     "dev": "node ./src/index.js",
     "lint": "eslint src/"
