@@ -188,7 +188,7 @@ node src/index.js scan tests/fixtures/sample.html --full
 
 ## 5. Standards
 
-Each standard enables a different axe rule set. Test the three supported values.
+Each standard enables a different axe rule set. Test all supported values.
 
 ### 5.1 WCAG 2.1 AA (default)
 
@@ -198,17 +198,27 @@ node src/index.js scan tests/fixtures/sample.html
 ```
 - [ ] Runs without error, reports AA-level violations
 
-### 5.2 WCAG 2.1 AAA
+### 5.2 WCAG 2.2 AA
+
+```bash
+# Temporarily set standard to wcag-22-aa in allycat.config.json, then:
+node src/index.js scan tests/fixtures/sample.html
+```
+- [ ] Runs without error, reports AA-level violations
+- [ ] May report additional `target-size` violations (SC 2.5.8) not present in WCAG 2.1 AA
+- [ ] No crash
+
+### 5.3 WCAG AAA (automated rules)
 
 ```bash
 # Temporarily set standard to wcag-aaa in allycat.config.json, then:
 node src/index.js scan tests/fixtures/sample.html
 ```
-- [ ] Scan header shows "WCAG 2.1 AAA"
+- [ ] Scan header shows "WCAG AAA (automated rules)"
 - [ ] More violations may appear compared to AA (AAA has stricter rules)
 - [ ] No crash
 
-### 5.3 Israeli Standard (IS 5568) — Archived
+### 5.4 Israeli Standard (IS 5568) — Archived
 
 > **This standard has been removed.** RTL checking is now a standalone opt-in feature
 > (`rules.rtl: true`) independent of any regional standard.
@@ -496,8 +506,9 @@ node src/index.js scan tests/samples/react/tsx/ComprehensiveTest.tsx
 | 3.6 | Quick scan — .htm extension | ⬜ |
 | 4 | Full scan (Playwright) | ⬜ |
 | 5.1 | Standard: WCAG 2.1 AA | ⬜ |
-| 5.2 | Standard: WCAG 2.1 AAA | ⬜ |
-| 5.3 | ~~Standard: Israeli IS 5568~~ (archived — see docs/archived/) | — |
+| 5.2 | Standard: WCAG 2.2 AA | ⬜ |
+| 5.3 | Standard: WCAG AAA (automated rules) | ⬜ |
+| 5.4 | ~~Standard: Israeli IS 5568~~ (archived — see docs/archived/) | — |
 | 6 | RTL detection | ⬜ |
 | 7.1 | Output: terminal | ⬜ |
 | 7.2 | Output: --summary | ⬜ |
