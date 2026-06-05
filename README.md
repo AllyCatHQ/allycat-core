@@ -293,6 +293,8 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 }
 ```
 
+Valid values for `selectedStandard`: `wcag-aa` (default), `wcag-22-aa`, `wcag-aaa`.
+
 → See [Configuration Reference](docs/configuration.md) for all valid values and manual editing details.
 
 ---
