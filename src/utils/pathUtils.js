@@ -9,7 +9,6 @@
 
 import os from 'os';
 import path from 'path';
-import { minimatch } from 'minimatch';
 import { NEVER_SCAN } from '../constants.js';
 
 /**
@@ -175,9 +174,24 @@ export function matchesExcludePatterns(filepath, patterns) {
  * @param {string[]} files - Absolute or relative file paths
  * @returns {string[]} - Files with NEVER_SCAN matches removed
  */
+// NEVER_SCAN patterns must follow one of two forms:
+//   **/X/**  → file lives inside directory X at any depth
+//   **/X     → file is named X at any depth
+// If a more complex glob is ever added (e.g. **/*.min.js), add minimatch as a
+// direct dependency and replace this logic with: minimatch(normalized, pattern)
 export function filterNeverScan(files) {
     return files.filter(f => {
         const normalized = f.replace(/\\/g, '/');
-        return !NEVER_SCAN.some(pattern => minimatch(normalized, pattern, { matchBase: false }));
+        return !NEVER_SCAN.some(pattern => {
+            if (pattern.startsWith('**/') && pattern.endsWith('/**')) {
+                const seg = pattern.slice(3, -3);
+                return normalized.startsWith(`${seg}/`) || normalized.includes(`/${seg}/`);
+            }
+            if (pattern.startsWith('**/')) {
+                const suffix = pattern.slice(3);
+                return normalized === suffix || normalized.endsWith(`/${suffix}`);
+            }
+            return false;
+        });
     });
 }
