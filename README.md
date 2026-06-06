@@ -199,7 +199,7 @@ allycat scan src/components --exclude fixtures        # auto-resolves to src/com
 allycat scan src/test --exclude __mocks__             # auto-resolves to src/test/__mocks__
 ```
 
-Stacks on top of the built-in ignores (`node_modules/`, `dist/`, `build/`). Works in normal scan, watch, and `--changed` modes.
+Stacks on top of the built-in ignores (`node_modules/`, `dist/`, `build/`, `allycat-report.html`). Works in normal scan, watch, and `--changed` modes.
 
 #### CI & Gates
 
@@ -308,7 +308,7 @@ Valid values for `selectedStandard`: `wcag-aa` (default), `wcag-22-aa`, `wcag-aa
 | Vue | `.vue` |
 | Angular | `.component.html`, `.component.ts` |
 
-Ignores `node_modules/`, `dist/`, `build/` by default. Use `--exclude` to add more paths.
+Ignores `node_modules/`, `dist/`, `build/`, and `allycat-report.html` by default. Use `--exclude` to add more paths.
 
 ---
 
