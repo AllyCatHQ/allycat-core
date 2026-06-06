@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `allycat init` confirmation summary now displays the correct human-readable standard name
   (`WCAG 2.1 AA`, `WCAG 2.2 AA`, `WCAG AAA (automated rules)`) instead of the raw config
   value (`wcag-aa`, `wcag-22-aa`, `wcag-aaa`).
+- `allycat-report.html` is now excluded from all scan modes — normal scan, watch, and
+  `--changed`. Previously it could appear in results if it existed in the target directory
+  or showed up in the git diff.
 
 ### Changed
 - AAA mode relabeled from `"Strict Mode (WCAG 2.1 AAA)"` to `"Strict Mode (WCAG AAA, automated rules)"`
