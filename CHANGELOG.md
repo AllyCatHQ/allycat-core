@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] - 2026-06-06
+
+### Fixed
+- `allycat-report.html` is now excluded from all scan modes — normal scan, watch, and
+  `--changed`. Previously it could appear in results if it existed in the target directory
+  or showed up in the git diff.
+
+### Changed
+- `allycat init` report delivery prompt now defaults to **"Ask me each time"** as the first
+  option instead of "Auto-open in browser" — a safer default for first-time setup.
+- The **"Open fix-prompt report in browser?"** prompt (shown when `reportBehavior` is `ask`)
+  now defaults to **No** instead of Yes — pressing Enter skips the browser open and prints
+  the path instead, which is the less intrusive action.
+
+---
+
 ## [1.4.0] - 2026-06-05
 
 ### Added
@@ -23,9 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `allycat init` confirmation summary now displays the correct human-readable standard name
   (`WCAG 2.1 AA`, `WCAG 2.2 AA`, `WCAG AAA (automated rules)`) instead of the raw config
   value (`wcag-aa`, `wcag-22-aa`, `wcag-aaa`).
-- `allycat-report.html` is now excluded from all scan modes — normal scan, watch, and
-  `--changed`. Previously it could appear in results if it existed in the target directory
-  or showed up in the git diff.
 
 ### Changed
 - AAA mode relabeled from `"Strict Mode (WCAG 2.1 AAA)"` to `"Strict Mode (WCAG AAA, automated rules)"`
