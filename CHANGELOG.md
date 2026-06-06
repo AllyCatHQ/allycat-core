@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] - 2026-06-06
+
+### Fixed
+- `allycat-report.html` is now excluded from all scan modes — normal scan, watch, and
+  `--changed`. Previously it could appear in results if it existed in the target directory
+  or showed up in the git diff.
+
+### Changed
+- `allycat init` report delivery prompt now defaults to **"Ask me each time"** as the first
+  option instead of "Auto-open in browser" — a safer default for first-time setup.
+- The **"Open fix-prompt report in browser?"** prompt (shown when `reportBehavior` is `ask`)
+  now defaults to **No** instead of Yes — pressing Enter skips the browser open and prints
+  the path instead, which is the less intrusive action.
+
+---
+
 ## [1.4.0] - 2026-06-05
 
 ### Added

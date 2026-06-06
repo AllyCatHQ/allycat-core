@@ -26,7 +26,7 @@ import path from 'path';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../utils/fileResolver.js';
 import { resolveExcludePatterns, matchesExcludePatterns, scopeExcludesTo } from '../utils/pathUtils.js';
-import { SUPPORTED_EXTENSIONS, SCAN_MODES } from '../constants.js';
+import { SUPPORTED_EXTENSIONS, SCAN_MODES, NEVER_SCAN } from '../constants.js';
 import { runQuickAudit } from '../engine/scanners/quickScanner.js';
 import { runFullAudit } from '../engine/scanners/fullScanner.js';
 import { groupViolationsByFile, computeDelta, normalizePath, totalViolations } from './watchState.js';
@@ -76,7 +76,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
     const watchPaths = target ? [target] : ['.'];
 
     const watcher = chokidar.watch(watchPaths, {
-        ignored: [/node_modules/, /[/\\]\./, /dist[/\\]/, /build[/\\]/],
+        ignored: [/[/\\]\./, ...NEVER_SCAN],
         persistent: true,
         ignoreInitial: true,
         awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },

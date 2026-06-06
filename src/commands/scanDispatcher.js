@@ -13,7 +13,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { runQuickAudit } from '../engine/scanners/quickScanner.js';
 import { runFullAudit, checkPlaywrightAvailable } from '../engine/scanners/fullScanner.js';
-import { resolveExcludePatterns, matchesExcludePatterns } from '../utils/pathUtils.js';
+import { resolveExcludePatterns, matchesExcludePatterns, filterNeverScan } from '../utils/pathUtils.js';
 import { SUPPORTED_EXTENSIONS, MESSAGES, SCAN_MODES } from '../constants.js';
 
 // -----------------------------------------------------------------------------
@@ -137,11 +137,14 @@ async function resolveChangedFiles(target) {
  * @returns {Promise<{violations: Array, warnings: Array}|null>} - Scan result or null on error
  */
 export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null, excludes = []) {
-    if (preResolvedFiles && excludes.length) {
-        const patterns = resolveExcludePatterns(excludes);
-        preResolvedFiles = preResolvedFiles.filter(
-            f => !matchesExcludePatterns(f.replace(/\\/g, '/'), patterns)
-        );
+    if (preResolvedFiles) {
+        preResolvedFiles = filterNeverScan(preResolvedFiles);
+        if (excludes.length) {
+            const patterns = resolveExcludePatterns(excludes);
+            preResolvedFiles = preResolvedFiles.filter(
+                f => !matchesExcludePatterns(f.replace(/\\/g, '/'), patterns)
+            );
+        }
     }
 
     const spinner = p.spinner();

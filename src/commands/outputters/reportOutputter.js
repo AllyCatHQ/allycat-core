@@ -33,7 +33,7 @@ export async function outputAiReport(violations, config, scanMode) {
                 printReportPath(reportPath);
                 return;
             }
-            const open = await p.confirm({ message: 'Open fix-prompt report in browser?' });
+            const open = await p.confirm({ message: 'Open fix-prompt report in browser?', initialValue: false });
             if (p.isCancel(open)) return;
             if (open) {
                 const reportPath = generateReport(violations, config, scanMode);
