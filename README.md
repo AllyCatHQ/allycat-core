@@ -7,6 +7,7 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/npm/dm/allycat.svg)](https://www.npmjs.com/package/allycat)
+[![Total Downloads](https://img.shields.io/npm/dt/allycat.svg)](https://www.npmjs.com/package/allycat)
 
 </div>
 
