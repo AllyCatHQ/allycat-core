@@ -393,15 +393,6 @@ Run `allycat help faq` for more.
 </details>
 
 <details>
-<summary>Roadmap</summary>
-
-- **`--report` flag** — Expose the HTML report as a standalone CLI flag (`allycat scan --report`) without requiring `ai.enabled` in config.
-- **UI preferences** — Per-project control over summary style and which violation fields are shown in terminal output, configurable via `allycat init ui`.
-- **Config validation** — Warn on unknown or misspelled keys in `allycat.config.json` instead of silently falling back to defaults.
-
-</details>
-
-<details>
 <summary>Contributing</summary>
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md)
