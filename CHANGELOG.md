@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **`allycat report`** — opens `allycat-report.html` in your browser directly from the terminal. No need to locate the file manually after a scan. Prints a clear message if no report file exists yet.
 - **`allycat feedback`** — opens GitHub Issues in your browser to report a bug or request a feature without leaving the terminal.
-- **`allycat update`** — checks your installed version against the latest on npm. If an update is available, shows the exact command to run. Offers to open the release notes or full changelog in your browser.
+- **`allycat update`** — check for updates and view release notes from the terminal.
 
 ---
 

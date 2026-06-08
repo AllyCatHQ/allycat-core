@@ -308,8 +308,6 @@ Check for updates and view release notes.
 allycat update
 ```
 
-Compares your installed version against the latest on npm. If an update is available, shows the exact command to run. Offers to open the release notes or full changelog in your browser.
-
 ---
 
 ## Configuration
