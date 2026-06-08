@@ -6,7 +6,7 @@
 [![npm version](https://img.shields.io/npm/v/allycat.svg)](https://www.npmjs.com/package/allycat)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Downloads](https://img.shields.io/npm/dm/allycat.svg)](https://www.npmjs.com/package/allycat)
+[![Downloads](https://img.shields.io/npm/dw/allycat.svg)](https://www.npmjs.com/package/allycat)
 [![Total Downloads](https://img.shields.io/npm/dt/allycat.svg)](https://www.npmjs.com/package/allycat)
 
 </div>
@@ -20,7 +20,7 @@
 **Supports**: JSX/TSX, Vue, Angular, HTML • RTL support (experimental) • Quick (JSDOM) & Full (Playwright) modes
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/demo.gif" alt="AllyCat scanning files — violations found and reported" />
+  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/demo-optimized.gif" alt="AllyCat scanning files — violations found and reported" />
 </p>
 
 ---
@@ -98,6 +98,12 @@ allycat scan
 > Full scans (contrast checking) require Chromium — install once with `npx playwright install chromium`, then run `allycat scan --full`.
 
 See all options with `allycat scan --help`.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/actions-cli.gif" alt="AllyCat scan output with line numbers, saving a baseline, and catching new violations with --fail-on-new" />
+</p>
+
+> *Scan violations with exact line numbers → save a baseline → catch only new violations with `--fail-on-new`*
 
 ---
 
