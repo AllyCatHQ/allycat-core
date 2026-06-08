@@ -20,7 +20,7 @@
 **Supports**: JSX/TSX, Vue, Angular, HTML • RTL support (experimental) • Quick (JSDOM) & Full (Playwright) modes
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/demo-optimized.gif" alt="AllyCat scanning files — violations found and reported" />
+  <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/demo-optimize.gif" alt="AllyCat scanning files — violations found and reported" />
 </p>
 
 ---

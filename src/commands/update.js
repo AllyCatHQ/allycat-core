@@ -1,5 +1,6 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
+import https from 'https';
 import { createRequire } from 'module';
 import { APP_LINKS } from '../constants.js';
 import { openInBrowser } from '../utils/browserOpener.js';
@@ -7,14 +8,13 @@ import { openInBrowser } from '../utils/browserOpener.js';
 const require = createRequire(import.meta.url);
 const pkg = require('../../package.json');
 
-const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 const REGISTRY_VERSION_RE = /^\d+\.\d+\.\d+(-[\w.]+)?$/;
 
 function semverIsNewer(a, b) {
-    if (!SEMVER_RE.test(a) || !SEMVER_RE.test(b)) return false;
-    const parse = v => v.split('.').map(Number);
+    const parse = v => v.split('-')[0].split('.').map(Number);
     const [am, an, ap] = parse(a);
     const [bm, bn, bp] = parse(b);
+    if ([am, an, ap, bm, bn, bp].some(n => !Number.isInteger(n))) return false;
     if (am !== bm) return am > bm;
     if (an !== bn) return an > bn;
     return ap > bp;
@@ -30,12 +30,16 @@ export async function updateCommand() {
 
     let latestVersion;
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-        const res = await fetch('https://registry.npmjs.org/allycat/latest', { signal: controller.signal });
-        clearTimeout(timeout);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const data = await new Promise((resolve, reject) => {
+            const req = https.get('https://registry.npmjs.org/allycat/latest', { headers: { 'User-Agent': 'allycat-cli' } }, res => {
+                if (res.statusCode !== 200) { reject(new Error(`HTTP ${res.statusCode}`)); return; }
+                let body = '';
+                res.on('data', chunk => { body += chunk; });
+                res.on('end', () => { try { resolve(JSON.parse(body)); } catch { reject(new Error('Invalid JSON')); } });
+            });
+            req.setTimeout(5000, () => { req.destroy(); reject(new Error('Timeout')); });
+            req.on('error', reject);
+        });
         if (typeof data.version !== 'string' || !REGISTRY_VERSION_RE.test(data.version)) throw new Error('Invalid version in registry response');
         latestVersion = data.version;
         s.stop('Done');
