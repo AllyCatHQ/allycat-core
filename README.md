@@ -28,7 +28,7 @@
 ## Table of Contents
 
 - [Features](#features)
-- [Why AllyCat vs @axe-core/cli](#why-allycat-vs-axe-corecli)
+- [Why AllyCat](#why-allycat)
 - [Quick Start](#quick-start)
 - [Installation](#installation)
 - [Commands](#commands)
@@ -36,10 +36,7 @@
 - [Supported File Types](#supported-file-types)
 - [Output Formats](#output-formats)
 - [CI/CD Integration](#cicd-integration)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [Acknowledgments](#acknowledgments)
+- [More](#more)
 - [License](#license)
 
 ---
@@ -57,7 +54,12 @@
 
 ---
 
-## Why AllyCat vs `@axe-core/cli`
+## Why AllyCat
+
+Most accessibility tools need a deployed app. AllyCat scans your source files directly — JSX, Vue, Angular, HTML — giving you exact line numbers and AI-ready fix prompts before anything ships.
+
+<details>
+<summary>Why AllyCat vs axe-core/cli</summary>
 
 `@axe-core/cli` excels at scanning **live URLs**. AllyCat is designed for **source code** in your editor and pipelines.
 
@@ -75,6 +77,8 @@
 | Quick scan (no browser) | Yes — JSDOM, ~1s/file | No — always full browser |
 
 **Use AllyCat** for pre-commit hooks, local development, and PR pipelines without a deployed app.
+
+</details>
 
 ---
 
@@ -354,7 +358,10 @@ AllyCat is built for pipelines:
 ---
 
 
-## Accessibility Standards
+## More
+
+<details>
+<summary>Accessibility Standards</summary>
 
 | Standard | Contrast Ratio | RTL Support | Typical Use |
 |---|---|---|---|
@@ -366,10 +373,10 @@ RTL support is available as an opt-in for all standards — enable it during `al
 
 Run `allycat help standards` for a full breakdown, or see the official [WCAG 2.1](https://www.w3.org/TR/WCAG21/) and [WCAG 2.2](https://www.w3.org/TR/WCAG22/) specifications.
 
----
+</details>
 
-
-## Troubleshooting
+<details>
+<summary>Troubleshooting</summary>
 
 **Common issues**:
 
@@ -383,29 +390,34 @@ Run `allycat help standards` for a full breakdown, or see the official [WCAG 2.1
 
 Run `allycat help faq` for more.
 
----
+</details>
 
-## Roadmap
+<details>
+<summary>Roadmap</summary>
 
 - **`--report` flag** — Expose the HTML report as a standalone CLI flag (`allycat scan --report`) without requiring `ai.enabled` in config.
 - **UI preferences** — Per-project control over summary style and which violation fields are shown in terminal output, configurable via `allycat init ui`.
 - **Config validation** — Warn on unknown or misspelled keys in `allycat.config.json` instead of silently falling back to defaults.
 
----
+</details>
 
-## Contributing
+<details>
+<summary>Contributing</summary>
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md)
 
----
+</details>
 
-## Acknowledgments
+<details>
+<summary>Acknowledgments</summary>
 
 - [axe-core](https://github.com/dequelabs/axe-core) — Accessibility rules engine
 - [Playwright](https://playwright.dev/) — Browser automation for full scan mode
 - [JSDOM](https://github.com/jsdom/jsdom) — DOM implementation for quick scan mode
 - [Babel](https://babeljs.io/) — JSX/TSX transformation
 - [Commander.js](https://github.com/tj/commander.js) — CLI framework
+
+</details>
 
 ---
 
