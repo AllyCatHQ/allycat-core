@@ -8,37 +8,37 @@
  * @module utils/browserOpener
  */
 
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 
 /**
- * Open a file path in the default browser.
+ * Open a file path or URL in the default browser.
  * Fails silently — if the browser can't open, the scan still succeeds.
  *
- * @param {string} filePath - Absolute path to the HTML file
+ * @param {string} target - Absolute path or URL to open
  */
-export function openInBrowser(filePath) {
-    const command = resolveOpenCommand(filePath);
-    if (!command) return;
+export function openInBrowser(target) {
+    const resolved = resolveOpenCommand(target);
+    if (!resolved) return;
 
-    exec(command, (error) => {
+    // execFile avoids a shell entirely — no string interpolation, no injection surface.
+    execFile(resolved.bin, resolved.args, () => {
         // Intentionally silent — opening the browser is best-effort
-        // The file path is always printed to terminal as fallback
+        // The target is always printed to terminal as fallback
     });
 }
 
 /**
- * Resolve the correct open command for the current platform.
+ * Resolve the platform binary and argument list for opening a target.
+ * Returns null on unsupported platforms.
  *
- * @param {string} filePath
- * @returns {string|null}
+ * @param {string} target
+ * @returns {{ bin: string, args: string[] } | null}
  */
-function resolveOpenCommand(filePath) {
-    const escaped = `"${filePath.replace(/"/g, '\\"')}"`;
-
+function resolveOpenCommand(target) {
     switch (process.platform) {
-        case 'darwin':  return `open ${escaped}`;
-        case 'win32':   return `start "" ${escaped}`;
-        case 'linux':   return `xdg-open ${escaped}`;
+        case 'darwin':  return { bin: 'open',     args: [target] };
+        case 'win32':   return { bin: 'cmd.exe',  args: ['/c', 'start', '', target] };
+        case 'linux':   return { bin: 'xdg-open', args: [target] };
         default:        return null;
     }
 }
