@@ -204,6 +204,13 @@ function showTopicList() {
     console.log(`  ${chalk.cyan(`${CLI.SCAN} --help`)}    ${chalk.dim('Scan command options')}`);
     console.log('');
 
+    console.log(chalk.bold('Other Commands:'));
+    console.log('');
+    console.log(`  ${chalk.cyan(CLI.REPORT)}    ${chalk.dim('Open the last report in your browser')}`);
+    console.log(`  ${chalk.cyan(CLI.FEEDBACK)}  ${chalk.dim('Report a bug or request a feature on GitHub')}`);
+    console.log(`  ${chalk.cyan(CLI.UPDATE)}    ${chalk.dim('Check for updates and view release notes')}`);
+    console.log('');
+
     console.log(divider);
     console.log(chalk.dim(`Quick start: ${CLI.INIT} && ${CLI.SCAN}`));
     console.log('');

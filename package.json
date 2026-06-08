@@ -1,6 +1,6 @@
 {
   "name": "allycat",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Accessibility tool for source files — scans JSX, Vue, Angular, and HTML without a running server. Exact line numbers, watch mode, CI gates, AI fix prompts. WCAG 2.1 AA, WCAG 2.2 AA, and WCAG AAA (automated rules) with optional RTL support.",
   "main": "src/index.js",
   "bin": {
@@ -19,6 +19,9 @@
     "wcag2",
     "axe-core",
     "cli",
+    "linter",
+    "scanner",
+    "static-analysis",
     "testing",
     "audit",
     "compliance",

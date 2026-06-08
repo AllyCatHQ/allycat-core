@@ -8,7 +8,7 @@
  */
 
 import chalk from 'chalk';
-import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME, SUPPORTED_EXTENSIONS, SUPPORTED_EXTENSIONS_DISPLAY, SUPPORTED_FRAMEWORKS } from '../constants.js';
+import { INSTALL, CLI, CONFIG_FILE_NAME, DEFAULT_REPORT_NAME, SUPPORTED_EXTENSIONS, SUPPORTED_EXTENSIONS_DISPLAY, SUPPORTED_FRAMEWORKS, DEFAULT_HTML_REPORT } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // FAQ
@@ -283,6 +283,14 @@ export const EXAMPLE_SECTIONS = [
             { cmd: `${CLI.SCAN} ./src --full --summary`, desc: 'Full scan, summary only' },
             { cmd: `${CLI.SCAN} ./src -f --json-file`,   desc: 'Full scan to JSON file' },
             { cmd: `${CLI.SCAN} ./src -q -s`,            desc: 'Quick scan, summary (fastest)' }
+        ]
+    },
+    {
+        title: 'Reports & Feedback',
+        examples: [
+            { cmd: CLI.REPORT,   desc: `Open ${DEFAULT_HTML_REPORT} in your browser — run allycat scan first` },
+            { cmd: CLI.FEEDBACK, desc: 'Open GitHub Issues to report a bug or request a feature' },
+            { cmd: CLI.UPDATE,   desc: 'Check for updates — compare installed vs latest and view release notes' }
         ]
     }
 ];

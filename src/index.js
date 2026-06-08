@@ -6,6 +6,9 @@ import updateNotifier from 'update-notifier';
 import { initCommand } from './commands/init.js';
 import { scanCommand } from './commands/scan.js';
 import { helpCommand } from './commands/help.js';
+import { reportCommand } from './commands/report.js';
+import { feedbackCommand } from './commands/feedback.js';
+import { updateCommand } from './commands/update.js';
 import { UI, APP_LINKS, SUPPORTED_EXTENSIONS_DISPLAY } from './constants.js';
 
 const require = createRequire(import.meta.url);
@@ -137,6 +140,27 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} allycat scan --watch --exclude tests  ${chalk.dim('# Watch mode — excluded paths ignored on every rescan too')}
 `)
   .action((target, options) => scanCommand(target, options));
+
+// Report Command
+
+program
+  .command('report')
+  .description('Open the last generated accessibility report in your browser')
+  .action(reportCommand);
+
+// Feedback Command
+
+program
+  .command('feedback')
+  .description('Report a bug or request a feature on GitHub')
+  .action(feedbackCommand);
+
+// Update Command
+
+program
+  .command('update')
+  .description('Check for updates and view release notes')
+  .action(updateCommand);
 
 // Help Command (FAQ, Examples)
 

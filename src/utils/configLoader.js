@@ -183,7 +183,7 @@ export function loadConfig(scanMode = SCAN_MODES.QUICK) {
     } catch {
         console.error(
             `[allycat] Config file is not valid JSON — run \`allycat init\` to reset it.\n` +
-            `  Path: ${configPath}`
+            `  Path: ${path.relative(process.cwd(), configPath)}`
         );
         return { ...sanitizeConfig(DEFAULT_CONFIG, scanMode), configIsDefault: true };
     }

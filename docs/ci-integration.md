@@ -2,6 +2,14 @@
 
 This guide covers exit codes, baseline workflows, CI mode, and pipeline examples for GitHub Actions, GitLab CI, and Jenkins.
 
+## Table of Contents
+
+- [Exit Codes](#exit-codes)
+- [Violation Baseline](#violation-baseline)
+- [CI Mode](#ci-mode)
+- [JSON Report Structure](#json-report-structure)
+- [Pipeline Examples](#pipeline-examples)
+
 ---
 
 ## Exit Codes
@@ -147,7 +155,10 @@ When using `--json-file` or `-o json`, the output follows this shape:
 
 ---
 
-## GitHub Actions
+## Pipeline Examples
+
+<details>
+<summary>GitHub Actions</summary>
 
 ```yaml
 name: Accessibility Check
@@ -181,7 +192,10 @@ jobs:
           path: allycat-report.json
 ```
 
-## GitLab CI
+</details>
+
+<details>
+<summary>GitLab CI</summary>
 
 ```yaml
 accessibility:
@@ -195,7 +209,10 @@ accessibility:
       - allycat-report.json
 ```
 
-## Jenkins
+</details>
+
+<details>
+<summary>Jenkins</summary>
 
 ```groovy
 stage('Accessibility') {
@@ -206,3 +223,5 @@ stage('Accessibility') {
   }
 }
 ```
+
+</details>

@@ -11,10 +11,13 @@ export const CURRENT_CONFIG_VERSION = 1;
 // ─── CLI Command Strings ──────────────────────────────────────────────────────
 
 export const CLI = {
-    NAME: 'allycat',
-    SCAN: 'allycat scan',
-    INIT: 'allycat init',
-    HELP: 'allycat help',
+    NAME:     'allycat',
+    SCAN:     'allycat scan',
+    INIT:     'allycat init',
+    HELP:     'allycat help',
+    REPORT:   'allycat report',
+    FEEDBACK: 'allycat feedback',
+    UPDATE:   'allycat update',
 };
 
 // ─── Scan Modes ───────────────────────────────────────────────────────────────
@@ -129,5 +132,8 @@ export const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
 // ─── App Links ────────────────────────────────────────────────────────────────
 
 export const APP_LINKS = {
-    DOCS: 'https://github.com/AllyCatHQ/allycat-core/blob/main/README.md',
+    DOCS:      'https://github.com/AllyCatHQ/allycat-core/blob/main/README.md',
+    ISSUES:    'https://github.com/AllyCatHQ/allycat-core/issues',
+    CHANGELOG: 'https://github.com/AllyCatHQ/allycat-core/blob/main/CHANGELOG.md',
+    RELEASE:   (version) => `https://github.com/AllyCatHQ/allycat-core/releases/tag/v${version}`,
 };
