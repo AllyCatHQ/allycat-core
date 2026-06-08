@@ -278,35 +278,46 @@ allycat scan --help   # Scan command with all options
 
 ---
 
-## Configuration
+### `allycat report`
 
-Running `allycat init` creates `allycat.config.json` in your project root. You can also edit it manually.
+Opens the last generated HTML accessibility report (`allycat-report.html`) in your browser.
 
-```json
-{
-  "configVersion": 1,
-  "selectedStandard": "wcag-aa",
-  "rules": {
-    "rtl": false,
-    "level": "AA"
-  },
-  "scan": {
-    "defaultMode": "quick"
-  },
-  "ai": {
-    "enabled": true,
-    "agent": "claude",
-    "reportBehavior": "path-only"
-  },
-  "performance": {
-    "concurrency": null
-  }
-}
+```bash
+allycat report
 ```
 
-Valid values for `selectedStandard`: `wcag-aa` (default), `wcag-22-aa`, `wcag-aaa`.
+Run `allycat scan` first. Prints a message and exits if no report file is found.
 
-→ See [Configuration Reference](docs/configuration.md) for all valid values and manual editing details.
+---
+
+### `allycat feedback`
+
+Opens [GitHub Issues](https://github.com/AllyCatHQ/allycat-core/issues) in your browser to report a bug or request a feature.
+
+```bash
+allycat feedback
+```
+
+---
+
+### `allycat update`
+
+Check for updates and view release notes.
+
+```bash
+allycat update
+```
+
+Compares your installed version against the latest on npm. If an update is available, shows the exact command to run. Offers to open the release notes or full changelog in your browser.
+
+---
+
+## Configuration
+
+Run `allycat init` to create `allycat.config.json` in your project root.
+Valid standards are `wcag-aa` (default), `wcag-22-aa`, and `wcag-aaa`.
+
+→ See [Configuration Reference](docs/configuration.md) for all fields, valid values, and manual editing details.
 
 ---
 
