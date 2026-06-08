@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`allycat feedback`** — opens GitHub Issues in your browser to report a bug or request a feature without leaving the terminal.
 - **`allycat update`** — check for updates and view release notes from the terminal.
 
+### Fixed
+- Security improvement in browser open handling.
+- Minor fix to config error output.
+
 ---
 
 ## [1.4.1] - 2026-06-06
