@@ -8,6 +8,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/npm/dw/allycat.svg)](https://www.npmjs.com/package/allycat)
 [![Total Downloads](https://img.shields.io/npm/dt/allycat.svg)](https://www.npmjs.com/package/allycat)
+[![GitHub Stars](https://img.shields.io/github/stars/AllyCatHQ/allycat-core?style=social)](https://github.com/AllyCatHQ/allycat-core)
+
+<p>⭐ It takes one second to <a href="https://github.com/AllyCatHQ/allycat-core">star this project</a> - and keeps me motivated for weeks after.</p>
 
 </div>
 
