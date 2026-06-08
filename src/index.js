@@ -8,6 +8,7 @@ import { scanCommand } from './commands/scan.js';
 import { helpCommand } from './commands/help.js';
 import { reportCommand } from './commands/report.js';
 import { feedbackCommand } from './commands/feedback.js';
+import { updateCommand } from './commands/update.js';
 import { UI, APP_LINKS, SUPPORTED_EXTENSIONS_DISPLAY } from './constants.js';
 
 const require = createRequire(import.meta.url);
@@ -153,6 +154,13 @@ program
   .command('feedback')
   .description('Report a bug or request a feature on GitHub')
   .action(feedbackCommand);
+
+// Update Command
+
+program
+  .command('update')
+  .description('Check for updates and view release notes')
+  .action(updateCommand);
 
 // Help Command (FAQ, Examples)
 
