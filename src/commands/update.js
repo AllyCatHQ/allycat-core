@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url);
 const pkg = require('../../package.json');
 
 const SEMVER_RE = /^\d+\.\d+\.\d+$/;
+const REGISTRY_VERSION_RE = /^\d+\.\d+\.\d+(-[\w.]+)?$/;
 
 function semverIsNewer(a, b) {
     if (!SEMVER_RE.test(a) || !SEMVER_RE.test(b)) return false;
@@ -35,7 +36,7 @@ export async function updateCommand() {
         clearTimeout(timeout);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        if (typeof data.version !== 'string' || !data.version) throw new Error('Invalid version in registry response');
+        if (typeof data.version !== 'string' || !REGISTRY_VERSION_RE.test(data.version)) throw new Error('Invalid version in registry response');
         latestVersion = data.version;
         s.stop('Done');
     } catch {
