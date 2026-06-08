@@ -129,5 +129,6 @@ export const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
 // ─── App Links ────────────────────────────────────────────────────────────────
 
 export const APP_LINKS = {
-    DOCS: 'https://github.com/AllyCatHQ/allycat-core/blob/main/README.md',
+    DOCS:   'https://github.com/AllyCatHQ/allycat-core/blob/main/README.md',
+    ISSUES: 'https://github.com/AllyCatHQ/allycat-core/issues',
 };
