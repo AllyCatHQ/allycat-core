@@ -66,4 +66,7 @@ function printReportPath(absolutePath) {
         chalk.cyan(relativePath) +
         chalk.dim(`  (${absolutePath})`)
     );
+    if (process.stdout.isTTY) {
+        p.log.info(chalk.dim('  Run ') + chalk.cyan('allycat report') + chalk.dim(' to open it in your browser'));
+    }
 }
