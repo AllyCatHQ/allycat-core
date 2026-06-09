@@ -106,6 +106,27 @@ correct and valuable action.
 
 ---
 
+## Rename Detection (pre-pass)
+
+Before the four-key matching runs, AllyCat tries to account for files that were
+renamed or moved since the baseline was saved.
+
+If `baseline.gitCommit` is present, AllyCat runs `git diff --find-renames` between
+that commit and `HEAD`. Any renamed/moved files found are remapped in memory — the
+baseline's `file` paths are rewritten to their new locations before matching, so a
+file move alone no longer causes its existing violations to appear as `NEW`.
+
+If renames are detected, a warning is printed suggesting you re-run `--save-baseline`
+to persist the updated paths into the committed baseline file.
+
+This pre-pass is best-effort and silently does nothing — falling through to the
+unmodified four-key matching — when:
+- `gitCommit` is absent (older baseline file)
+- git is unavailable in the current environment
+- the repository is a shallow clone that doesn't have the baseline commit
+
+---
+
 ## Matching Algorithm
 
 ```
@@ -143,6 +164,7 @@ time `--save-baseline` is run.
 ```json
 {
   "createdAt": "2026-03-17T10:00:00.000Z",
+  "gitCommit": "a3f9c1d8e2b4567890abcdef1234567890abcde",
   "standard": "wcag-aa",
   "scanMode": "quick",
   "violations": [
@@ -159,10 +181,16 @@ time `--save-baseline` is run.
 
 | Field | Used for matching | Purpose |
 |---|---|---|
+| `createdAt` | ❌ No | Timestamp of the `--save-baseline` run |
+| `gitCommit` | ❌ No | `HEAD` commit hash at the time `--save-baseline` ran; powers the rename-detection layer (see "Rename Detection" above). `null` if git was unavailable |
 | `fingerprint` | ✅ Yes | Core identity — survives line shifts |
 | `selector` | ✅ Yes | Instance address — closes substitution loophole |
 | `element` | ❌ No | Human-readable copy of the HTML for manual inspection |
 | `file`, `rule` | ✅ Yes | Scope filters |
+
+**Backward compatible:** baseline files saved before `gitCommit` was introduced simply
+don't have the field. It is treated as absent/`null`, the rename-detection pre-pass is
+skipped, and the four-key matching runs exactly as before.
 
 ---
 

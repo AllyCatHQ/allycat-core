@@ -13,6 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
+import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { BASELINE_FILE } from '../constants.js';
 
@@ -51,8 +52,17 @@ export function saveBaseline(violations, config, scanMode) {
         element:     (v.html || '').trim()   // human-readable only — not used for matching
     }));
 
+    let gitCommit = null;
+    try {
+        gitCommit = execSync('git rev-parse HEAD', {
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe']
+        }).trim();
+    } catch { /* git unavailable — store null, no crash */ }
+
     const baseline = {
         createdAt: new Date().toISOString(),
+        gitCommit,
         standard:  config?.selectedStandard ?? 'unknown',
         scanMode,
         violations: entries
@@ -120,4 +130,51 @@ export function classifyViolations(violations, baseline) {
         baselineViolations,
         staleCount: available.length
     };
+}
+
+// -----------------------------------------------------------------------------
+// Rename Detection
+// -----------------------------------------------------------------------------
+
+/**
+ * Detect file renames between the baseline commit and HEAD using git.
+ * Returns a Map of oldPath → newPath.
+ * Returns an empty Map on any failure (git unavailable, shallow clone, bad commit, no renames).
+ *
+ * @param {string|null} fromCommit - git commit hash the baseline was saved at
+ * @returns {Map<string,string>}
+ */
+export function detectRenames(fromCommit) {
+    if (!fromCommit) return new Map();
+    try {
+        const output = execSync(
+            `git diff --find-renames --name-status ${fromCommit}..HEAD`,
+            { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
+        );
+        const renames = new Map();
+        for (const line of output.trim().split('\n')) {
+            // git outputs: R094\told/path.jsx\tnew/path.jsx
+            const match = line.match(/^R\d+\t(.+)\t(.+)$/);
+            if (match) renames.set(match[1], match[2]);
+        }
+        return renames;
+    } catch {
+        return new Map();
+    }
+}
+
+/**
+ * Remap baseline entry file paths using a rename map.
+ * Returns the same array unchanged if the map is empty.
+ *
+ * @param {Array} entries - baseline.violations entries
+ * @param {Map<string,string>} renameMap - oldPath → newPath
+ * @returns {Array}
+ */
+export function remapBaselineFiles(entries, renameMap) {
+    if (renameMap.size === 0) return entries;
+    return entries.map(e => ({
+        ...e,
+        file: renameMap.get(e.file) ?? e.file
+    }));
 }
