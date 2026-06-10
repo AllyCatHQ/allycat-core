@@ -134,6 +134,21 @@ export const SUPPORTED_FRAMEWORKS = [
     { label: 'Angular', extensions: ['.component.html', '.component.ts'] },
 ];
 
+// ─── Document-Level Axe Rules ─────────────────────────────────────────────────
+// Rules that require a complete HTML document context and fire at most once
+// per page. violationProcessor skips them for JSX/TSX component fragments;
+// baselineManager matches them by (file, rule) alone — their violation.html
+// is the whole <html> element, so fingerprint/selector are unstable.
+
+export const DOCUMENT_LEVEL_RULES = new Set([
+    'landmark-one-main',
+    'page-has-heading-one',
+    'html-has-lang',
+    'document-title',
+    'meta-viewport',
+    'bypass',
+]);
+
 // ─── Impact Severity Order ────────────────────────────────────────────────────
 // Shared sort key: lower value = more severe. Used by watchMode and violationFormatter.
 

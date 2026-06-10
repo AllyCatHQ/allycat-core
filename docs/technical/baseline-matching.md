@@ -41,9 +41,9 @@ consumption fails the same substitution scenario described above.
 
 ---
 
-## The Solution: Composite Key
+## The Solution: Two-Tier Composite Key
 
-Every baseline entry is identified by **four fields together**:
+Every baseline entry stores **four fields**:
 
 ```
 file  +  rule  +  fingerprint  +  selector
@@ -56,7 +56,19 @@ file  +  rule  +  fingerprint  +  selector
 | `fingerprint` | SHA-256 of `violation.html.trim()` | Stable across line shifts; changes only when the element markup changes |
 | `selector` | Stable canonical DOM path (e.g. `body > button:nth-child(2)`) | Unique per element instance; always full positional path — see below |
 
-A violation matches a baseline entry only when **all four match exactly**.
+Matching runs in two tiers:
+
+- **Tier 1** — all four fields must match exactly.
+- **Tier 2 (fallback)** — `file + rule + fingerprint` only, applied **only when that
+  fingerprint appears exactly once in the baseline and exactly once in the current
+  scan** for the same (file, rule). A unique fingerprint is unambiguous identity, so
+  position is irrelevant — this is what makes the matching immune to insertions that
+  shift every `:nth-child()` below them (see "Insert Before" below).
+
+When two or more elements share an identical fingerprint, tier 2 is disabled for that
+group and the strict four-field match applies — which is exactly what keeps the
+substitution loophole closed.
+
 No fuzzy logic. No line numbers anywhere in the matching pipeline.
 
 ---
@@ -70,7 +82,7 @@ the live DOM. It has no connection to line numbers. Adding or removing any numbe
 lines elsewhere in the file does not affect it. The hash is therefore stable across
 every edit that does not touch the element itself.
 
-### `selector` closes the substitution loophole
+### `selector` closes the substitution loophole — for identical elements
 
 Instead of storing axe-core's raw CSS selector, AllyCat stores a **stable canonical selector**
 computed by walking the live DOM from the element up to `<body>`, always producing a full
@@ -85,14 +97,21 @@ though the element was never touched — breaking composite-key matching.
 The stable selector is always in the same full positional format, so it is unaffected by
 whether there is one or many instances of an element.
 
-Even when 10 buttons have identical `violation.html`, each gets a different stable selector
-(`button:nth-child(n)` relative to its parent). Storing the stable selector as part of the
-identity means each baseline entry corresponds to exactly one element instance — not a count,
-a fingerprint registry.
+The selector's job is to **disambiguate identical fingerprints**. When 10 buttons have
+identical `violation.html`, each gets a different stable selector (`button:nth-child(n)`
+relative to its parent), so each baseline entry corresponds to exactly one element
+instance — not a count, a fingerprint registry.
 
-When a developer fixes button 1 and adds a new broken button at a new DOM position:
-- Button 1's entry is not matched (it no longer appears in the scan) → stale, ignored
+When a developer fixes one of 10 identical broken buttons and adds a new broken button at
+a new DOM position:
+- The group has multiple identical fingerprints → tier 2 is disabled → strict matching
+- The 9 untouched buttons match their exact selectors → **BASELINE**
+- The fixed button's entry is not matched → stale, ignored
 - New button has a new stable selector → no composite match in baseline → **NEW** ✅
+
+For elements whose fingerprint is unique in the file, the selector is *not* required to
+match (tier 2) — there it carries no identity information, only position, and position is
+exactly what insertions destabilize.
 
 ### "Touch it, you own it"
 
@@ -104,11 +123,26 @@ This is intentional behaviour, not a false positive. The developer had eyes on t
 element and chose not to fix the a11y issue. Resurfacing it at that moment is the
 correct and valuable action.
 
+### Document-level rules match by (file, rule) alone
+
+Six rules fire at most once per page and target the document itself, not an element:
+`html-has-lang`, `document-title`, `landmark-one-main`, `page-has-heading-one`,
+`meta-viewport`, `bypass` (the `DOCUMENT_LEVEL_RULES` set in `src/constants.js`).
+
+For these, axe's `violation.html` is the `<html>` element — so *any* edit anywhere in
+the page changes the fingerprint and would falsely re-flag a known violation. Since the
+rule can only fire once per file, `(file, rule)` is already a complete identity;
+fingerprint and selector are stored for human inspection but ignored during matching.
+
+This is backward compatible: baseline files saved by older versions match these rules
+correctly without a re-save, because their stored fingerprint/selector are simply not
+consulted.
+
 ---
 
 ## Rename Detection (pre-pass)
 
-Before the four-key matching runs, AllyCat tries to account for files that were
+Before the two-tier matching runs, AllyCat tries to account for files that were
 renamed or moved since the baseline was saved.
 
 If `baseline.gitCommit` is present, AllyCat runs `git diff --find-renames` between
@@ -130,7 +164,7 @@ baselines travel safely between Windows and Unix machines, and `--save-baseline`
 always writes forward-slash paths regardless of OS.
 
 This pre-pass is best-effort and silently does nothing — falling through to the
-unmodified four-key matching — when:
+unmodified two-tier matching — when:
 - `gitCommit` is absent (older baseline file) or not a valid commit hash
 - git is unavailable in the current environment
 - the repository is a shallow clone that doesn't have the baseline commit
@@ -173,17 +207,31 @@ classifyViolations(currentViolations, baseline):
 
   available = copy of baseline.violations     // entries are consumed as they match
 
+  // Group sizes are computed over the FULL sets (pre-consumption):
+  // uniqueness means "this markup exists exactly once on each side"
+  baselineCounts = count entries  by (file, rule, fingerprint), skipping document-level rules
+  currentCounts  = count current  by (file, rule, fingerprint), skipping document-level rules
+
+  // Step 0 + Tier 1
   for each violation in currentViolations:
+
+    if violation.rule is document-level:
+      match available entry on (file, rule) only
+      consumed → BASELINE, else → NEW
+      continue
+
     fp  = sha256(violation.html.trim())
-    key = { file, rule, fingerprint: fp, selector: violation.selector }
+    match available entry on (file, rule, fingerprint, selector)   // exact, tier 1
+    consumed → BASELINE, else → pending
 
-    match = find first entry in available where all four key fields are equal
-
-    if match found:
-      remove match from available             // consumed — cannot match a second violation
-      label violation BASELINE
+  // Tier 2 — unique-fingerprint fallback (position-independent)
+  for each violation in pending:
+    key = (file, rule, fingerprint)
+    if baselineCounts[key] == 1 and currentCounts[key] == 1:
+      match available entry on (file, rule, fingerprint)           // selector ignored
+      consumed → BASELINE, else → NEW
     else:
-      label violation NEW
+      NEW                                     // ambiguous group → strict matching only
 
   stale = entries remaining in available      // violations fixed since last --save-baseline
   return { newViolations, baselineViolations, staleCount: stale.length }
@@ -191,6 +239,11 @@ classifyViolations(currentViolations, baseline):
 
 **Consumption is critical.** Without it, one baseline entry could match multiple
 identical violations — re-introducing the substitution loophole at the algorithm level.
+
+**Tier 2 only fires for unambiguous identities.** A fingerprint that exists exactly once
+on both sides can only be the same element (or a byte-identical replacement — see
+"Accepted Trade-offs" below). For groups of identical elements, position is the only
+distinguishing signal, so the exact match is kept.
 
 **Stale entries are not errors.** An entry that finds no match in the current scan
 means the violation was fixed. It is silently ignored and will be removed the next
@@ -222,30 +275,45 @@ time `--save-baseline` is run.
 |---|---|---|
 | `createdAt` | ❌ No | Timestamp of the `--save-baseline` run |
 | `gitCommit` | ❌ No | `HEAD` commit hash at the time `--save-baseline` ran; powers the rename-detection layer (see "Rename Detection" above). `null` if git was unavailable |
-| `fingerprint` | ✅ Yes | Core identity — survives line shifts |
-| `selector` | ✅ Yes | Instance address — closes substitution loophole |
+| `fingerprint` | ✅ Yes | Core identity — survives line shifts. Ignored for document-level rules |
+| `selector` | ✅ Tier 1 only | Disambiguates identical fingerprints — closes the substitution loophole. Ignored in tier 2 and for document-level rules |
 | `element` | ❌ No | Human-readable copy of the HTML for manual inspection |
-| `file`, `rule` | ✅ Yes | Scope filters |
+| `file`, `rule` | ✅ Yes | Scope filters — the complete identity for document-level rules |
 
 **Backward compatible:** baseline files saved before `gitCommit` was introduced simply
 don't have the field. It is treated as absent/`null`, the rename-detection pre-pass is
-skipped, and the four-key matching runs exactly as before.
+skipped, and the two-tier matching runs exactly as before.
 
 ---
 
-## Remaining Limitation: Insert Before
+## Insert Before: Solved for Unique Elements
 
-The stable selector uses `tag:nth-child(n)` which reflects the element's position
-among its parent's children. If a new element is inserted **before** an existing
-violation, that violation's `:nth-child()` value shifts and the baseline entry no
-longer matches — producing a false positive.
+The stable selector uses `tag:nth-child(n)`, which reflects the element's position
+among its parent's children. Inserting a new element **before** an existing violation
+shifts the `:nth-child()` value of *every* sibling below it — under pure four-field
+matching this cascaded: one insertion mid-page false-flagged every violation below the
+insertion point as NEW.
 
-This is a deliberate and logically correct outcome: the element's physical DOM
-position genuinely changed. Re-running `--save-baseline` resolves it in one command.
+Tier 2 fixes this for the common case. An element whose fingerprint is unique within
+its (file, rule) re-matches by fingerprint alone, regardless of where it moved.
+Inserting, removing, or reordering elements no longer disturbs unique violations.
 
-**This does not affect the common "add after" case.** Adding elements after an
-existing violation, or inside a new wrapper anywhere in the document, does not
-change the `:nth-child()` value of the existing violation.
+## Accepted Trade-offs
+
+Two residual cases are accepted by design — both are consequences of the fact that
+byte-identical elements are indistinguishable without position, and position is
+unstable under insertion. You cannot have both properties at once; AllyCat keeps the
+strict behaviour exactly where ambiguity exists.
+
+1. **Unique-element substitution is suppressed.** If the *only* broken `<input>` in a
+   file is fixed and a **byte-identical** broken one is added elsewhere in the same
+   file, tier 2 matches the new one to the old entry. This is rare, and the missed
+   markup is identical to one the team had already accepted into the baseline.
+
+2. **Identical-fingerprint groups still shift-flag.** When 2+ elements share an
+   identical fingerprint, tier 2 is disabled; inserting an element before such a group
+   still false-flags its members. This keeps the substitution loophole closed where it
+   actually exists. Re-running `--save-baseline` resolves it in one command.
 
 ---
 

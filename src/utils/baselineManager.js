@@ -3,9 +3,21 @@
  *
  * Handles violation baseline snapshots for --save-baseline / --fail-on-new workflow.
  *
- * Matching strategy: composite key (file + rule + SHA-256(violation.html.trim()) + selector).
- * All four fields must match exactly — no fuzzy logic, no line numbers.
- * Consumption-based: each baseline entry can only match one violation.
+ * Matching strategy — two-tier composite key, consumption-based (each baseline
+ * entry can only match one violation). No fuzzy logic, no line numbers.
+ *
+ *   Tier 1: exact match on file + rule + SHA-256(violation.html.trim()) + selector.
+ *   Tier 2: file + rule + fingerprint only — applied ONLY when that fingerprint
+ *           appears exactly once in the baseline and once in the current scan
+ *           for the same (file, rule). A unique fingerprint is unambiguous
+ *           identity, so position shifts (insertions above the element) don't
+ *           produce false NEW violations. Identical-fingerprint groups stay
+ *           strict, keeping the substitution loophole closed (see
+ *           docs/technical/baseline-matching.md).
+ *
+ *   Document-level rules (DOCUMENT_LEVEL_RULES) fire at most once per page and
+ *   their violation.html is the whole <html> element — fingerprint/selector are
+ *   unstable. They match by (file, rule) alone.
  *
  * @module utils/baselineManager
  */
@@ -15,7 +27,7 @@ import path from 'path';
 import { createHash } from 'crypto';
 import { execFileSync } from 'child_process';
 import chalk from 'chalk';
-import { BASELINE_FILE } from '../constants.js';
+import { BASELINE_FILE, DOCUMENT_LEVEL_RULES } from '../constants.js';
 import { normalizePathSeparators } from './pathUtils.js';
 
 // -----------------------------------------------------------------------------
@@ -106,10 +118,20 @@ export function loadBaseline() {
 }
 
 /**
- * Classify each violation as NEW or BASELINE using consumption-based composite-key matching.
+ * Classify each violation as NEW or BASELINE using consumption-based two-tier matching.
  *
  * Each baseline entry can only absorb one violation (prevents one stale entry from
  * suppressing two identical violations after a substitution).
+ *
+ * Steps:
+ *   0. Document-level rules match by (file, rule) alone — at most one per page,
+ *      and their violation.html (the <html> element) changes on any page edit.
+ *   1. Tier 1 — exact match on file + rule + fingerprint + selector.
+ *   2. Tier 2 — file + rule + fingerprint only, applied ONLY when that
+ *      fingerprint is unique on both sides for the same (file, rule).
+ *      Unambiguous identity → position shifts from insertions don't matter.
+ *      Identical-fingerprint groups skip this tier so a fix-one-add-identical
+ *      substitution is still flagged as NEW.
  *
  * @param {Array}  violations - Current scan violations
  * @param {Object} baseline   - Parsed baseline object (from loadBaseline())
@@ -121,13 +143,48 @@ export function classifyViolations(violations, baseline) {
 
     const newViolations      = [];
     const baselineViolations = [];
+    const pending            = [];   // tier-1 misses, awaiting tier-2
 
+    // Fingerprint-group sizes over the FULL sets (pre-consumption) — uniqueness
+    // means "this markup exists exactly once on each side", which is what makes
+    // a selector-free match unambiguous.
+    const groupKey = (file, rule, fp) => `${normalizePathSeparators(file)}\u0000${rule}\u0000${fp}`;
+
+    const baselineCounts = new Map();
+    for (const e of available) {
+        if (DOCUMENT_LEVEL_RULES.has(e.rule)) continue;
+        const k = groupKey(e.file, e.rule, e.fingerprint);
+        baselineCounts.set(k, (baselineCounts.get(k) ?? 0) + 1);
+    }
+
+    const currentCounts = new Map();
     for (const v of violations) {
-        const fp        = fingerprint(v.html);
-        const vselector = v.stableSelector ?? v.selector;
+        if (DOCUMENT_LEVEL_RULES.has(v.id)) continue;
+        const k = groupKey(v.file, v.id, fingerprint(v.html));
+        currentCounts.set(k, (currentCounts.get(k) ?? 0) + 1);
+    }
+
+    // Steps 0 + 1 — document-level match, then tier-1 exact match
+    for (const v of violations) {
         // Normalize both sides: scan paths use backslashes on Windows, and
         // baselines saved before normalization may contain backslashes too
-        const vfile     = normalizePathSeparators(v.file);
+        const vfile = normalizePathSeparators(v.file);
+
+        if (DOCUMENT_LEVEL_RULES.has(v.id)) {
+            const idx = available.findIndex(
+                e => normalizePathSeparators(e.file) === vfile && e.rule === v.id
+            );
+            if (idx !== -1) {
+                available.splice(idx, 1);   // consumed — cannot match again
+                baselineViolations.push(v);
+            } else {
+                newViolations.push(v);
+            }
+            continue;
+        }
+
+        const fp        = fingerprint(v.html);
+        const vselector = v.stableSelector ?? v.selector;
         const idx = available.findIndex(
             e => normalizePathSeparators(e.file) === vfile &&
                  e.rule        === v.id   &&
@@ -139,8 +196,29 @@ export function classifyViolations(violations, baseline) {
             available.splice(idx, 1);   // consumed — cannot match again
             baselineViolations.push(v);
         } else {
-            newViolations.push(v);
+            pending.push(v);            // tier-2 candidate
         }
+    }
+
+    // Step 2 — tier-2 unique-fingerprint fallback (position-independent)
+    for (const v of pending) {
+        const fp    = fingerprint(v.html);
+        const vfile = normalizePathSeparators(v.file);
+        const k     = groupKey(v.file, v.id, fp);
+
+        if (baselineCounts.get(k) === 1 && currentCounts.get(k) === 1) {
+            const idx = available.findIndex(
+                e => normalizePathSeparators(e.file) === vfile &&
+                     e.rule        === v.id &&
+                     e.fingerprint === fp
+            );
+            if (idx !== -1) {
+                available.splice(idx, 1);
+                baselineViolations.push(v);
+                continue;
+            }
+        }
+        newViolations.push(v);
     }
 
     return {
