@@ -13,7 +13,7 @@
  * @module engine/report/promptGenerator
  */
 
-import { STANDARDS, STANDARD_LABELS } from '../../constants.js';
+import { getStandardLabel } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // Constants
@@ -54,7 +54,7 @@ export function generateFilePrompt(file, violations, config) {
 // -----------------------------------------------------------------------------
 
 function buildFilePrompt(file, violations, config, agentKey) {
-    const standard = STANDARD_LABELS[config?.selectedStandard] || STANDARD_LABELS[STANDARDS.WCAG_AA];
+    const standard = getStandardLabel(config?.selectedStandard);
     const rtlEnabled = config?.rules?.rtl === true;
     const sorted = sortViolationsBySeverity(violations);
 

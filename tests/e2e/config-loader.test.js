@@ -190,6 +190,99 @@ console.log('\n-- e2e: scan with partial config -------------------------------'
 }
 
 // -----------------------------------------------------------------------------
+// 6. Invalid config values: warn + fallback, file untouched
+// -----------------------------------------------------------------------------
+
+console.log('\n-- invalid config values (warn + fallback) ---------------------');
+
+/** Run loadFrom while capturing console.warn output. */
+function loadCapturingWarnings(dir) {
+    const warnings = [];
+    const originalWarn = console.warn;
+    console.warn = (msg) => warnings.push(String(msg));
+    try {
+        return { config: loadFrom(dir), warnings };
+    } finally {
+        console.warn = originalWarn;
+    }
+}
+
+{
+    const content = JSON.stringify({
+        configVersion: 1,
+        selectedStandard: 'wcag-aaaaa',
+        scan:  { defaultMode: 'turbo' },
+        rules: { rtl: 'yes' },
+        ai:    { enabled: false, reportBehavior: 'always' },
+    });
+    const dir = makeConfigDir(content);
+    const { config, warnings } = loadCapturingWarnings(dir);
+    const fileAfter = fs.readFileSync(path.join(dir, CONFIG_FILE_NAME), 'utf-8');
+
+    assert('invalid selectedStandard → default',  config.selectedStandard === STANDARDS.WCAG_AA);
+    assert('invalid scan.defaultMode → default',  config.scan.defaultMode === SCAN_MODES.QUICK);
+    assert('truthy-string rules.rtl → false (not coerced)', config.rules.rtl === false);
+    assert('invalid ai.reportBehavior → path-only', config.ai.reportBehavior === 'path-only');
+    assert('a warning was emitted per invalid field', warnings.length === 4,
+        `got ${warnings.length}: ${warnings.join(' | ')}`);
+    assert('warning names the bad value', warnings.some(w => w.includes('wcag-aaaaa')));
+    assert('file NOT rewritten with corrections', fileAfter === content);
+
+    // scan.js loads config twice per run (mode read + final load) — warnings
+    // must dedupe per process, not repeat on every load.
+    const second = loadCapturingWarnings(dir);
+    assert('reloading same config does not re-warn', second.warnings.length === 0,
+        second.warnings.join(' | '));
+}
+
+{
+    // Valid non-default values must pass through with zero warnings.
+    const dir = makeConfigDir(JSON.stringify({
+        configVersion: 1,
+        selectedStandard: STANDARDS.WCAG_AAA,
+        scan:  { defaultMode: SCAN_MODES.FULL },
+        rules: { rtl: true },
+        ai:    { enabled: true, reportBehavior: 'auto-open' },
+    }));
+    const { config, warnings } = loadCapturingWarnings(dir);
+
+    assert('valid selectedStandard preserved',   config.selectedStandard === STANDARDS.WCAG_AAA);
+    assert('valid scan.defaultMode preserved',   config.scan.defaultMode === SCAN_MODES.FULL);
+    assert('valid rules.rtl preserved',          config.rules.rtl === true);
+    assert('valid ai.reportBehavior preserved',  config.ai.reportBehavior === 'auto-open');
+    assert('no warnings for valid values', warnings.length === 0, warnings.join(' | '));
+}
+
+{
+    // Absent ai.reportBehavior must stay absent (reportOutputter applies its own default).
+    const dir = makeConfigDir('{"configVersion":1}');
+    const config = loadFrom(dir);
+    assert('absent ai.reportBehavior stays absent', !('reportBehavior' in config.ai));
+}
+
+// -----------------------------------------------------------------------------
+// 7. E2E: scan with invalid selectedStandard warns and shows the real standard
+// -----------------------------------------------------------------------------
+
+console.log('\n-- e2e: scan with invalid selectedStandard ---------------------');
+
+{
+    const dir = makeConfigDir(JSON.stringify({ configVersion: 1, selectedStandard: 'wcag-aaaaa' }));
+    fs.writeFileSync(
+        path.join(dir, 'page.html'),
+        '<html lang="en"><head><title>t</title></head><body><main><h1>hi</h1></main></body></html>'
+    );
+    const result = spawnSync('node', [CLI, 'scan', 'page.html'], { encoding: 'utf8', cwd: dir });
+    const output = `${result.stdout}${result.stderr}`;
+
+    assert('scan exits 0', result.status === 0, `exit ${result.status}`);
+    assert('warning emitted for invalid standard',
+        output.includes('selectedStandard "wcag-aaaaa" is not a valid value'), output.slice(-300));
+    assert('banner shows the standard actually used', output.includes('WCAG 2.1 AA'));
+    assert('banner no longer echoes the typo', !output.includes('WCAG-AAAAA'));
+}
+
+// -----------------------------------------------------------------------------
 // Summary
 // -----------------------------------------------------------------------------
 

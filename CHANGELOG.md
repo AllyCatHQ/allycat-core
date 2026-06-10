@@ -39,6 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config migration no longer crashes when `allycat.config.json` is read-only (e.g. in CI
   sandboxes or locked checkouts). The migration applies in-memory with a warning and is
   retried on the next run.
+- Invalid config values (e.g. `"selectedStandard": "wcag-aaaaa"`) are no longer silently
+  accepted and echoed back in the scan banner while a different standard actually ran.
+  AllyCat now validates `selectedStandard`, `scan.defaultMode`, `ai.reportBehavior`,
+  `rules.rtl`, and `ai.enabled` at load time: invalid values produce a stderr warning
+  (visible in CI logs) listing the valid options and fall back to the built-in default —
+  the config file itself is never rewritten. The scan banner now shows the human-readable
+  label of the standard that actually ran (e.g. `WCAG 2.1 AA` instead of the raw value).
 
 ---
 

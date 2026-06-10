@@ -80,6 +80,16 @@ export const STANDARD_LABELS = {
     [STANDARDS.WCAG_22_AA]: 'WCAG 2.2 AA',
 };
 
+/**
+ * Resolve the human-readable label for a standard value.
+ * Unknown/missing values resolve to the WCAG AA label — matching the rule set
+ * axeConfig falls back to, so displays always describe what actually ran.
+ * Shared by scan banner, init summary, HTML report, and prompt generator.
+ */
+export function getStandardLabel(standard) {
+    return STANDARD_LABELS[standard] || STANDARD_LABELS[STANDARDS.WCAG_AA];
+}
+
 // ─── Report File Names ────────────────────────────────────────────────────────
 
 export const DEFAULT_HTML_REPORT = 'allycat-report.html';

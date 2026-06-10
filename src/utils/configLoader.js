@@ -10,7 +10,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { CONFIG_FILE_NAME, SCAN_MODES, STANDARDS, CURRENT_CONFIG_VERSION } from '../constants.js';
+import { CONFIG_FILE_NAME, SCAN_MODES, STANDARDS, AI_REPORT_BEHAVIORS, CURRENT_CONFIG_VERSION } from '../constants.js';
 
 // -----------------------------------------------------------------------------
 // Default Configuration
@@ -39,6 +39,17 @@ const MEMORY_PER_SLOT = {
     [SCAN_MODES.QUICK]: 200 * 1024 * 1024,  // ~200MB per JSDOM instance (benchmarked: 163MB worst-case + 23% margin)
     [SCAN_MODES.FULL]:  500 * 1024 * 1024   // ~500MB per Playwright/Chromium instance (benchmarked: 413MB worst-case + 21% margin)
 };
+
+// loadConfig runs twice per scan (preliminary mode read + final load) and on
+// every watch-mode rescan — without dedup, each config problem would warn
+// once per load instead of once per process.
+const warnedMessages = new Set();
+
+function warnOnce(message) {
+    if (warnedMessages.has(message)) return;
+    warnedMessages.add(message);
+    console.warn(message);
+}
 
 const SAFE_RAM_RATIO             = 0.6; // Never use more than 60% of system RAM
 const CPU_CONCURRENCY_MULTIPLIER = 4;   // logical cores × 4 for async/IO-interleaved JSDOM work
@@ -82,7 +93,7 @@ function clampConcurrency(raw, scanMode) {
     const clamped = valid ? Math.min(parsed, ceiling) : ceiling;
 
     if (valid && parsed > ceiling) {
-        console.warn(
+        warnOnce(
             `[allycat] performance.concurrency "${parsed}" exceeds safe limit ` +
             `for your system in ${scanMode} mode. Clamped to ${clamped}.`
         );
@@ -92,13 +103,52 @@ function clampConcurrency(raw, scanMode) {
 }
 
 /**
- * Sanitize raw config loaded from disk.
- * Clamps concurrency to a RAM-aware safe ceiling and fills missing keys with defaults.
+ * Return raw if it is one of the allowed values; otherwise warn and return fallback.
+ * Missing keys (undefined) fall back silently — only present-but-invalid values warn.
+ * Warnings go to stderr (console.warn) so they surface in CI logs and never
+ * corrupt JSON output written to stdout.
  *
- * Defaults are merged per-section so a hand-edited config missing a key
- * (e.g. selectedStandard) can never crash downstream consumers. Nested
- * sections are rebuilt so DEFAULT_CONFIG's own objects are never shared
- * with (and mutable through) a returned config.
+ * @param {*} raw                    - Raw value from config
+ * @param {string[]} allowedValues   - Valid values for this field
+ * @param {string} fallback          - Default used when raw is missing or invalid
+ * @param {string} fieldPath         - Dotted field name for the warning message
+ * @returns {string}
+ */
+function validateEnum(raw, allowedValues, fallback, fieldPath) {
+    if (raw === undefined || allowedValues.includes(raw)) return raw ?? fallback;
+    warnOnce(
+        `[allycat] ${fieldPath} "${raw}" is not a valid value — falling back to "${fallback}".\n` +
+        `  Valid values: ${allowedValues.join(', ')}`
+    );
+    return fallback;
+}
+
+/**
+ * Return raw if it is a real boolean; otherwise warn and return fallback.
+ * Truthy strings like "yes" are rejected rather than coerced — coercion would
+ * silently flip intent for values like the string "false".
+ *
+ * @param {*} raw                - Raw value from config
+ * @param {boolean} fallback     - Default used when raw is missing or invalid
+ * @param {string} fieldPath     - Dotted field name for the warning message
+ * @returns {boolean}
+ */
+function validateBoolean(raw, fallback, fieldPath) {
+    if (raw === undefined || typeof raw === 'boolean') return raw ?? fallback;
+    warnOnce(`[allycat] ${fieldPath} "${raw}" is not true/false — falling back to ${fallback}.`);
+    return fallback;
+}
+
+/**
+ * Sanitize raw config loaded from disk.
+ * Clamps concurrency to a RAM-aware safe ceiling, fills missing keys with
+ * defaults, and replaces invalid enum/boolean values with their defaults
+ * (warning to stderr) so downstream consumers — axe rule selection, scan
+ * banner, reports, baseline — always agree on what actually ran.
+ *
+ * Corrections are in-memory only; the user's file is never rewritten.
+ * Nested sections are rebuilt so DEFAULT_CONFIG's own objects are never
+ * shared with (and mutable through) a returned config.
  *
  * @param {Object} raw      - Raw parsed JSON config
  * @param {'quick'|'full'} scanMode
@@ -108,9 +158,36 @@ function sanitizeConfig(raw, scanMode) {
     return {
         ...DEFAULT_CONFIG,
         ...raw,
-        scan:  { ...DEFAULT_CONFIG.scan,  ...raw?.scan },
-        rules: { ...DEFAULT_CONFIG.rules, ...raw?.rules },
-        ai:    { ...DEFAULT_CONFIG.ai,    ...raw?.ai },
+        selectedStandard: validateEnum(
+            raw?.selectedStandard, Object.values(STANDARDS),
+            DEFAULT_CONFIG.selectedStandard, 'selectedStandard'
+        ),
+        scan: {
+            ...DEFAULT_CONFIG.scan,
+            ...raw?.scan,
+            defaultMode: validateEnum(
+                raw?.scan?.defaultMode, Object.values(SCAN_MODES),
+                DEFAULT_CONFIG.scan.defaultMode, 'scan.defaultMode'
+            ),
+        },
+        rules: {
+            ...DEFAULT_CONFIG.rules,
+            ...raw?.rules,
+            rtl: validateBoolean(raw?.rules?.rtl, DEFAULT_CONFIG.rules.rtl, 'rules.rtl'),
+        },
+        ai: {
+            ...DEFAULT_CONFIG.ai,
+            ...raw?.ai,
+            enabled: validateBoolean(raw?.ai?.enabled, DEFAULT_CONFIG.ai.enabled, 'ai.enabled'),
+            // reportBehavior has no entry in DEFAULT_CONFIG — absent stays absent
+            // (reportOutputter applies its own ?? default), so only validate when present.
+            ...(raw?.ai?.reportBehavior !== undefined && {
+                reportBehavior: validateEnum(
+                    raw.ai.reportBehavior, Object.values(AI_REPORT_BEHAVIORS),
+                    AI_REPORT_BEHAVIORS.PATH_ONLY, 'ai.reportBehavior'
+                ),
+            }),
+        },
         performance: {
             ...raw?.performance,
             concurrency:       clampConcurrency(raw?.performance?.concurrency, scanMode),
