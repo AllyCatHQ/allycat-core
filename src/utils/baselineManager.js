@@ -79,18 +79,30 @@ export function saveBaseline(violations, config, scanMode) {
 /**
  * Load the baseline file from the current working directory.
  *
- * @returns {Object|null} - Parsed baseline object, or null if not found / unreadable
+ * Returns null for structurally invalid files (not an object, or `violations`
+ * not an array) — the file is user-editable JSON, so every consumer must be
+ * able to trust the shape it receives.
+ *
+ * @returns {Object|null} - Parsed baseline object, or null if not found / unreadable / malformed
  */
 export function loadBaseline() {
     const src = path.resolve(process.cwd(), BASELINE_FILE);
     if (!fs.existsSync(src)) return null;
 
+    let parsed;
     try {
-        return JSON.parse(fs.readFileSync(src, 'utf8'));
+        parsed = JSON.parse(fs.readFileSync(src, 'utf8'));
     } catch {
         process.stderr.write(chalk.yellow(`⚠ [allycat] Warning: could not parse ${BASELINE_FILE} — treating as missing\n`));
         return null;
     }
+
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed) || !Array.isArray(parsed.violations)) {
+        process.stderr.write(chalk.yellow(`⚠ [allycat] Warning: ${BASELINE_FILE} is malformed (expected an object with a violations array) — treating as missing\n`));
+        return null;
+    }
+
+    return parsed;
 }
 
 /**

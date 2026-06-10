@@ -74,8 +74,9 @@ allycat scan --fail-on-new --fail-on-critical
 
 If the baseline was saved inside a git repository, `--fail-on-new` detects files that
 were renamed or moved since — including uncommitted `git mv` — and follows them.
-A file move alone never reports its old violations as new. When renames are found,
-AllyCat prints:
+A git-tracked file move alone won't report its old violations as new. (A move git
+can't see yet — a plain filesystem rename that was never staged or committed — still
+shows them as new until you `git add` it.) When renames are found, AllyCat prints:
 
 ```
 ⚠ [allycat] File rename(s) detected since baseline was saved — 3 baseline entries remapped in memory. Re-run --save-baseline to persist the change.

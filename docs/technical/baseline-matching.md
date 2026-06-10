@@ -134,6 +134,15 @@ unmodified four-key matching — when:
 - `gitCommit` is absent (older baseline file) or not a valid commit hash
 - git is unavailable in the current environment
 - the repository is a shallow clone that doesn't have the baseline commit
+- the rename was a plain filesystem move that was never staged or committed —
+  git can't pair an untracked file (`git mv` or `git add` makes it visible)
+- the scan target was given as an absolute path — scan paths are then absolute
+  while git's rename output is cwd-relative, so no remap can apply
+
+A structurally invalid baseline file (not JSON, not an object, or `violations`
+not an array) is treated the same as a missing one: a warning is printed and
+the whole baseline check — both layers — is skipped. `loadBaseline()` is the
+single validation point, so downstream code can trust the shape it receives.
 
 ### CI: shallow clones disable rename detection
 

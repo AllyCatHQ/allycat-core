@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   writes forward-slash paths, and `--fail-on-new` compares paths separator-insensitively.
   Previously a baseline saved on Windows reported every violation as new when checked on
   Linux CI (and vice versa). Existing baselines keep working without re-saving.
+- A structurally invalid `allycat-baseline.json` (e.g. a hand-edited file where
+  `violations` is not an array) no longer crashes `--fail-on-new` or silently flags every
+  violation as new. AllyCat now prints a warning and skips the baseline check, same as a
+  missing file.
 - A broken `allycat.config.json` (e.g. containing `null`, an array, or plain text) no longer
   crashes the scan or silently overwrites your config file. AllyCat now prints a clear message,
   falls back to built-in defaults, and leaves the file untouched so you can fix or reset it
