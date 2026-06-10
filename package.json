@@ -1,13 +1,13 @@
 {
   "name": "allycat",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Accessibility tool for source files — scans JSX, Vue, Angular, and HTML without a running server. Exact line numbers, watch mode, CI gates, AI fix prompts. WCAG 2.1 AA, WCAG 2.2 AA, and WCAG AAA (automated rules) with optional RTL support.",
   "main": "src/index.js",
   "bin": {
     "allycat": "src/index.js"
   },
   "scripts": {
-    "test": "node tests/e2e/thresholds.test.js && node tests/e2e/concurrency.test.js && node tests/e2e/exclude.test.js && node tests/e2e/standards.test.js && node tests/e2e/never-scan.test.js && node tests/e2e/config-loader.test.js",
+    "test": "node tests/e2e/thresholds.test.js && node tests/e2e/concurrency.test.js && node tests/e2e/exclude.test.js && node tests/e2e/standards.test.js && node tests/e2e/never-scan.test.js && node tests/e2e/config-loader.test.js && node tests/e2e/baseline.test.js",
     "test:full": "npm test && node tests/e2e/css-delivery.test.js",
     "dev": "node ./src/index.js",
     "lint": "eslint src/"

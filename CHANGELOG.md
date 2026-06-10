@@ -7,20 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.6.0] - 2026-06-11
 
 ### Added
-- **Baseline rename protection** — `--fail-on-new` now uses git to detect files that were
-  renamed or moved since the baseline was saved, so moving a file no longer reports its
-  existing violations as new. Uncommitted renames (`git mv`) are detected too. When a
-  rename is found, AllyCat prints a reminder to re-run `--save-baseline` to persist the
-  new paths — the baseline file itself is never modified during `--fail-on-new`.
-  To support this, `--save-baseline` now records a `gitCommit` field in
-  `allycat-baseline.json`; older baseline files without it keep working unchanged.
-  In CI, rename detection requires git history — see the
-  [CI/CD Integration Guide](docs/ci-integration.md) for `fetch-depth` / `GIT_DEPTH` settings.
+- **Baseline rename protection** — `--fail-on-new` now detects files that were renamed
+  or moved since the baseline was saved, so moving a file no longer reports its existing
+  violations as new. AllyCat prints a reminder to re-run `--save-baseline` after a rename
+  to keep the baseline up to date — the baseline file itself is never modified during
+  `--fail-on-new`. Existing baseline files keep working unchanged. In CI, rename detection
+  requires git history — see the [CI/CD Integration Guide](docs/ci-integration.md) for
+  `fetch-depth` / `GIT_DEPTH` settings.
 
 ### Fixed
+- **Fewer false "new" violations after unrelated code changes** — `--fail-on-new` could
+  incorrectly report existing baseline violations (including page-level rules like
+  `html-has-lang` and `document-title`) as new after unrelated edits elsewhere in the
+  file. Existing baseline files keep working without re-saving. See
+  `docs/technical/baseline-matching.md` for details.
 - Baseline files are now portable across operating systems: `--save-baseline` always
   writes forward-slash paths, and `--fail-on-new` compares paths separator-insensitively.
   Previously a baseline saved on Windows reported every violation as new when checked on
@@ -34,18 +37,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   falls back to built-in defaults, and leaves the file untouched so you can fix or reset it
   with `allycat init`.
 - Hand-edited configs with missing fields (e.g. no `selectedStandard`) no longer crash
-  `allycat scan`. Missing fields are filled with built-in defaults at load time — values you
-  did set are always kept.
+  `allycat scan`. Missing fields are filled in with built-in defaults — values you did
+  set are always kept.
 - Config migration no longer crashes when `allycat.config.json` is read-only (e.g. in CI
-  sandboxes or locked checkouts). The migration applies in-memory with a warning and is
-  retried on the next run.
+  sandboxes or locked checkouts). AllyCat now warns and retries the migration on the next
+  run.
 - Invalid config values (e.g. `"selectedStandard": "wcag-aaaaa"`) are no longer silently
-  accepted and echoed back in the scan banner while a different standard actually ran.
-  AllyCat now validates `selectedStandard`, `scan.defaultMode`, `ai.reportBehavior`,
-  `rules.rtl`, and `ai.enabled` at load time: invalid values produce a stderr warning
-  (visible in CI logs) listing the valid options and fall back to the built-in default —
-  the config file itself is never rewritten. The scan banner now shows the human-readable
-  label of the standard that actually ran (e.g. `WCAG 2.1 AA` instead of the raw value).
+  accepted while a different standard actually ran. AllyCat now validates your config,
+  warns about anything invalid (with the valid options), and falls back to the built-in
+  default — your config file is never rewritten. The scan banner now shows the full
+  standard name (e.g. `WCAG 2.1 AA`) instead of the raw config value.
 
 ---
 
