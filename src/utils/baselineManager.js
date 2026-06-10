@@ -13,9 +13,10 @@
 import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import chalk from 'chalk';
 import { BASELINE_FILE } from '../constants.js';
+import { normalizePathSeparators } from './pathUtils.js';
 
 // -----------------------------------------------------------------------------
 // Fingerprinting
@@ -45,7 +46,9 @@ function fingerprint(html) {
  */
 export function saveBaseline(violations, config, scanMode) {
     const entries = violations.map(v => ({
-        file:        v.file,
+        // Always store forward-slash paths so baselines are portable across
+        // OSes and match git's path output (rename detection)
+        file:        normalizePathSeparators(v.file),
         rule:        v.id,
         fingerprint: fingerprint(v.html),
         selector:    v.stableSelector ?? v.selector,
@@ -54,7 +57,7 @@ export function saveBaseline(violations, config, scanMode) {
 
     let gitCommit = null;
     try {
-        gitCommit = execSync('git rev-parse HEAD', {
+        gitCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
             encoding: 'utf8',
             stdio: ['pipe', 'pipe', 'pipe']
         }).trim();
@@ -110,8 +113,11 @@ export function classifyViolations(violations, baseline) {
     for (const v of violations) {
         const fp        = fingerprint(v.html);
         const vselector = v.stableSelector ?? v.selector;
+        // Normalize both sides: scan paths use backslashes on Windows, and
+        // baselines saved before normalization may contain backslashes too
+        const vfile     = normalizePathSeparators(v.file);
         const idx = available.findIndex(
-            e => e.file        === v.file &&
+            e => normalizePathSeparators(e.file) === vfile &&
                  e.rule        === v.id   &&
                  e.fingerprint === fp     &&
                  e.selector    === vselector
@@ -137,25 +143,48 @@ export function classifyViolations(violations, baseline) {
 // -----------------------------------------------------------------------------
 
 /**
- * Detect file renames between the baseline commit and HEAD using git.
- * Returns a Map of oldPath → newPath.
+ * Detect file renames between the baseline commit and the working tree using git.
+ * Returns a Map of oldPath → newPath (forward-slash, relative to the cwd —
+ * the same shape as scan paths).
  * Returns an empty Map on any failure (git unavailable, shallow clone, bad commit, no renames).
+ *
+ * Diffing against the working tree (not HEAD) means uncommitted `git mv`
+ * renames are detected too, and a chain of renames collapses to its net result.
  *
  * @param {string|null} fromCommit - git commit hash the baseline was saved at
  * @returns {Map<string,string>}
  */
 export function detectRenames(fromCommit) {
-    if (!fromCommit) return new Map();
+    // Strict hash check: fromCommit comes from a user-editable JSON file and
+    // must never be passed to git unvalidated (64 covers SHA-256 repos)
+    if (!fromCommit || !/^[0-9a-f]{7,64}$/i.test(fromCommit)) return new Map();
     try {
-        const output = execSync(
-            `git diff --find-renames --name-status ${fromCommit}..HEAD`,
-            { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
-        );
+        const output = execFileSync('git', [
+            '-c', 'core.quotepath=off',     // never octal-escape non-ASCII paths
+            'diff', '--find-renames', '--name-status', '-z',
+            '--relative',                   // paths relative to cwd, like scan paths
+            fromCommit                      // vs working tree — catches uncommitted git mv
+        ], {
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+            maxBuffer: 10 * 1024 * 1024     // default 1 MB truncates monorepo-sized diffs
+        });
+
+        // -z output is NUL-separated: most statuses carry one path,
+        // rename/copy entries (R094, C100) carry two
+        const parts = output.split('\0');
         const renames = new Map();
-        for (const line of output.trim().split('\n')) {
-            // git outputs: R094\told/path.jsx\tnew/path.jsx
-            const match = line.match(/^R\d+\t(.+)\t(.+)$/);
-            if (match) renames.set(match[1], match[2]);
+        let i = 0;
+        while (i < parts.length - 1) {
+            const status = parts[i];
+            if (/^[RC]\d+$/.test(status)) {
+                if (status[0] === 'R' && parts[i + 1] && parts[i + 2]) {
+                    renames.set(parts[i + 1], parts[i + 2]);
+                }
+                i += 3;
+            } else {
+                i += 2;
+            }
         }
         return renames;
     } catch {
@@ -167,14 +196,18 @@ export function detectRenames(fromCommit) {
  * Remap baseline entry file paths using a rename map.
  * Returns the same array unchanged if the map is empty.
  *
+ * Lookups are separator-normalized so baselines saved on Windows (backslash
+ * paths) still match git's forward-slash output.
+ *
  * @param {Array} entries - baseline.violations entries
  * @param {Map<string,string>} renameMap - oldPath → newPath
  * @returns {Array}
  */
 export function remapBaselineFiles(entries, renameMap) {
-    if (renameMap.size === 0) return entries;
-    return entries.map(e => ({
+    const safeEntries = entries ?? [];
+    if (renameMap.size === 0) return safeEntries;
+    return safeEntries.map(e => ({
         ...e,
-        file: renameMap.get(e.file) ?? e.file
+        file: renameMap.get(normalizePathSeparators(e.file)) ?? e.file
     }));
 }

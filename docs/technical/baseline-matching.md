@@ -112,18 +112,48 @@ Before the four-key matching runs, AllyCat tries to account for files that were
 renamed or moved since the baseline was saved.
 
 If `baseline.gitCommit` is present, AllyCat runs `git diff --find-renames` between
-that commit and `HEAD`. Any renamed/moved files found are remapped in memory — the
-baseline's `file` paths are rewritten to their new locations before matching, so a
-file move alone no longer causes its existing violations to appear as `NEW`.
+that commit and the **working tree**. Any renamed/moved files found are remapped in
+memory — the baseline's `file` paths are rewritten to their new locations before
+matching, so a file move alone no longer causes its existing violations to appear
+as `NEW`.
 
-If renames are detected, a warning is printed suggesting you re-run `--save-baseline`
-to persist the updated paths into the committed baseline file.
+Because the diff targets the working tree (not `HEAD`), an uncommitted `git mv` is
+detected too, and a chain of renames (`A → B → C` across several commits) collapses
+to its net result (`A → C`).
+
+If renames affecting baseline entries are detected, a warning is printed suggesting
+you re-run `--save-baseline` to persist the updated paths into the committed
+baseline file.
+
+All path comparisons are separator-normalized (backslashes → forward slashes), so
+baselines travel safely between Windows and Unix machines, and `--save-baseline`
+always writes forward-slash paths regardless of OS.
 
 This pre-pass is best-effort and silently does nothing — falling through to the
 unmodified four-key matching — when:
-- `gitCommit` is absent (older baseline file)
+- `gitCommit` is absent (older baseline file) or not a valid commit hash
 - git is unavailable in the current environment
 - the repository is a shallow clone that doesn't have the baseline commit
+
+### CI: shallow clones disable rename detection
+
+Most CI providers clone shallowly by default, which usually leaves the baseline
+commit out of the local history — rename detection then degrades silently (the
+scan still works; renamed files just aren't remapped). To get rename protection
+in CI, fetch enough history:
+
+```yaml
+# GitHub Actions
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0   # full history (default is 1 — shallow)
+```
+
+```yaml
+# GitLab CI
+variables:
+  GIT_DEPTH: "0"     # full history (default is shallow)
+```
 
 ---
 

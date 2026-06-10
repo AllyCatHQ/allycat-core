@@ -44,13 +44,17 @@ export async function handleScanResult(violations, warnings, config, scanMode, o
         } else {
             // Layer 1: git rename detection (in-memory only, best-effort)
             const renameMap = detectRenames(baseline.gitCommit);
-            if (renameMap.size > 0) {
-                process.stderr.write(chalk.yellow(`⚠ [allycat] ${renameMap.size} file rename(s) detected since baseline was saved — baseline paths updated in memory. Re-run --save-baseline to persist the change.\n`));
+            const remappedViolations = remapBaselineFiles(baseline.violations, renameMap);
+            const remappedCount = remappedViolations.filter(
+                (e, i) => e.file !== (baseline.violations ?? [])[i]?.file
+            ).length;
+            if (remappedCount > 0) {
+                process.stderr.write(chalk.yellow(`⚠ [allycat] File rename(s) detected since baseline was saved — ${remappedCount} baseline entr${remappedCount !== 1 ? 'ies' : 'y'} remapped in memory. Re-run --save-baseline to persist the change.\n`));
             }
             // Layer 2: four-key composite matching (unchanged)
             const preparedBaseline = {
                 ...baseline,
-                violations: remapBaselineFiles(baseline.violations, renameMap)
+                violations: remappedViolations
             };
             baselineResult = classifyViolations(violations, preparedBaseline);
         }
