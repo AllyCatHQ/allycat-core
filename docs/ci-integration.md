@@ -70,8 +70,30 @@ allycat scan --fail-on-new --fail-on-critical
 # Exit 4 if new violations exist; exit 1 if critical baseline violations exist
 ```
 
+**Renamed or moved files are handled automatically:**
+
+If the baseline was saved inside a git repository, `--fail-on-new` detects files that
+were renamed or moved since — including uncommitted `git mv` — and follows them.
+A file move alone never reports its old violations as new. When renames are found,
+AllyCat prints:
+
+```
+⚠ [allycat] File rename(s) detected since baseline was saved — 3 baseline entries remapped in memory. Re-run --save-baseline to persist the change.
+```
+
+`--fail-on-new` never modifies the baseline file — re-run `--save-baseline` when
+convenient to store the new paths permanently.
+
+> **Shallow clones disable rename detection.** Most CI providers clone with limited git
+> history by default, which usually leaves the baseline's commit out of the clone. Scans
+> still work — renamed files just show up as new violations. To get rename protection in
+> CI, fetch full history: `fetch-depth: 0` on GitHub Actions, `GIT_DEPTH: "0"` on GitLab
+> (shown in the [pipeline examples](#pipeline-examples) below).
+
 > Matching uses a composite key: file + rule + SHA-256(element HTML) + CSS selector.
 > No line numbers — stable across any edit that doesn't touch the element itself.
+> Paths are compared separator-insensitively, so a baseline saved on Windows works on
+> Linux CI and vice versa.
 
 ---
 
@@ -170,6 +192,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full git history — needed only for --fail-on-new rename detection
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -200,6 +224,8 @@ jobs:
 ```yaml
 accessibility:
   image: node:20
+  variables:
+    GIT_DEPTH: "0"   # full git history — needed only for --fail-on-new rename detection
   script:
     - npm ci
     - npm install -g allycat

@@ -352,7 +352,7 @@ Ignores `node_modules/`, `dist/`, `build/`, and `allycat-report.html` by default
 AllyCat is built for pipelines:
 
 - **Exit gates** — fail on critical, serious, or any violations (`--fail-on-critical`, `--fail-on-serious`, `--fail-on-any`)
-- **Baselines** — adopt a gate without fixing pre-existing issues (`--save-baseline` + `--fail-on-new`)
+- **Baselines** — adopt a gate without fixing pre-existing issues (`--save-baseline` + `--fail-on-new`); rename-aware — moving a file won't flag its old violations as new
 - **PR scoping** — scan only git-changed files (`--changed`)
 - **CI preset** — compact output + critical gate in one flag (`--ci`)
 - **JSON export** — machine-readable reports for artifact storage (`--json-file`)

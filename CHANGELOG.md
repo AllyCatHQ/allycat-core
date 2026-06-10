@@ -9,7 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Baseline rename protection** — `--fail-on-new` now uses git to detect files that were
+  renamed or moved since the baseline was saved, so moving a file no longer reports its
+  existing violations as new. Uncommitted renames (`git mv`) are detected too. When a
+  rename is found, AllyCat prints a reminder to re-run `--save-baseline` to persist the
+  new paths — the baseline file itself is never modified during `--fail-on-new`.
+  To support this, `--save-baseline` now records a `gitCommit` field in
+  `allycat-baseline.json`; older baseline files without it keep working unchanged.
+  In CI, rename detection requires git history — see the
+  [CI/CD Integration Guide](docs/ci-integration.md) for `fetch-depth` / `GIT_DEPTH` settings.
+
 ### Fixed
+- Baseline files are now portable across operating systems: `--save-baseline` always
+  writes forward-slash paths, and `--fail-on-new` compares paths separator-insensitively.
+  Previously a baseline saved on Windows reported every violation as new when checked on
+  Linux CI (and vice versa). Existing baselines keep working without re-saving.
 - A broken `allycat.config.json` (e.g. containing `null`, an array, or plain text) no longer
   crashes the scan or silently overwrites your config file. AllyCat now prints a clear message,
   falls back to built-in defaults, and leaves the file untouched so you can fix or reset it
