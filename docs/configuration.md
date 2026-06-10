@@ -94,7 +94,9 @@ Use AllyCat in CI to catch all automatable violations before deployment. Pair wi
 | Config version is behind the tool | Auto-migrated and saved. User is told to run `allycat init` to review |
 | Config version is ahead of the tool | Warning printed, scan continues (update the tool) |
 | Config is valid JSON and version matches | Loads normally, zero overhead |
-| Config is corrupt / invalid JSON | Error message printed with file path, falls back to defaults |
+| Config is corrupt / invalid JSON / not a JSON object | Error message printed with file path, falls back to defaults — the file is left untouched |
+| Config is a valid object but missing keys (hand-edited) | Missing keys are filled from built-in defaults at load time; user-set values are kept |
+| Config file is not writable (read-only / CI sandbox) | Migration applies in-memory with a warning; retried on next run |
 
 Users do not need to do anything manually — migration is automatic and non-destructive.
 

@@ -95,13 +95,22 @@ function clampConcurrency(raw, scanMode) {
  * Sanitize raw config loaded from disk.
  * Clamps concurrency to a RAM-aware safe ceiling and fills missing keys with defaults.
  *
+ * Defaults are merged per-section so a hand-edited config missing a key
+ * (e.g. selectedStandard) can never crash downstream consumers. Nested
+ * sections are rebuilt so DEFAULT_CONFIG's own objects are never shared
+ * with (and mutable through) a returned config.
+ *
  * @param {Object} raw      - Raw parsed JSON config
  * @param {'quick'|'full'} scanMode
  * @returns {Object}
  */
 function sanitizeConfig(raw, scanMode) {
     return {
+        ...DEFAULT_CONFIG,
         ...raw,
+        scan:  { ...DEFAULT_CONFIG.scan,  ...raw?.scan },
+        rules: { ...DEFAULT_CONFIG.rules, ...raw?.rules },
+        ai:    { ...DEFAULT_CONFIG.ai,    ...raw?.ai },
         performance: {
             ...raw?.performance,
             concurrency:       clampConcurrency(raw?.performance?.concurrency, scanMode),
@@ -181,8 +190,15 @@ export function loadConfig(scanMode = SCAN_MODES.QUICK) {
     try {
         raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     } catch {
+        raw = undefined;
+    }
+
+    // Guard against valid JSON that is not a config object (null, [], "text", 42).
+    // null would crash property access below; arrays/scalars would be silently
+    // rewritten as garbage objects by the migration save.
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
         console.error(
-            `[allycat] Config file is not valid JSON — run \`allycat init\` to reset it.\n` +
+            `[allycat] Config file is not a valid JSON object — run \`allycat init\` to reset it.\n` +
             `  Path: ${path.relative(process.cwd(), configPath)}`
         );
         return { ...sanitizeConfig(DEFAULT_CONFIG, scanMode), configIsDefault: true };
@@ -201,7 +217,13 @@ export function loadConfig(scanMode = SCAN_MODES.QUICK) {
 
     if (version < CURRENT_CONFIG_VERSION) {
         const migrated = migrateConfig(raw);
-        saveConfig(migrated);
+        try {
+            saveConfig(migrated);
+        } catch {
+            // Read-only file/dir (CI sandbox, locked checkout): migration still
+            // applies in-memory; it will be re-attempted on the next load.
+            console.warn(`[allycat] Could not write migrated config to disk — continuing with in-memory settings.`);
+        }
         // First-time stamp only (v0→v1): no schema changes, no action needed from the user.
         // Any later migration means real field changes happened — tell them to review.
         if (version === 0 && CURRENT_CONFIG_VERSION === 1) {

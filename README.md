@@ -399,6 +399,7 @@ Run `allycat help standards` for a full breakdown, or see the official [WCAG 2.1
 **Common issues**:
 
 - **No config?** → Run `allycat init`
+- **Broken or hand-edited config?** → AllyCat falls back to safe defaults and never overwrites your file; run `allycat init` to reset it
 - **Full scan fails?** → `npx playwright install chromium`
 - **No contrast check?** → Contrast requires a real browser: `allycat scan --full`
 - **Contrast violations missing on styled-components / Emotion / styled-jsx projects?** → Runtime CSS-in-JS styles cannot be statically analyzed. The scanner will emit a warning per file — this is a known limitation.

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- A broken `allycat.config.json` (e.g. containing `null`, an array, or plain text) no longer
+  crashes the scan or silently overwrites your config file. AllyCat now prints a clear message,
+  falls back to built-in defaults, and leaves the file untouched so you can fix or reset it
+  with `allycat init`.
+- Hand-edited configs with missing fields (e.g. no `selectedStandard`) no longer crash
+  `allycat scan`. Missing fields are filled with built-in defaults at load time — values you
+  did set are always kept.
+- Config migration no longer crashes when `allycat.config.json` is read-only (e.g. in CI
+  sandboxes or locked checkouts). The migration applies in-memory with a warning and is
+  retried on the next run.
+
+---
+
 ## [1.5.0] - 2026-06-08
 
 ### Added
