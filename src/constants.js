@@ -80,6 +80,16 @@ export const STANDARD_LABELS = {
     [STANDARDS.WCAG_22_AA]: 'WCAG 2.2 AA',
 };
 
+/**
+ * Resolve the human-readable label for a standard value.
+ * Unknown/missing values resolve to the WCAG AA label — matching the rule set
+ * axeConfig falls back to, so displays always describe what actually ran.
+ * Shared by scan banner, init summary, HTML report, and prompt generator.
+ */
+export function getStandardLabel(standard) {
+    return STANDARD_LABELS[standard] || STANDARD_LABELS[STANDARDS.WCAG_AA];
+}
+
 // ─── Report File Names ────────────────────────────────────────────────────────
 
 export const DEFAULT_HTML_REPORT = 'allycat-report.html';
@@ -123,6 +133,21 @@ export const SUPPORTED_FRAMEWORKS = [
     { label: 'Vue',     extensions: ['.vue'] },
     { label: 'Angular', extensions: ['.component.html', '.component.ts'] },
 ];
+
+// ─── Document-Level Axe Rules ─────────────────────────────────────────────────
+// Rules that require a complete HTML document context and fire at most once
+// per page. violationProcessor skips them for JSX/TSX component fragments;
+// baselineManager matches them by (file, rule) alone — their violation.html
+// is the whole <html> element, so fingerprint/selector are unstable.
+
+export const DOCUMENT_LEVEL_RULES = new Set([
+    'landmark-one-main',
+    'page-has-heading-one',
+    'html-has-lang',
+    'document-title',
+    'meta-viewport',
+    'bypass',
+]);
 
 // ─── Impact Severity Order ────────────────────────────────────────────────────
 // Shared sort key: lower value = more severe. Used by watchMode and violationFormatter.

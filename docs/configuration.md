@@ -46,6 +46,23 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | `ai.reportBehavior` | `auto-open`, `path-only`, `ask` | How the fix-prompt HTML report is delivered after each scan. `auto-open` = opens in browser automatically, `path-only` = prints relative + absolute path to terminal, `ask` = prompts you each time. Defaults to `path-only` if unset. |
 | `performance.concurrency` | integer or `null` | Files scanned in parallel. `null` = auto (computed from RAM + CPU) |
 
+### Invalid values
+
+Every field above is validated at load time against its allowed values. If a hand-edited
+config contains an invalid value (e.g. `"selectedStandard": "wcag-aaaaa"`), AllyCat prints
+a warning naming the field, the bad value, and the valid options, then continues the scan
+with the built-in default for that field. Your config file is never rewritten — fix the
+value or run `allycat init` to regenerate it.
+
+```
+[allycat] selectedStandard "wcag-aaaaa" is not a valid value — falling back to "wcag-aa".
+  Valid values: wcag-aa, wcag-aaa, wcag-22-aa
+```
+
+The warning is written to stderr, so it also shows up in CI logs and never corrupts
+`--output json` results on stdout. The scan banner and reports always display the standard
+that actually ran.
+
 ---
 
 ## Accessibility Standards & Automation Limits
@@ -94,7 +111,10 @@ Use AllyCat in CI to catch all automatable violations before deployment. Pair wi
 | Config version is behind the tool | Auto-migrated and saved. User is told to run `allycat init` to review |
 | Config version is ahead of the tool | Warning printed, scan continues (update the tool) |
 | Config is valid JSON and version matches | Loads normally, zero overhead |
-| Config is corrupt / invalid JSON | Error message printed with file path, falls back to defaults |
+| Config is corrupt / invalid JSON / not a JSON object | Error message printed with file path, falls back to defaults — the file is left untouched |
+| Config is a valid object but missing keys (hand-edited) | Missing keys are filled from built-in defaults at load time; user-set values are kept |
+| Config has an invalid value (e.g. unknown `selectedStandard`) | Warning printed with the valid options; built-in default used for that field; the file is left untouched |
+| Config file is not writable (read-only / CI sandbox) | Migration applies in-memory with a warning; retried on next run |
 
 Users do not need to do anything manually — migration is automatic and non-destructive.
 

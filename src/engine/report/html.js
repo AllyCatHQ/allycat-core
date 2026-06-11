@@ -11,7 +11,7 @@ import path from 'path';
 import { buildStyles } from './styles.js';
 import { buildScript } from './script.js';
 import { countByImpact } from '../../utils/violationFormatter.js';
-import { STANDARD_LABELS, STANDARDS, UI } from '../../constants.js';
+import { getStandardLabel, UI } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // Data Helpers
@@ -56,10 +56,6 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;');
 }
 
-function resolveStandardLabel(standard) {
-    return STANDARD_LABELS[standard] || STANDARD_LABELS[STANDARDS.WCAG_AA];
-}
-
 // -----------------------------------------------------------------------------
 // HTML Entry
 // -----------------------------------------------------------------------------
@@ -67,7 +63,7 @@ function resolveStandardLabel(standard) {
 export function buildHtml(byFile, prompts, config, scanMode) {
     const files     = Object.keys(byFile);
     const timestamp = new Date().toLocaleString();
-    const standard  = resolveStandardLabel(config?.selectedStandard);
+    const standard  = getStandardLabel(config?.selectedStandard);
     const promptMap = Object.fromEntries(prompts.map(p => [p.file, p.prompt]));
 
     return `<!DOCTYPE html>

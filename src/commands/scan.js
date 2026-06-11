@@ -11,7 +11,7 @@ import { loadConfig } from '../utils/configLoader.js';
 import { watchMode } from './watchMode.js';
 import { resolveInputFiles, executeScan, preflightScan } from './scanDispatcher.js';
 import { handleScanResult } from './scanResultHandler.js';
-import { SUPPORTED_EXTENSIONS_DISPLAY, MESSAGES, UI, SCAN_MODES } from '../constants.js';
+import { SUPPORTED_EXTENSIONS_DISPLAY, MESSAGES, UI, SCAN_MODES, getStandardLabel } from '../constants.js';
 import { expandUserPath } from '../utils/pathUtils.js';
 
 // -----------------------------------------------------------------------------
@@ -146,7 +146,7 @@ function displayScanConfiguration(config, scanMode, options, target) {
         exitGateLine +
         baselineLine +
         excludeLine +
-        `Standard:  ${chalk.bold(config.selectedStandard.toUpperCase())}\n` +
+        `Standard:  ${chalk.bold(getStandardLabel(config.selectedStandard))}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Output:    ${chalk.bold(options.output || 'terminal')}\n` +
         `Parallel:  ${config.performance.concurrencyIsAuto ? `Auto → ${chalk.bold(config.performance.concurrency)} files` : `${chalk.bold(config.performance.concurrency)} files`}\n` +

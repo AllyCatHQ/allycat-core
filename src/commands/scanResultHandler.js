@@ -8,7 +8,7 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import { outputResults } from './outputters/index.js';
-import { saveBaseline, loadBaseline, classifyViolations } from '../utils/baselineManager.js';
+import { saveBaseline, loadBaseline, classifyViolations, detectRenames, remapBaselineFiles } from '../utils/baselineManager.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -42,7 +42,21 @@ export async function handleScanResult(violations, warnings, config, scanMode, o
         if (!baseline) {
             process.stderr.write(chalk.yellow('⚠ [allycat] Warning: --fail-on-new specified but no allycat-baseline.json found. Run --save-baseline first. Continuing without baseline check.\n'));
         } else {
-            baselineResult = classifyViolations(violations, baseline);
+            // Layer 1: git rename detection (in-memory only, best-effort)
+            const renameMap = detectRenames(baseline.gitCommit);
+            const remappedViolations = remapBaselineFiles(baseline.violations, renameMap);
+            const remappedCount = remappedViolations.filter(
+                (e, i) => e.file !== (baseline.violations ?? [])[i]?.file
+            ).length;
+            if (remappedCount > 0) {
+                process.stderr.write(chalk.yellow(`⚠ [allycat] File rename(s) detected since baseline was saved — ${remappedCount} baseline entr${remappedCount !== 1 ? 'ies' : 'y'} remapped in memory. Re-run --save-baseline to persist the change.\n`));
+            }
+            // Layer 2: four-key composite matching (unchanged)
+            const preparedBaseline = {
+                ...baseline,
+                violations: remappedViolations
+            };
+            baselineResult = classifyViolations(violations, preparedBaseline);
         }
     }
 

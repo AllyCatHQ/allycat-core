@@ -12,14 +12,10 @@ import { HTML_WRAPPER_OFFSET } from '../transformers/transformerUtils.js';
 
 // Rules that require a complete HTML document context.
 // These are false positives when scanning JSX/TSX component fragments.
-export const DOCUMENT_LEVEL_RULES = new Set([
-    'landmark-one-main',
-    'page-has-heading-one',
-    'html-has-lang',
-    'document-title',
-    'meta-viewport',
-    'bypass',
-]);
+// Defined in constants.js (also used by baselineManager); re-exported here
+// to keep the historical import path working.
+import { DOCUMENT_LEVEL_RULES } from '../../constants.js';
+export { DOCUMENT_LEVEL_RULES };
 
 // -----------------------------------------------------------------------------
 // Layer A — Ordinal Index via DOM Position

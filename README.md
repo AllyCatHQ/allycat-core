@@ -352,7 +352,7 @@ Ignores `node_modules/`, `dist/`, `build/`, and `allycat-report.html` by default
 AllyCat is built for pipelines:
 
 - **Exit gates** — fail on critical, serious, or any violations (`--fail-on-critical`, `--fail-on-serious`, `--fail-on-any`)
-- **Baselines** — adopt a gate without fixing pre-existing issues (`--save-baseline` + `--fail-on-new`)
+- **Baselines** — adopt a gate without fixing pre-existing issues (`--save-baseline` + `--fail-on-new`); resilient to file renames and unrelated code changes, so existing violations stay suppressed
 - **PR scoping** — scan only git-changed files (`--changed`)
 - **CI preset** — compact output + critical gate in one flag (`--ci`)
 - **JSON export** — machine-readable reports for artifact storage (`--json-file`)
@@ -399,6 +399,7 @@ Run `allycat help standards` for a full breakdown, or see the official [WCAG 2.1
 **Common issues**:
 
 - **No config?** → Run `allycat init`
+- **Broken or hand-edited config?** → AllyCat falls back to safe defaults and never overwrites your file; run `allycat init` to reset it
 - **Full scan fails?** → `npx playwright install chromium`
 - **No contrast check?** → Contrast requires a real browser: `allycat scan --full`
 - **Contrast violations missing on styled-components / Emotion / styled-jsx projects?** → Runtime CSS-in-JS styles cannot be statically analyzed. The scanner will emit a warning per file — this is a known limitation.

@@ -3,6 +3,10 @@
 > **Scope:** `--save-baseline` and `--fail-on-new` flags.
 > Quick scan (JSDOM, default mode). No Playwright required.
 > All tests use fixtures in `tests/fixtures/`.
+>
+> **Automated coverage:** `node tests/e2e/baseline.test.js` (part of `npm test`)
+> runs the core matching scenarios end-to-end. This guide remains the manual
+> walkthrough with expected terminal output.
 
 ---
 
@@ -20,14 +24,21 @@ Remove-Item allycat-baseline.json -ErrorAction SilentlyContinue
 
 ## How the Matching Works
 
-The composite key is: **file path + rule ID + SHA-256(violation.html.trim()) + selector**.
+Matching is two-tier (see `docs/technical/baseline-matching.md` for the full design):
+
+- **Tier 1:** exact match on **file path + rule ID + SHA-256(violation.html.trim()) + selector**.
+- **Tier 2:** file + rule + fingerprint only — applied only when that fingerprint is
+  unique on both sides for the same (file, rule). Makes matching immune to insertions
+  that shift `:nth-child()` positions.
+- **Document-level rules** (`html-has-lang`, `document-title`, etc.): matched by
+  (file, rule) alone — they fire at most once per page.
 
 | Field | Included in match? | Notes |
 |---|:---:|---|
 | File path | ✅ | Absolute path as resolved by the scanner |
 | Rule ID | ✅ | e.g. `button-name`, `image-alt`, `region` |
 | SHA-256 of `violation.html` | ✅ | Fingerprint of the element's outer HTML |
-| CSS selector | ✅ | axe-core selector string for the node |
+| Stable selector | Tier 1 only | Disambiguates identical fingerprints |
 | Line number | ❌ | Never used — immune to line shifts |
 
 ---
@@ -38,6 +49,8 @@ The composite key is: **file path + rule ID + SHA-256(violation.html.trim()) + s
 |---|---|---|
 | `tests/fixtures/baseline-a.html` | `<img>` + empty `<button>`, no landmark | `image-alt` (critical), `button-name` (critical), `region` (moderate) = **3 total** |
 | `tests/fixtures/baseline-stale.html` | Same elements wrapped in `<main>` | `image-alt` (critical), `button-name` (critical) = **2 total** (no `region` — landmark present) |
+| `tests/fixtures/baseline-b.html` | Two identical empty `<button>`s in `<main>` | `button-name` ×2 (critical) = **2 total** |
+| `tests/fixtures/baseline-lang.html` | `<html>` without `lang`, content in `<main>` | `html-has-lang` (serious) = **1 total** |
 
 ---
 
@@ -311,6 +324,95 @@ echo $LASTEXITCODE
 
 ---
 
+## Test 10 — Insert before does NOT cascade (tier 2)
+
+**What it proves:** Inserting a new element *above* existing violations shifts every
+`:nth-child()` below it. Unique-fingerprint violations re-match by fingerprint alone
+(tier 2), so nothing is falsely flagged.
+
+```powershell
+# Step 1 — save baseline
+node src/index.js scan tests/fixtures/baseline-a.html --save-baseline
+
+# Step 2 — insert a clean <div></div> BEFORE the img (shifts img + button positions)
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-a.html'))
+$c = $c.Replace('<img src="photo.jpg">', "<div></div>`n<img src=""photo.jpg"">")
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-a.html'), $c, [System.Text.Encoding]::UTF8)
+
+# Step 3 — scan: all violations still BASELINE despite the position shift
+node src/index.js scan tests/fixtures/baseline-a.html --fail-on-new
+echo $LASTEXITCODE
+
+# Step 4 — restore
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-a.html'))
+$c = $c.Replace("<div></div>`n", '')
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-a.html'), $c, [System.Text.Encoding]::UTF8)
+```
+
+**Expected:** `3 issues  (3 suppressed)` — no NEW despite every `:nth-child()` shifting.
+
+✅ Exit code: `0`
+
+---
+
+## Test 11 — Substitution among identical elements is still caught
+
+**What it proves:** With 2+ byte-identical broken elements, fixing one and adding an
+identical one elsewhere keeps the count equal — but tier 2 is disabled for ambiguous
+groups, so the new element at a new position is flagged `NEW`.
+
+```powershell
+# Step 1 — save baseline from baseline-b.html (2 identical empty <button>s)
+node src/index.js scan tests/fixtures/baseline-b.html --save-baseline
+
+# Step 2 — overwrite with the substituted variant (first button fixed via
+# aria-label, identical empty <button> added at the end — count is still 2)
+Copy-Item tests/fixtures/baseline-b-substituted.html tests/fixtures/baseline-b.html
+
+# Step 3 — scan: the added button is NEW even though the count matches
+node src/index.js scan tests/fixtures/baseline-b.html --fail-on-new
+echo $LASTEXITCODE
+
+# Step 4 — restore baseline-b.html from git
+git checkout -- tests/fixtures/baseline-b.html
+```
+
+**Expected:** `2 issues  (1 new · 1 suppressed)` — the untouched button stays
+BASELINE, the added one is NEW, the fixed one's entry goes stale.
+
+✅ Exit code: `4`
+
+---
+
+## Test 12 — Document-level rule survives page edits
+
+**What it proves:** `html-has-lang` (and the other document-level rules) match by
+(file, rule) alone. Editing page content — which changes the `<html>` element's
+serialized HTML — does not re-flag the known violation.
+
+```powershell
+# Step 1 — save baseline from the lang-less fixture (1 violation: html-has-lang)
+node src/index.js scan tests/fixtures/baseline-lang.html --save-baseline
+
+# Step 2 — add unrelated content (changes the <html> outerHTML)
+$c = [System.IO.File]::ReadAllText((Resolve-Path 'tests/fixtures/baseline-lang.html'))
+$c = $c.Replace('</main>', "  <p>More content added later</p>`n</main>")
+[System.IO.File]::WriteAllText((Resolve-Path 'tests/fixtures/baseline-lang.html'), $c, [System.Text.Encoding]::UTF8)
+
+# Step 3 — scan: html-has-lang still BASELINE
+node src/index.js scan tests/fixtures/baseline-lang.html --fail-on-new
+echo $LASTEXITCODE
+
+# Step 4 — restore
+git checkout -- tests/fixtures/baseline-lang.html
+```
+
+**Expected:** `1 issue  (1 suppressed)`.
+
+✅ Exit code: `0`
+
+---
+
 ---
 
 ## Edge Case Tests
@@ -437,6 +539,9 @@ Remove-Item allycat-baseline.json -ErrorAction SilentlyContinue
 | 7 | Missing baseline file → warning, no block | `baseline-a.html` | `--fail-on-new` | `0` |
 | 8 | Exit 4 takes priority over exit 1 | `baseline-a.html` (cross-file baseline) | `--fail-on-new --fail-on-critical` | `4` |
 | 9 | Severity gate still runs on suppressed violations | `baseline-a.html` | `--fail-on-new --fail-on-critical` | `1` |
+| 10 | Insert before does not cascade (tier 2) | `baseline-a.html` (div prepended) | `--fail-on-new` | `0` |
+| 11 | Substitution among identicals still caught | `baseline-b.html` → `-substituted` | `--fail-on-new` | `4` |
+| 12 | Document-level rule survives page edits | `baseline-lang.html` (modified) | `--fail-on-new` | `0` |
 | EC-1 | Corrupted baseline → warning + no crash | `baseline-a.html` | `--fail-on-new` | `0` |
 | EC-2 | `--save-baseline` wins over `--fail-on-new` | `baseline-a.html` | `--save-baseline --fail-on-new` | `0` |
 | EC-3 | 0 violations + `--fail-on-new` → clean message | `fail-on-clean.html` | `--fail-on-new` | `0` |
