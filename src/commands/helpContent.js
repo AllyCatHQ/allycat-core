@@ -290,6 +290,7 @@ export const EXAMPLE_SECTIONS = [
         examples: [
             { cmd: CLI.REPORT,   desc: `Open ${DEFAULT_HTML_REPORT} in your browser — run allycat scan first` },
             { cmd: CLI.FEEDBACK, desc: 'Open GitHub Issues to report a bug or request a feature' },
+            { cmd: CLI.REPO,     desc: 'Open the AllyCat GitHub repository in your browser' },
             { cmd: CLI.UPDATE,   desc: 'Check for updates — compare installed vs latest and view release notes' }
         ]
     }

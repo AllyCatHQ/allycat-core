@@ -17,6 +17,7 @@ export const CLI = {
     HELP:     'allycat help',
     REPORT:   'allycat report',
     FEEDBACK: 'allycat feedback',
+    REPO:     'allycat repo',
     UPDATE:   'allycat update',
 };
 
@@ -157,6 +158,7 @@ export const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
 // ─── App Links ────────────────────────────────────────────────────────────────
 
 export const APP_LINKS = {
+    REPO:      'https://github.com/AllyCatHQ/allycat-core',
     DOCS:      'https://github.com/AllyCatHQ/allycat-core/blob/main/README.md',
     ISSUES:    'https://github.com/AllyCatHQ/allycat-core/issues',
     CHANGELOG: 'https://github.com/AllyCatHQ/allycat-core/blob/main/CHANGELOG.md',

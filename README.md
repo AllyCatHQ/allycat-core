@@ -303,6 +303,16 @@ allycat feedback
 
 ---
 
+### `allycat repo`
+
+Opens the [AllyCat GitHub repository](https://github.com/AllyCatHQ/allycat-core) in your browser.
+
+```bash
+allycat repo
+```
+
+---
+
 ### `allycat update`
 
 Check for updates and view release notes.

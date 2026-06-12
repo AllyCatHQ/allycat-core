@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **`allycat repo`** — opens the AllyCat GitHub repository in your browser.
+
 ## [1.6.0] - 2026-06-11
 
 ### Added
