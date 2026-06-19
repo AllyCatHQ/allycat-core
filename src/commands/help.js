@@ -208,6 +208,7 @@ function showTopicList() {
     console.log('');
     console.log(`  ${chalk.cyan(CLI.REPORT)}    ${chalk.dim('Open the last report in your browser')}`);
     console.log(`  ${chalk.cyan(CLI.FEEDBACK)}  ${chalk.dim('Report a bug or request a feature on GitHub')}`);
+    console.log(`  ${chalk.cyan(CLI.REPO)}      ${chalk.dim('Open the AllyCat GitHub repository')}`);
     console.log(`  ${chalk.cyan(CLI.UPDATE)}    ${chalk.dim('Check for updates and view release notes')}`);
     console.log('');
 
