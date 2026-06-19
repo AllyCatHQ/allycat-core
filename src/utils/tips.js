@@ -27,7 +27,7 @@ const TIPS = [
         text: 'Use --fail-on-critical to block deploys on critical issues',
     },
     {
-        text: 'Use --save-baseline to snapshot current violations',
+        text: 'Use --save-baseline to snapshot violations, then --fail-on-new to block regressions',
     },
     {
         text: 'Use --fail-on-new to catch regressions without fixing everything first',
@@ -58,17 +58,40 @@ const TIPS = [
         text: 'AllyCat supports JSX, TSX, Vue, Angular, and plain HTML',
     },
     {
-        text: 'Use allycat report to generate an HTML report',
+        text: 'Run allycat report to open the latest HTML report in your browser',
     },
     {
         text: 'Fix violations top-to-bottom to avoid shifting line numbers',
         when: ({ violationCount }) => violationCount > 0,
     },
+    {
+        text: 'Use --fail-on-serious or --fail-on-any for stricter CI gates',
+    },
+    {
+        text: 'Run allycat update to check for a new version',
+    },
+    {
+        text: 'Found a bug? Run allycat feedback to report it 🐛',
+    },
+    {
+        text: 'Run allycat help faq for common questions',
+    },
+    {
+        text: 'Use --summary-style compact for a single-line summary',
+    },
 ];
 
 const FALLBACK_TIP = TIPS[0].text;
 
+// Community nudge shown occasionally. Kept out of TIPS so it never inflates the
+// normal weighted pool — its frequency is controlled solely by PROMO_TIP_CHANCE.
+const PROMO_TIP = 'Enjoying AllyCat? miew~ Star or share it — run allycat repo 🌟';
+const PROMO_TIP_CHANCE = 0.1;
+
 export function pickTip({ scanMode, violationCount } = {}) {
+    // Rare pre-roll: independent of pool size so adding tips never dilutes it.
+    if (Math.random() < PROMO_TIP_CHANCE) return PROMO_TIP;
+
     const ctx = { scanMode, violationCount };
 
     const eligible = TIPS.filter(t => !t.when || t.when(ctx));
