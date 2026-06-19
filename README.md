@@ -249,6 +249,7 @@ allycat scan --json-file ci-report                    # custom name: ci-report.j
 | `--no-wcag` | | Hide WCAG tags per violation |
 | `--no-selector` | | Hide element selector per violation |
 | `--no-affected` | | Hide affected element count per violation |
+| `--no-tips` | | Hide the tip box after scan results |
 | `--summary-style <style>` | | Summary style: `default` (box) or `compact` (single line) |
 
 ```bash

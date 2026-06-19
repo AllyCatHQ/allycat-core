@@ -37,6 +37,7 @@ export async function scanCommand(target = null, options = {}) {
         options.wcag          = false;
         options.selector      = false;
         options.affected      = false;
+        options.tips          = false;
         options.summaryStyle  = 'compact';
         options.failOnCritical = true;
     }

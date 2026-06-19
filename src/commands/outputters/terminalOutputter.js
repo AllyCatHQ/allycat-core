@@ -9,8 +9,8 @@
 
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
-import { UI, SCAN_MODES } from '../../constants.js';
 import { formatSummary, formatByFile } from '../../utils/violationFormatter.js';
+import { pickTip } from '../../utils/tips.js';
 
 // -----------------------------------------------------------------------------
 // Terminal Output
@@ -51,7 +51,7 @@ export function outputTerminal(violations, scanMode, options = {}) {
     const summary = formatSummary(violations, scanMode, summaryStyle);
     console.log(summary);
 
-    displayTerminalTips(scanMode);
+    displayTerminalTips({ scanMode, violationCount: violations.length, options });
 }
 
 // -----------------------------------------------------------------------------
@@ -127,7 +127,11 @@ export function outputTerminalWithBaseline({ newViolations, baselineViolations, 
         console.log(chalk.dim(`✓ ${totalSup} baseline violation${totalSup !== 1 ? 's' : ''} suppressed (run --save-baseline to update baseline)`));
     }
 
-    displayTerminalTips(scanMode);
+    displayTerminalTips({
+        scanMode,
+        violationCount: newViolations.length + baselineViolations.length,
+        options,
+    });
 }
 
 // -----------------------------------------------------------------------------
@@ -164,20 +168,56 @@ function formatViolationInline(violation) {
 }
 
 /**
- * Display helpful tips after terminal output
+ * Display a random contextual tip inside a styled box.
  *
- * @param {string} scanMode - Current scan mode
+ * @param {Object} ctx
+ * @param {string} ctx.scanMode
+ * @param {number} ctx.violationCount
+ * @param {Object} ctx.options
  */
-function displayTerminalTips(scanMode) {
-    console.log('');
-    console.log(chalk.dim(UI.DIVIDER));
-    console.log(chalk.dim('Tips:'));
-    console.log(chalk.dim('  • File paths with line numbers are clickable in VS Code'));
-    console.log(chalk.dim('  • Use --output json for CI/CD integration'));
+function displayTerminalTips({ scanMode, violationCount, options }) {
+    if (options.tips === false) return;
 
-    if (scanMode === SCAN_MODES.QUICK) {
-        console.log(chalk.dim('  • Use --full to enable contrast checking'));
+    const tip = pickTip({ scanMode, violationCount });
+
+    const INNER = 48;
+    const PAD   = 4;
+    // Wrapper splits on spaces only; assumes no single tip word exceeds MAX_TEXT.
+    // A longer token (e.g. a URL) would clamp pad to 0 and push the right border out.
+    const MAX_TEXT = INNER - PAD;
+
+    const words = tip.split(' ');
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+        const next = line ? `${line} ${word}` : word;
+        if (next.length > MAX_TEXT) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = next;
+        }
     }
+    if (line) lines.push(line);
 
+    const titleLabel = ' Tip ';
+    const sideDashes = INNER - titleLabel.length;
+    const boxTop    = chalk.dim('  ╭' + '─'.repeat(Math.floor(sideDashes / 2)) + titleLabel + '─'.repeat(Math.ceil(sideDashes / 2)) + '╮');
+    const boxBottom = chalk.dim('  ╰' + '─'.repeat(INNER) + '╯');
+    const boxEmpty  = chalk.dim('  │' + ' '.repeat(INNER) + '│');
+
+    const boxRow = (text) => {
+        const pad = ' '.repeat(Math.max(0, INNER - text.length - PAD));
+        return chalk.dim('  │') + '  ' + chalk.dim(text) + pad + chalk.dim('  │');
+    };
+
+    console.log('');
+    console.log(boxTop);
+    console.log(boxEmpty);
+    for (const l of lines) {
+        console.log(boxRow(l));
+    }
+    console.log(boxEmpty);
+    console.log(boxBottom);
     console.log('');
 }

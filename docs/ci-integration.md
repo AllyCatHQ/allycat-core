@@ -115,6 +115,7 @@ allycat scan \
   --no-wcag \
   --no-selector \
   --no-affected \
+  --no-tips \
   --summary-style compact \
   --fail-on-critical
 ```
@@ -143,6 +144,7 @@ Apply flags individually for partial suppression:
 | `--no-wcag` | Hide WCAG tags per violation |
 | `--no-selector` | Hide element selector per violation |
 | `--no-affected` | Hide affected element count per violation |
+| `--no-tips` | Hide the tip box after scan results |
 | `--summary-style compact` | Single-line summary instead of the bordered box |
 
 ---
