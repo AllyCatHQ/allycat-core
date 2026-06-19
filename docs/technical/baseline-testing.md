@@ -30,7 +30,7 @@ Matching is two-tier (see `docs/technical/baseline-matching.md` for the full des
 - **Tier 2:** file + rule + fingerprint only — applied only when that fingerprint is
   unique on both sides for the same (file, rule). Makes matching immune to insertions
   that shift `:nth-child()` positions.
-- **Document-level rules** (`html-has-lang`, `document-title`, etc.): matched by
+- **Document-level rules** (`html-has-lang`, `document-title`, `region`, etc.): matched by
   (file, rule) alone — they fire at most once per page.
 
 | Field | Included in match? | Notes |

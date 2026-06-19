@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   workflows you might not know about. Disable with `--no-tips`.
 
 ### Fixed
+- **Fewer false positives on React/Vue/Angular components** — the `region` rule
+  ("all page content should be contained by landmarks") no longer fires on component
+  files. Components are fragments, not full pages — they are composed into a page with
+  landmarks at runtime. The rule still applies to standalone HTML files.
 - **CLI no longer hangs after opening browser on Linux** — commands that open a browser
   (`allycat report`, `allycat feedback`, `allycat update`, `allycat repo`) now properly
   detach the child process so the CLI exits immediately.

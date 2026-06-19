@@ -148,6 +148,7 @@ export const DOCUMENT_LEVEL_RULES = new Set([
     'document-title',
     'meta-viewport',
     'bypass',
+    'region',
 ]);
 
 // ─── Impact Severity Order ────────────────────────────────────────────────────

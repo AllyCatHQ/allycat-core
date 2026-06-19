@@ -125,9 +125,9 @@ correct and valuable action.
 
 ### Document-level rules match by (file, rule) alone
 
-Six rules fire at most once per page and target the document itself, not an element:
+Seven rules fire at most once per page and target the document itself, not an element:
 `html-has-lang`, `document-title`, `landmark-one-main`, `page-has-heading-one`,
-`meta-viewport`, `bypass` (the `DOCUMENT_LEVEL_RULES` set in `src/constants.js`).
+`meta-viewport`, `bypass`, `region` (the `DOCUMENT_LEVEL_RULES` set in `src/constants.js`).
 
 For these, axe's `violation.html` is the `<html>` element — so *any* edit anywhere in
 the page changes the fingerprint and would falsely re-flag a known violation. Since the

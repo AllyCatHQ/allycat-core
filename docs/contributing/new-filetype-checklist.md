@@ -109,6 +109,7 @@ Component files are fragments, not full HTML documents. Axe-core will flag rules
 - `landmark-one-main` — no `<main>` in a button component
 - `page-has-heading-one` — no `<h1>` in a card component
 - `html-has-lang` — no `<html lang>` in a modal component
+- `region` — content not inside a landmark in a component fragment
 - `document-title`, `meta-viewport`, `bypass`
 
 These are false positives for component files.
