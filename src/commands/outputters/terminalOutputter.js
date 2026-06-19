@@ -9,7 +9,6 @@
 
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
-import { UI } from '../../constants.js';
 import { formatSummary, formatByFile } from '../../utils/violationFormatter.js';
 import { pickTip } from '../../utils/tips.js';
 
@@ -183,6 +182,8 @@ function displayTerminalTips({ scanMode, violationCount, options }) {
 
     const INNER = 48;
     const PAD   = 4;
+    // Wrapper splits on spaces only; assumes no single tip word exceeds MAX_TEXT.
+    // A longer token (e.g. a URL) would clamp pad to 0 and push the right border out.
     const MAX_TEXT = INNER - PAD;
 
     const words = tip.split(' ');
