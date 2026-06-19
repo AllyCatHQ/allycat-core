@@ -93,9 +93,10 @@ program
   .option('--no-wcag', 'Hide WCAG tags per violation')
   .option('--no-selector', 'Hide element selector per violation')
   .option('--no-affected', 'Hide affected element count per violation')
+  .option('--no-tips', 'Hide the tip box after scan results')
   .option('--summary-style <style>', 'Summary display style: default, compact', 'default')
   .option('--exclude <path>', 'Exclude a path or glob from the scan (repeatable)', collectRepeatable, [])
-  .option('--ci', 'CI preset: compact output + fail on critical (activates --no-snippet, --no-help, --no-wcag, --no-selector, --no-affected, --summary-style compact, --fail-on-critical)')
+  .option('--ci', 'CI preset: compact output + fail on critical (activates --no-snippet, --no-help, --no-wcag, --no-selector, --no-affected, --no-tips, --summary-style compact, --fail-on-critical)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan

@@ -119,6 +119,7 @@ export const FAQ_ITEMS = [
    ${chalk.cyan('--no-wcag')}             ${chalk.dim('# hide WCAG tags per violation')}
    ${chalk.cyan('--no-selector')}         ${chalk.dim('# hide element selector per violation')}
    ${chalk.cyan('--no-affected')}         ${chalk.dim('# hide affected element count per violation')}
+   ${chalk.cyan('--no-tips')}             ${chalk.dim('# hide the tip box after scan results')}
    ${chalk.cyan('--summary-style compact')} ${chalk.dim('# single-line summary instead of box')}
    ${chalk.cyan('--fail-on-critical')}    ${chalk.dim('# exit 1 if any critical violations found')}
 
