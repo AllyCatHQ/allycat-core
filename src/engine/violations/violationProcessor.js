@@ -14,7 +14,7 @@ import { HTML_WRAPPER_OFFSET } from '../transformers/transformerUtils.js';
 // These are false positives when scanning JSX/TSX component fragments.
 // Defined in constants.js (also used by baselineManager); re-exported here
 // to keep the historical import path working.
-import { DOCUMENT_LEVEL_RULES } from '../../constants.js';
+import { DOCUMENT_LEVEL_RULES, COMPONENT_SUBSTITUTION_RULES } from '../../constants.js';
 export { DOCUMENT_LEVEL_RULES };
 
 // -----------------------------------------------------------------------------
@@ -320,6 +320,10 @@ export function processAxeViolations(
         if (isComponentContext && DOCUMENT_LEVEL_RULES.has(violation.id)) continue;
 
         for (const node of violation.nodes) {
+            if (isComponentContext
+                && COMPONENT_SUBSTITUTION_RULES.has(violation.id)
+                && node.html?.includes('data-allycat-substituted')) continue;
+
             const base = createViolationFromNode(
                 filePath, violation, node, sourceContent,
                 lineMap, transformedHtml, ordinalIndex, domDocument

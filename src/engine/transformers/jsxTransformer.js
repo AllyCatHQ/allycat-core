@@ -93,6 +93,7 @@ function parseJsx(sourceCode) {
 
 /**
  * Walk the AST and collect all top-level JSX elements returned by components.
+ * Skips .map() callback bodies — those are rendered inline by jsxRenderer.
  *
  * @param {import('@babel/types').File} ast
  * @returns {Array<import('@babel/types').JSXElement|import('@babel/types').JSXFragment>}
@@ -104,18 +105,39 @@ function collectJsxRoots(ast) {
         ReturnStatement(path) {
             const arg = path.node.argument;
             if (arg && (t.isJSXElement(arg) || t.isJSXFragment(arg))) {
+                if (isInsideMapCallback(path)) return;
                 roots.push(arg);
             }
         },
         ArrowFunctionExpression(path) {
             const body = path.node.body;
             if (t.isJSXElement(body) || t.isJSXFragment(body)) {
+                if (isMapCallbackPath(path)) return;
                 roots.push(body);
             }
         },
     });
 
     return roots;
+}
+
+/**
+ * Check whether a function path is a .map() callback argument.
+ */
+function isMapCallbackPath(fnPath) {
+    const parent = fnPath.parent;
+    if (!t.isCallExpression(parent)) return false;
+    const callee = parent.callee;
+    return t.isMemberExpression(callee) &&
+           t.isIdentifier(callee.property, { name: 'map' });
+}
+
+/**
+ * Check whether a path is inside a .map() callback's block body.
+ */
+function isInsideMapCallback(path) {
+    const fnPath = path.getFunctionParent();
+    return fnPath ? isMapCallbackPath(fnPath) : false;
 }
 
 /**
