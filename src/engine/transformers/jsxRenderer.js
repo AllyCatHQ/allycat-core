@@ -10,7 +10,7 @@
  */
 
 import * as t from '@babel/types';
-import { HTML_TAGS, registerOrdinalEntry } from './transformerUtils.js';
+import { HTML_TAGS, VOID_ELEMENTS, registerOrdinalEntry } from './transformerUtils.js';
 import { renderAttributes } from './jsxAttributeMapper.js';
 
 // Context-aware tag defaults for custom components inside structural parents.
@@ -134,11 +134,25 @@ function renderElement(node, depth, cssModuleBindings, parentTag) {
     }
 
     if (isSelfClosing) {
-        return [{
-            htmlLine: `${indent}<${tag}${attributes}${extraAttrs}>`,
-            sourceLine,
-            tag,
-        }];
+        if (VOID_ELEMENTS.has(tag)) {
+            return [{
+                htmlLine: `${indent}<${tag}${attributes}${extraAttrs}>`,
+                sourceLine,
+                tag,
+            }];
+        }
+        return [
+            {
+                htmlLine: `${indent}<${tag}${attributes}${extraAttrs}>`,
+                sourceLine,
+                tag,
+            },
+            {
+                htmlLine: `${indent}</${tag}>`,
+                sourceLine: null,
+                tag: null,
+            },
+        ];
     }
 
     const lines = [{
@@ -333,5 +347,5 @@ function resolveTag(openingElement) {
  * @returns {boolean}
  */
 function isHtmlTag(name) {
-    return HTML_TAGS.has(name.toLowerCase());
+    return HTML_TAGS.has(name);
 }

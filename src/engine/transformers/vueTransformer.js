@@ -16,7 +16,7 @@
  */
 
 import { parse, NodeTypes } from '@vue/compiler-dom';
-import { wrapInDocument, escapeAttr, HTML_TAGS, HTML_WRAPPER_OFFSET, registerOrdinalEntry } from './transformerUtils.js';
+import { wrapInDocument, escapeAttr, HTML_TAGS, VOID_ELEMENTS, HTML_WRAPPER_OFFSET, registerOrdinalEntry } from './transformerUtils.js';
 import { stripHtmlComments } from '../../utils/cssResolver.js';
 
 // -----------------------------------------------------------------------------
@@ -262,15 +262,6 @@ function renderText(node, depth) {
 // -----------------------------------------------------------------------------
 // Tag Resolution
 // -----------------------------------------------------------------------------
-
-/**
- * HTML void elements — rendered without a closing tag.
- * @type {Set<string>}
- */
-const VOID_ELEMENTS = new Set([
-    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
-    'link', 'meta', 'param', 'source', 'track', 'wbr',
-]);
 
 /**
  * Resolve a Vue tag name to its HTML equivalent.
