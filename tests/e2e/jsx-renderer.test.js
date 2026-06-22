@@ -4,7 +4,7 @@
  * E2E tests for JSX renderer correctness:
  *   1. HTML name collision: PascalCase components must not match native HTML tags
  *   2. Self-closing non-void: custom components must produce closing tags
- *   3. Existing list-structure fixtures (regression guard)
+ *   3. List-structure fixtures (false-positive guard, real + mixed violations)
  *
  * Usage:
  *   node tests/e2e/jsx-renderer.test.js
@@ -71,14 +71,21 @@ console.log('\n-- self-closing non-void tags produce closing tags --------------
 
 console.log('\n-- existing list false-positive guard ----------------------------');
 {
-    const { status } = run(path.join(JSX_DIR, 'ListFalsePositive.jsx'));
+    const { status, output } = run(path.join(JSX_DIR, 'ListFalsePositive.jsx'));
     assertExit('ListFalsePositive.jsx → exit 0', status, 0);
+    assertNotContains('no substitution marker leaks into output', output, 'data-allycat-substituted');
 }
 
 console.log('\n-- real list violations still caught -----------------------------');
 {
     const { status } = run(path.join(JSX_DIR, 'ListRealViolation.jsx'));
     assertExit('ListRealViolation.jsx → exit 3 (violations found)', status, 3);
+}
+
+console.log('\n-- real violation caught in mixed (custom + bad element) list ----');
+{
+    const { status } = run(path.join(JSX_DIR, 'ListMixedViolation.jsx'));
+    assertExit('ListMixedViolation.jsx → exit 3 (real <div> still flagged)', status, 3);
 }
 
 // -----------------------------------------------------------------------------
