@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ("all page content should be contained by landmarks") no longer fires on component
   files. Components are fragments, not full pages — they are composed into a page with
   landmarks at runtime. The rule still applies to standalone HTML files.
+- **React custom components inside `<ul>`/`<ol>`/`<dl>` no longer produce false
+  list violations** — components like styled-component wrappers and design system
+  elements used inside lists are now recognized as valid list children. Hand-written
+  HTML violations (e.g. `<ul><div>text</div></ul>`) are still caught.
+- **Real list violations are no longer missed when a list also contains custom
+  components** — a genuinely invalid element (e.g. a bare `<div>`) in a list that mixes
+  it with custom components is now correctly reported. Reports also no longer show an
+  internal attribute on rendered elements.
 - **CLI no longer hangs after opening browser on Linux** — commands that open a browser
   (`allycat report`, `allycat feedback`, `allycat update`, `allycat repo`) now properly
   detach the child process so the CLI exits immediately.
