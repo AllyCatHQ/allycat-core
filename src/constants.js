@@ -151,15 +151,6 @@ export const DOCUMENT_LEVEL_RULES = new Set([
     'region',
 ]);
 
-// Per-node suppression: list-structure rules suppressed when the violating node
-// carries data-allycat-substituted (a custom component, not hand-written HTML).
-export const COMPONENT_SUBSTITUTION_RULES = new Set([
-    'list',
-    'listitem',
-    'definition-list',
-    'dlitem',
-]);
-
 // ─── Impact Severity Order ────────────────────────────────────────────────────
 // Shared sort key: lower value = more severe. Used by watchMode and violationFormatter.
 

@@ -108,8 +108,8 @@ function renderNode(node, depth = 0, cssModuleBindings = new Map(), parentTag = 
  * Render a JSX element to output lines.
  *
  * Custom components (uppercase) are rendered with a substituted HTML tag based
- * on parent context (e.g. custom inside <ul> becomes <li>) and marked with
- * data-allycat-substituted="ComponentName".
+ * on parent context (e.g. custom inside <ul> becomes <li>) so axe-core sees
+ * structurally valid HTML.
  *
  * @param {import('@babel/types').JSXElement} node
  * @param {number} depth
@@ -125,25 +125,21 @@ function renderElement(node, depth, cssModuleBindings, parentTag) {
     const isSelfClosing = node.openingElement.selfClosing;
 
     let tag = tagInfo.tag;
-    let extraAttrs = '';
-    if (tagInfo.isCustom) {
-        if (parentTag && PARENT_CHILD_DEFAULTS[parentTag]) {
-            tag = PARENT_CHILD_DEFAULTS[parentTag];
-        }
-        extraAttrs = ` data-allycat-substituted="${tagInfo.componentName}"`;
+    if (tagInfo.isCustom && parentTag && PARENT_CHILD_DEFAULTS[parentTag]) {
+        tag = PARENT_CHILD_DEFAULTS[parentTag];
     }
 
     if (isSelfClosing) {
         if (VOID_ELEMENTS.has(tag)) {
             return [{
-                htmlLine: `${indent}<${tag}${attributes}${extraAttrs}>`,
+                htmlLine: `${indent}<${tag}${attributes}>`,
                 sourceLine,
                 tag,
             }];
         }
         return [
             {
-                htmlLine: `${indent}<${tag}${attributes}${extraAttrs}>`,
+                htmlLine: `${indent}<${tag}${attributes}>`,
                 sourceLine,
                 tag,
             },
@@ -156,7 +152,7 @@ function renderElement(node, depth, cssModuleBindings, parentTag) {
     }
 
     const lines = [{
-        htmlLine: `${indent}<${tag}${attributes}${extraAttrs}>`,
+        htmlLine: `${indent}<${tag}${attributes}>`,
         sourceLine,
         tag,
     }];
@@ -319,7 +315,7 @@ function renderConditionalExpression(expression, depth, cssModuleBindings, paren
 /**
  * Resolve a JSX opening element to its HTML tag name.
  * Custom components (uppercase) default to <div>; the caller may override
- * the tag via PARENT_CHILD_DEFAULTS and adds data-allycat-substituted.
+ * the tag via PARENT_CHILD_DEFAULTS based on parent context.
  *
  * @param {import('@babel/types').JSXOpeningElement} openingElement
  * @returns {{ tag: string, isCustom: boolean, componentName?: string }}
