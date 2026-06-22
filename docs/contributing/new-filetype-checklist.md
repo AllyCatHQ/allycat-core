@@ -121,12 +121,13 @@ Check `quickScanner.js` — the `isComponent` flag controls this.
 **Exception:** If a framework file is always a full page (e.g. a Next.js `_document.tsx`),
 treat it as non-component.
 
-**Custom component markers:** When a transformer renders a custom component (uppercase tag
-name), it should emit `data-allycat-substituted="ComponentName"` on the rendered HTML
-element. This marker enables per-node suppression of list-structure rules
-(`COMPONENT_SUBSTITUTION_RULES` in `constants.js`) — violations on marked nodes are
-suppressed because the structure mismatch is a transformation artifact, not a real issue.
-Hand-written HTML (no marker) is still flagged.
+**Custom components in structural parents:** When a transformer renders a custom component
+(uppercase tag name) that is a direct child of a structural parent (`<ul>`, `<ol>`, `<dl>`,
+`<table>`, etc.), substitute its tag for the structurally valid child (`<li>`, `<div>`,
+`<tr>`, …) so axe-core sees valid HTML and never fires a false list-structure violation.
+See `PARENT_CHILD_DEFAULTS` in `jsxRenderer.js` for the reference mapping. Do **not** emit a
+synthetic marker attribute — substitution alone prevents the false positive, and hand-written
+HTML (which is not substituted) is still flagged correctly.
 
 ---
 
