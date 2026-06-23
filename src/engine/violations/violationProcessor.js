@@ -7,7 +7,7 @@
  * @module engine/violations/violationProcessor
  */
 
-import { findLineNumber, extractSourceTag } from '../../utils/sourceMapper.js';
+import { findLineNumber, extractSourceLine, truncateSnippet } from '../../utils/sourceMapper.js';
 import { HTML_WRAPPER_OFFSET } from '../transformers/transformerUtils.js';
 
 // Rules that require a complete HTML document context.
@@ -278,7 +278,7 @@ export function createViolationFromNode(
     );
 
     const sourceSnippet = (isComponentContext && lineNumber)
-        ? extractSourceTag(sourceContent, lineNumber)
+        ? truncateSnippet(extractSourceLine(sourceContent, lineNumber), 120)
         : undefined;
 
     return {
