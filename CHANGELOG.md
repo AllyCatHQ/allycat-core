@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.7.0] - 2026-06-23
 
 ### Security
 - **Updated `undici` to 7.28.0** — resolves 7 security advisories (5 high, 2 moderate)
