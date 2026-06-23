@@ -244,7 +244,7 @@ allycat scan --json-file ci-report                    # custom name: ci-report.j
 | Option | Short | Description |
 |---|---|---|
 | `--output <format>` | `-o` | Output format: `terminal` (default) or `json` |
-| `--no-snippet` | | Hide code snippet per violation |
+| `--no-snippet` | | Hide source/HTML snippet per violation |
 | `--no-help` | | Hide help text per violation |
 | `--no-wcag` | | Hide WCAG tags per violation |
 | `--no-selector` | | Hide element selector per violation |

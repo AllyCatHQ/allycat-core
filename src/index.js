@@ -88,7 +88,7 @@ program
   .option('-e, --existing', 'In watch mode: show full details of pre-existing violations on startup (default: counts only)')
   .option('--save-baseline', 'Save all current violations as a baseline — exits 0 always')
   .option('--fail-on-new', 'Exit code 4 if any violation is not in the baseline (requires --save-baseline to have been run first)')
-  .option('--no-snippet', 'Hide HTML snippet per violation')
+  .option('--no-snippet', 'Hide source/HTML snippet per violation')
   .option('--no-help', 'Hide help text per violation')
   .option('--no-wcag', 'Hide WCAG tags per violation')
   .option('--no-selector', 'Hide element selector per violation')
