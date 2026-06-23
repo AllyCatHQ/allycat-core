@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Updated `undici` to 7.28.0** — resolves 7 security advisories (5 high, 2 moderate)
+  in a transitive dependency used by jsdom. No behavior changes — lockfile-only update.
+
 ### Added
 - **`allycat repo`** — opens the AllyCat GitHub repository in your browser.
 - **Random tips** — after each scan, a context-aware tip helps you discover flags and
