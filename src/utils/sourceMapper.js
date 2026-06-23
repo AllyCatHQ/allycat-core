@@ -214,7 +214,17 @@ export function extractSourceLine(sourceContent, lineNumber) {
     if (!sourceContent || !lineNumber || lineNumber < 1) return null;
     const lines = sourceContent.split('\n');
     if (lineNumber > lines.length) return null;
-    return lines[lineNumber - 1]?.trim() || null;
+
+    const line = lines[lineNumber - 1]?.trim();
+    if (!line) return null;
+
+    if (line.endsWith('>') && !line.includes('/>') && !line.includes('</')) {
+        for (let i = lineNumber; i < Math.min(lines.length, lineNumber + 3); i++) {
+            const nextLine = lines[i]?.trim();
+            if (nextLine) return `${line}  ${nextLine}...`;
+        }
+    }
+    return line;
 }
 
 /**
