@@ -204,6 +204,84 @@ export function buildHtmlOrdinalIndex(sourceContent) {
 }
 
 /**
+ * Extract the opening tag from source code at a given line number.
+ *
+ * Scans forward from the first `<` on the target line until the matching `>`
+ * (respecting nested braces for JSX expressions, quoted strings, and template
+ * literals). Returns the opening tag only, not children.
+ *
+ * @param {string} sourceContent - Original file source
+ * @param {number} lineNumber - 1-indexed line number where the element starts
+ * @returns {string|null} - Opening tag text (from `<` to `>`) or null
+ */
+export function extractSourceTag(sourceContent, lineNumber) {
+    if (!sourceContent || !lineNumber || lineNumber < 1) return null;
+
+    const lines = sourceContent.split('\n');
+    if (lineNumber > lines.length) return null;
+
+    const startLine = lines[lineNumber - 1];
+    const ltIndex = startLine.indexOf('<');
+    if (ltIndex === -1) return null;
+
+    const MAX_SCAN_LINES = 20;
+    let result = '';
+    let braceDepth = 0;
+    let stringChar = null;   // current quote character: ' " or `
+
+    for (let li = lineNumber - 1; li < Math.min(lines.length, lineNumber - 1 + MAX_SCAN_LINES); li++) {
+        const line = lines[li];
+        const startCol = li === lineNumber - 1 ? ltIndex : 0;
+
+        for (let ci = startCol; ci < line.length; ci++) {
+            const ch = line[ci];
+            const prev = ci > 0 ? line[ci - 1] : (li > lineNumber - 1 && result.length > 0 ? result[result.length - 1] : '');
+
+            if (stringChar) {
+                result += ch;
+                if (ch === stringChar && prev !== '\\') {
+                    stringChar = null;
+                }
+                continue;
+            }
+
+            if (braceDepth > 0) {
+                result += ch;
+                if (ch === '\'' || ch === '"' || ch === '`') {
+                    stringChar = ch;
+                } else if (ch === '{') {
+                    braceDepth++;
+                } else if (ch === '}') {
+                    braceDepth--;
+                }
+                continue;
+            }
+
+            // At top level (depth 0, no string)
+            if (ch === '{') {
+                result += ch;
+                braceDepth++;
+            } else if (ch === '/' && ci + 1 < line.length && line[ci + 1] === '>') {
+                result += '/>';
+                return result;
+            } else if (ch === '>') {
+                result += '>';
+                return result;
+            } else if (ch === '\'' || ch === '"') {
+                result += ch;
+                stringChar = ch;
+            } else {
+                result += ch;
+            }
+        }
+
+        result += '\n';
+    }
+
+    return null;
+}
+
+/**
  * Extract meaningful identifier from CSS selector
  * Simplifies axe-core's verbose selectors for display
  * 
