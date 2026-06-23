@@ -55,6 +55,9 @@ const TIPS = [
         weight: 2,
     },
     {
+        text: 'Component violations show the original source line — look for "Source:" in the output',
+    },
+    {
         text: 'AllyCat supports JSX, TSX, Vue, Angular, and plain HTML',
     },
     {

@@ -28,6 +28,11 @@ line in this index.
 If you wrap the output (like JSX does with `<html><body>…`), account for the line offset
 in `HTML_WRAPPER_OFFSET` so `lineMap` entries stay accurate.
 
+**Source snippets:** When `isComponentContext` is true and a line number is resolved,
+`extractSourceLine()` in `sourceMapper.js` reads the original source line and attaches it
+to the violation as `sourceSnippet`. This shows users their actual component code instead
+of the rendered HTML. Accurate `lineMap` entries are essential for this to work correctly.
+
 ---
 
 ## 2. Duplicate Element Line Resolution (Ordinal Index)

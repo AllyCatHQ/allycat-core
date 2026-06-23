@@ -114,7 +114,7 @@ export const FAQ_ITEMS = [
    ${chalk.yellow(`${CLI.SCAN} --ci`)}
 
    This enables all of the following at once:
-   ${chalk.cyan('--no-snippet')}          ${chalk.dim('# hide HTML snippet per violation')}
+   ${chalk.cyan('--no-snippet')}          ${chalk.dim('# hide source/HTML snippet per violation')}
    ${chalk.cyan('--no-help')}             ${chalk.dim('# hide help text per violation')}
    ${chalk.cyan('--no-wcag')}             ${chalk.dim('# hide WCAG tags per violation')}
    ${chalk.cyan('--no-selector')}         ${chalk.dim('# hide element selector per violation')}
