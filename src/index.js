@@ -8,6 +8,7 @@ import { scanCommand } from './commands/scan.js';
 import { helpCommand } from './commands/help.js';
 import { reportCommand } from './commands/report.js';
 import { feedbackCommand } from './commands/feedback.js';
+import { repoCommand } from './commands/repo.js';
 import { updateCommand } from './commands/update.js';
 import { UI, APP_LINKS, SUPPORTED_EXTENSIONS_DISPLAY } from './constants.js';
 
@@ -87,14 +88,15 @@ program
   .option('-e, --existing', 'In watch mode: show full details of pre-existing violations on startup (default: counts only)')
   .option('--save-baseline', 'Save all current violations as a baseline — exits 0 always')
   .option('--fail-on-new', 'Exit code 4 if any violation is not in the baseline (requires --save-baseline to have been run first)')
-  .option('--no-snippet', 'Hide HTML snippet per violation')
+  .option('--no-snippet', 'Hide source/HTML snippet per violation')
   .option('--no-help', 'Hide help text per violation')
   .option('--no-wcag', 'Hide WCAG tags per violation')
   .option('--no-selector', 'Hide element selector per violation')
   .option('--no-affected', 'Hide affected element count per violation')
+  .option('--no-tips', 'Hide the tip box after scan results')
   .option('--summary-style <style>', 'Summary display style: default, compact', 'default')
   .option('--exclude <path>', 'Exclude a path or glob from the scan (repeatable)', collectRepeatable, [])
-  .option('--ci', 'CI preset: compact output + fail on critical (activates --no-snippet, --no-help, --no-wcag, --no-selector, --no-affected, --summary-style compact, --fail-on-critical)')
+  .option('--ci', 'CI preset: compact output + fail on critical (activates --no-snippet, --no-help, --no-wcag, --no-selector, --no-affected, --no-tips, --summary-style compact, --fail-on-critical)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
   ${chalk.cyan('target')}    Optional file or folder path to scan
@@ -154,6 +156,13 @@ program
   .command('feedback')
   .description('Report a bug or request a feature on GitHub')
   .action(feedbackCommand);
+
+// Repo Command
+
+program
+  .command('repo')
+  .description('Open the AllyCat GitHub repository in your browser')
+  .action(repoCommand);
 
 // Update Command
 

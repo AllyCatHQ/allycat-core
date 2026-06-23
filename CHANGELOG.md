@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.0] - 2026-06-23
+
+### Security
+- **Updated `undici` to 7.28.0** — resolves 7 security advisories (5 high, 2 moderate)
+  in a transitive dependency used by jsdom. No behavior changes — lockfile-only update.
+
+### Added
+- **`allycat repo`** — opens the AllyCat GitHub repository in your browser.
+- **Random tips** — after each scan, a context-aware tip helps you discover flags and
+  workflows you might not know about. Disable with `--no-tips`.
+- **Source snippets** — violations from component files (JSX, TSX, Vue, Angular) now show the
+  original source line alongside the rendered HTML. Terminal output labels it "Source:"
+  when available; HTML reports show both; JSON output adds a `source` field under `element`.
+
+### Fixed
+- **Fewer false positives on React/Vue/Angular components** — the `region` rule
+  ("all page content should be contained by landmarks") no longer fires on component
+  files. Components are fragments, not full pages — they are composed into a page with
+  landmarks at runtime. The rule still applies to standalone HTML files.
+- **React custom components inside `<ul>`/`<ol>`/`<dl>` no longer produce false
+  list violations** — components like styled-component wrappers and design system
+  elements used inside lists are now recognized as valid list children. Hand-written
+  HTML violations (e.g. `<ul><div>text</div></ul>`) are still caught.
+- **Real list violations are no longer missed when a list also contains custom
+  components** — a genuinely invalid element (e.g. a bare `<div>`) in a list that mixes
+  it with custom components is now correctly reported. Reports also no longer show an
+  internal attribute on rendered elements.
+- **CLI no longer hangs after opening browser on Linux** — commands that open a browser
+  (`allycat report`, `allycat feedback`, `allycat update`, `allycat repo`) now properly
+  detach the child process so the CLI exits immediately.
+
+### Upgrade note
+- If you use `--fail-on-new` with a saved baseline, re-run `--save-baseline` after
+  upgrading to avoid rare fingerprint mismatches from the JSX renderer improvements.
+
 ## [1.6.0] - 2026-06-11
 
 ### Added

@@ -115,6 +115,7 @@ allycat scan \
   --no-wcag \
   --no-selector \
   --no-affected \
+  --no-tips \
   --summary-style compact \
   --fail-on-critical
 ```
@@ -138,11 +139,12 @@ Apply flags individually for partial suppression:
 
 | Flag | Effect |
 |---|---|
-| `--no-snippet` | Hide HTML snippet per violation |
+| `--no-snippet` | Hide source/HTML snippet per violation |
 | `--no-help` | Hide help text per violation |
 | `--no-wcag` | Hide WCAG tags per violation |
 | `--no-selector` | Hide element selector per violation |
 | `--no-affected` | Hide affected element count per violation |
+| `--no-tips` | Hide the tip box after scan results |
 | `--summary-style compact` | Single-line summary instead of the bordered box |
 
 ---
@@ -172,7 +174,20 @@ When using `--json-file` or `-o json`, the output follows this shape:
       "serious": 0
     }
   },
-  "violations": [...]
+  "violations": [
+    {
+      "file": "src/components/Button.tsx",
+      "id": "button-name",
+      "impact": "critical",
+      "description": "Ensures buttons have discernible text",
+      "element": {
+        "selector": "button",
+        "html": "<button></button>",
+        "source": "<Button>"
+      },
+      "lineNumber": 12
+    }
+  ]
 }
 ```
 

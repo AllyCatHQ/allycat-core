@@ -114,11 +114,12 @@ export const FAQ_ITEMS = [
    ${chalk.yellow(`${CLI.SCAN} --ci`)}
 
    This enables all of the following at once:
-   ${chalk.cyan('--no-snippet')}          ${chalk.dim('# hide HTML snippet per violation')}
+   ${chalk.cyan('--no-snippet')}          ${chalk.dim('# hide source/HTML snippet per violation')}
    ${chalk.cyan('--no-help')}             ${chalk.dim('# hide help text per violation')}
    ${chalk.cyan('--no-wcag')}             ${chalk.dim('# hide WCAG tags per violation')}
    ${chalk.cyan('--no-selector')}         ${chalk.dim('# hide element selector per violation')}
    ${chalk.cyan('--no-affected')}         ${chalk.dim('# hide affected element count per violation')}
+   ${chalk.cyan('--no-tips')}             ${chalk.dim('# hide the tip box after scan results')}
    ${chalk.cyan('--summary-style compact')} ${chalk.dim('# single-line summary instead of box')}
    ${chalk.cyan('--fail-on-critical')}    ${chalk.dim('# exit 1 if any critical violations found')}
 
@@ -290,6 +291,7 @@ export const EXAMPLE_SECTIONS = [
         examples: [
             { cmd: CLI.REPORT,   desc: `Open ${DEFAULT_HTML_REPORT} in your browser — run allycat scan first` },
             { cmd: CLI.FEEDBACK, desc: 'Open GitHub Issues to report a bug or request a feature' },
+            { cmd: CLI.REPO,     desc: 'Open the AllyCat GitHub repository in your browser' },
             { cmd: CLI.UPDATE,   desc: 'Check for updates — compare installed vs latest and view release notes' }
         ]
     }

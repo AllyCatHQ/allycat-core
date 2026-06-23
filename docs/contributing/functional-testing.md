@@ -253,6 +253,12 @@ node src/index.js scan tests/fixtures/sample.html
 - [ ] Violations grouped by rule
 - [ ] Each violation shows: rule ID, impact, element snippet, line number, file path
 - [ ] VS Code link (`vscode://file/...`) appears per violation
+- [ ] HTML files show `HTML:` label for element snippets
+
+```bash
+node src/index.js scan tests/fixtures/sample.jsx
+```
+- [ ] Component files show `Source:` label with the original source line (not rendered HTML)
 
 ### 7.2 Summary mode
 
@@ -296,6 +302,13 @@ node src/index.js scan tests/fixtures/sample.html
 - [ ] File search works
 - [ ] Each violation entry has a clickable VS Code link
 - [ ] No external CDN dependencies (file should work offline)
+
+```bash
+# Scan a component file with ai.enabled: true:
+node src/index.js scan tests/fixtures/sample.jsx
+```
+- [ ] Component violations show "Source" label with the original source line
+- [ ] Rendered HTML shown below with "Rendered HTML" label (dimmed)
 
 ---
 
@@ -511,7 +524,7 @@ node src/index.js scan tests/samples/react/tsx/ComprehensiveTest.tsx
 | 5.3 | Standard: WCAG AAA (automated rules) | ⬜ |
 | 5.4 | ~~Standard: Israeli IS 5568~~ (archived — see docs/archived/) | — |
 | 6 | RTL detection | ⬜ |
-| 7.1 | Output: terminal | ⬜ |
+| 7.1 | Output: terminal (HTML: label for HTML, Source: label for components) | ⬜ |
 | 7.2 | Output: --summary | ⬜ |
 | 7.3 | Output: --output json | ⬜ |
 | 7.4 | Output: --json-file | ⬜ |

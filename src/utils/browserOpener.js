@@ -5,14 +5,19 @@
  * Cross-platform: macOS, Windows, Linux.
  * Zero external dependencies — uses Node.js built-in child_process.
  *
+ * NOTE: only pass trusted targets (APP_LINKS constants or local report
+ * paths). On Windows, `cmd /c start` mangles targets containing & or %.
+ *
  * @module utils/browserOpener
  */
 
-import { execFile } from 'child_process';
+import { spawn } from 'child_process';
 
 /**
  * Open a file path or URL in the default browser.
  * Fails silently — if the browser can't open, the scan still succeeds.
+ * The child is detached and unref'd so it never keeps the CLI alive
+ * (xdg-open can otherwise block the event loop until the browser closes).
  *
  * @param {string} target - Absolute path or URL to open
  */
@@ -20,11 +25,18 @@ export function openInBrowser(target) {
     const resolved = resolveOpenCommand(target);
     if (!resolved) return;
 
-    // execFile avoids a shell entirely — no string interpolation, no injection surface.
-    execFile(resolved.bin, resolved.args, () => {
-        // Intentionally silent — opening the browser is best-effort
-        // The target is always printed to terminal as fallback
-    });
+    try {
+        const child = spawn(resolved.bin, resolved.args, {
+            detached: true,
+            stdio: 'ignore',
+        });
+        // Without a listener, a spawn 'error' event (e.g. binary missing)
+        // would crash the process — swallow it, the link is already printed.
+        child.on('error', () => {});
+        child.unref();
+    } catch {
+        // Best-effort by design.
+    }
 }
 
 /**

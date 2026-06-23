@@ -32,6 +32,8 @@ export async function handleScanResult(violations, warnings, config, scanMode, o
         console.log(chalk.dim(`  ${violations.length} violation${violations.length !== 1 ? 's' : ''} recorded across ${countFiles(violations)} file${countFiles(violations) !== 1 ? 's' : ''}`));
         console.log(chalk.dim(`  Commit this file to your repository.`));
         console.log('');
+        console.log(chalk.dim(`  Next: run `) + chalk.cyan('allycat scan --fail-on-new') + chalk.dim(` to fail CI on new violations`));
+        console.log('');
         return; // always exit 0
     }
 

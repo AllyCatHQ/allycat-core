@@ -329,11 +329,24 @@ function buildViolationCard(v) {
                 <div class="vfield-label">WCAG</div>
                 <div class="vfield-value">${escapeHtml(v.wcagTags.slice(0, 3).join(', '))}</div>
             </div>` : ''}
-            ${v.html ? `
+            ${(() => {
+                const displaySnippet = v.sourceSnippet || v.html;
+                if (!displaySnippet) return '';
+                const label = v.sourceSnippet ? 'Source' : 'HTML';
+                let block = `
             <div class="vfield-full">
-                <div class="vfield-label">Element</div>
-                <code class="vfield-value code">${escapeHtml(v.html)}</code>
-            </div>` : ''}
+                <div class="vfield-label">${label}</div>
+                <code class="vfield-value code">${escapeHtml(displaySnippet)}</code>
+            </div>`;
+                if (v.sourceSnippet && v.html) {
+                    block += `
+            <div class="vfield-full">
+                <div class="vfield-label">Rendered HTML</div>
+                <code class="vfield-value code vfield-secondary">${escapeHtml(v.html)}</code>
+            </div>`;
+                }
+                return block;
+            })()}
             <div class="vfield-full">
                 <div class="vfield-label">How to fix</div>
                 <div class="vfield-value">${escapeHtml(v.help)}${v.helpUrl

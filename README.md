@@ -244,11 +244,12 @@ allycat scan --json-file ci-report                    # custom name: ci-report.j
 | Option | Short | Description |
 |---|---|---|
 | `--output <format>` | `-o` | Output format: `terminal` (default) or `json` |
-| `--no-snippet` | | Hide HTML snippet per violation |
+| `--no-snippet` | | Hide source/HTML snippet per violation |
 | `--no-help` | | Hide help text per violation |
 | `--no-wcag` | | Hide WCAG tags per violation |
 | `--no-selector` | | Hide element selector per violation |
 | `--no-affected` | | Hide affected element count per violation |
+| `--no-tips` | | Hide the tip box after scan results |
 | `--summary-style <style>` | | Summary style: `default` (box) or `compact` (single line) |
 
 ```bash
@@ -299,6 +300,16 @@ Opens [GitHub Issues](https://github.com/AllyCatHQ/allycat-core/issues) in your 
 
 ```bash
 allycat feedback
+```
+
+---
+
+### `allycat repo`
+
+Opens the [AllyCat GitHub repository](https://github.com/AllyCatHQ/allycat-core) in your browser.
+
+```bash
+allycat repo
 ```
 
 ---

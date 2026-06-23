@@ -13,6 +13,7 @@ CLAUDE.md
 Dockerfile.crosstest
 *.tgz
 ReadmeOld.md
+.reddit_post_history.json
 # Environment / secrets
 .env
 .env.*

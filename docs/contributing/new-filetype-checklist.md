@@ -28,6 +28,11 @@ line in this index.
 If you wrap the output (like JSX does with `<html><body>…`), account for the line offset
 in `HTML_WRAPPER_OFFSET` so `lineMap` entries stay accurate.
 
+**Source snippets:** When `isComponentContext` is true and a line number is resolved,
+`extractSourceLine()` in `sourceMapper.js` reads the original source line and attaches it
+to the violation as `sourceSnippet`. This shows users their actual component code instead
+of the rendered HTML. Accurate `lineMap` entries are essential for this to work correctly.
+
 ---
 
 ## 2. Duplicate Element Line Resolution (Ordinal Index)
@@ -109,6 +114,7 @@ Component files are fragments, not full HTML documents. Axe-core will flag rules
 - `landmark-one-main` — no `<main>` in a button component
 - `page-has-heading-one` — no `<h1>` in a card component
 - `html-has-lang` — no `<html lang>` in a modal component
+- `region` — content not inside a landmark in a component fragment
 - `document-title`, `meta-viewport`, `bypass`
 
 These are false positives for component files.
@@ -119,6 +125,14 @@ Check `quickScanner.js` — the `isComponent` flag controls this.
 
 **Exception:** If a framework file is always a full page (e.g. a Next.js `_document.tsx`),
 treat it as non-component.
+
+**Custom components in structural parents:** When a transformer renders a custom component
+(uppercase tag name) that is a direct child of a structural parent (`<ul>`, `<ol>`, `<dl>`,
+`<table>`, etc.), substitute its tag for the structurally valid child (`<li>`, `<div>`,
+`<tr>`, …) so axe-core sees valid HTML and never fires a false list-structure violation.
+See `PARENT_CHILD_DEFAULTS` in `jsxRenderer.js` for the reference mapping. Do **not** emit a
+synthetic marker attribute — substitution alone prevents the false positive, and hand-written
+HTML (which is not substituted) is still flagged correctly.
 
 ---
 
