@@ -10,6 +10,7 @@
 import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import { formatSummary, formatByFile } from '../../utils/violationFormatter.js';
+import { truncateSnippet } from '../../utils/sourceMapper.js';
 import { pickTip } from '../../utils/tips.js';
 
 // -----------------------------------------------------------------------------
@@ -163,7 +164,12 @@ function formatViolationInline(violation) {
         chalk.dim(`   Rule: ${violation.id}`),
         chalk.dim('   File: ') + location,
         violation.selector ? chalk.dim(`   Element: ${violation.selector}`) : '',
-        violation.html     ? chalk.dim(`   HTML: ${chalk.yellow(violation.html.substring(0, 80))}`) : ''
+        (() => {
+            const displaySnippet = violation.sourceSnippet || violation.html;
+            if (!displaySnippet) return '';
+            const label = violation.sourceSnippet ? 'Source' : 'HTML';
+            return chalk.dim(`   ${label}: ${chalk.yellow(truncateSnippet(displaySnippet, 80))}`);
+        })()
     ].filter(Boolean).join('\n');
 }
 
