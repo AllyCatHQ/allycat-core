@@ -52,10 +52,14 @@ export function formatViolation(violation, options = {}) {
         lines.push(chalk.dim(`   Element: ${selector}`));
     }
 
-    // HTML snippet (truncated)
-    if (showSnippet && violation.html) {
-        const snippet = truncateSnippet(violation.html, 60);
-        lines.push(chalk.dim(`   HTML: ${chalk.yellow(snippet)}`));
+    // Source/HTML snippet (truncated)
+    if (showSnippet) {
+        const displaySnippet = violation.sourceSnippet || violation.html;
+        if (displaySnippet) {
+            const label = violation.sourceSnippet ? 'Source' : 'HTML';
+            const snippet = truncateSnippet(displaySnippet, 60);
+            lines.push(chalk.dim(`   ${label}: ${chalk.yellow(snippet)}`));
+        }
     }
 
     // Help text
@@ -194,7 +198,8 @@ export function formatViolationForJson(violation) {
         wcag: violation.wcagTags,
         element: {
             selector: violation.selector,
-            html: violation.html
+            html: violation.html,
+            ...(violation.sourceSnippet && { source: violation.sourceSnippet })
         }
     };
 

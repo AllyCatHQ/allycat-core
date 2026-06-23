@@ -492,6 +492,8 @@ export function buildStyles() {
 
     .vfield-full { grid-column: 1 / -1; }
 
+    .vfield-secondary { opacity: 0.6; font-size: 0.85em; }
+
     .help-link { color: var(--accent); text-decoration: none; font-size: 0.74rem; }
     .help-link:hover { text-decoration: underline; }
 

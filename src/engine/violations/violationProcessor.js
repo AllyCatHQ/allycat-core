@@ -7,7 +7,7 @@
  * @module engine/violations/violationProcessor
  */
 
-import { findLineNumber } from '../../utils/sourceMapper.js';
+import { findLineNumber, extractSourceLine, truncateSnippet } from '../../utils/sourceMapper.js';
 import { HTML_WRAPPER_OFFSET } from '../transformers/transformerUtils.js';
 
 // Rules that require a complete HTML document context.
@@ -259,7 +259,8 @@ function computeStableSelector(cssSelector, domDocument) {
  */
 export function createViolationFromNode(
     filePath, violation, node, sourceContent,
-    lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null
+    lineMap = null, transformedHtml = null, ordinalIndex = null, domDocument = null,
+    isComponentContext = false
 ) {
     const htmlSnippet = node.html;
 
@@ -276,6 +277,10 @@ export function createViolationFromNode(
         lineMap, transformedHtml, ordinalIndex, domDocument
     );
 
+    const sourceSnippet = (isComponentContext && lineNumber)
+        ? truncateSnippet(extractSourceLine(sourceContent, lineNumber), 120)
+        : undefined;
+
     return {
         file: filePath,
         id: violation.id,
@@ -287,6 +292,7 @@ export function createViolationFromNode(
         selector: cssSelector,
         stableSelector: computeStableSelector(cssSelector, domDocument),
         html: htmlSnippet,
+        sourceSnippet,
         lineNumber,
         failureSummary: node.failureSummary,
     };
@@ -322,7 +328,8 @@ export function processAxeViolations(
         for (const node of violation.nodes) {
             const base = createViolationFromNode(
                 filePath, violation, node, sourceContent,
-                lineMap, transformedHtml, ordinalIndex, domDocument
+                lineMap, transformedHtml, ordinalIndex, domDocument,
+                isComponentContext
             );
             results.push(nodeEnhancer ? nodeEnhancer(base, violation, node) : base);
         }

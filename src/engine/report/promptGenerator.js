@@ -90,7 +90,9 @@ function buildViolationList(violations) {
             `   - Rule: \`${v.id}\``,
         ];
         if (v.lineNumber) lines.push(`   - Line: ${v.lineNumber}`);
-        if (v.html) lines.push(`   - Element: \`${truncateSnippet(v.html, 120)}\``);
+        const displaySnippet = v.sourceSnippet || v.html;
+        const snippetLabel = v.sourceSnippet ? 'Source' : 'HTML';
+        if (displaySnippet) lines.push(`   - ${snippetLabel}: \`${truncateSnippet(displaySnippet, 120)}\``);
         if (v.help) lines.push(`   - What to fix: ${v.help}`);
         if (v.wcagTags?.length > 0) lines.push(`   - WCAG: ${v.wcagTags.slice(0, 3).join(', ')}`);
         return lines.join('\n');
