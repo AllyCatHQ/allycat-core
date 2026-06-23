@@ -1,11 +1,13 @@
 /**
  * Source Mapper Utility
- * 
+ *
  * Maps DOM elements back to approximate source line numbers.
  * Uses pattern matching since DOM parsing loses line information.
- * 
+ *
  * @module utils/sourceMapper
  */
+
+import { VOID_ELEMENTS } from '../engine/transformers/transformerUtils.js';
 
 /**
  * Find approximate line number for an HTML snippet in source code
@@ -218,7 +220,10 @@ export function extractSourceLine(sourceContent, lineNumber) {
     const line = lines[lineNumber - 1]?.trim();
     if (!line) return null;
 
-    if (line.endsWith('>') && !line.includes('/>') && !line.includes('</')) {
+    const tagMatch = line.match(/^<([a-zA-Z][a-zA-Z0-9-]*)/);
+    const tagName = tagMatch ? tagMatch[1].toLowerCase() : '';
+
+    if (line.endsWith('>') && !line.includes('/>') && !line.includes('</') && !VOID_ELEMENTS.has(tagName)) {
         for (let i = lineNumber; i < Math.min(lines.length, lineNumber + 3); i++) {
             const nextLine = lines[i]?.trim();
             if (nextLine) return `${line}  ${nextLine}...`;
