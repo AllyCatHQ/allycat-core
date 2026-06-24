@@ -18,7 +18,8 @@ import * as p from '@clack/prompts';
 import pLimit from 'p-limit';
 import { resolveFiles } from '../../utils/fileResolver.js';
 import { getSafeConcurrencyCeiling } from '../../utils/configLoader.js';
-import { MESSAGES, SCAN_MODES } from '../../constants.js';
+import { MESSAGES, SCAN_MODES, SCAN_TIMEOUT_MS } from '../../constants.js';
+import { withTimeout } from '../../utils/timeout.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
 import { checkRtlCompliance, checkJsxRtlCompliance } from '../violations/rtlValidator.js';
 import { processAxeViolations } from '../violations/violationProcessor.js';
@@ -61,7 +62,7 @@ export async function runQuickAudit(config, targetPath = null, files = null, sil
         filesToScan.map(filePath =>
             limit(async () => {
                 try {
-                    return await scanSingleFile(filePath, config);
+                    return await withTimeout(scanSingleFile(filePath, config), SCAN_TIMEOUT_MS);
                 } catch (err) {
                     p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
                     return { violations: [], warning: null };

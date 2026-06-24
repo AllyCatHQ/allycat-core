@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Per-file scan timeout** — files that take longer than 30 seconds to scan are
+  automatically skipped with a warning, preventing a single file from hanging the
+  entire scan.
+
+---
+
 ## [1.7.0] - 2026-06-23
 
 ### Security

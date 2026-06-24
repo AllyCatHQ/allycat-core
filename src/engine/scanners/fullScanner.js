@@ -22,7 +22,8 @@ import { readSourceFile } from '../../utils/fileUtils.js';
 import { getSafeConcurrencyCeiling } from '../../utils/configLoader.js';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../../utils/fileResolver.js';
-import { MESSAGES, SCAN_MODES } from '../../constants.js';
+import { MESSAGES, SCAN_MODES, SCAN_TIMEOUT_MS } from '../../constants.js';
+import { withTimeout } from '../../utils/timeout.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
 import { processAxeViolations } from '../violations/violationProcessor.js';
 import { transformJsxToHtml } from '../transformers/jsxTransformer.js';
@@ -143,9 +144,14 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
         const results = await Promise.all(
             filesToScan.map(filePath =>
                 limiter(async () => {
+                    const signal = { cancelled: false };
                     try {
-                        return await scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder);
+                        return await withTimeout(
+                            scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder, signal),
+                            SCAN_TIMEOUT_MS
+                        );
                     } catch (err) {
+                        signal.cancelled = true;
                         p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
                         return { violations: [], warning: null };
                     }
@@ -291,7 +297,7 @@ async function transformSourceFile(filePath, sourceContent, { isJsx, isVue, isAn
  * @param {Map<string,string>} aliases - Resolved tsconfig path aliases
  * @returns {Promise<{ violations: Array, warning: string|null }>}
  */
-async function scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder) {
+async function scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder, signal = {}) {
     const violations = [];
     let warning = null;
 
@@ -345,7 +351,9 @@ async function scanSingleFile(browser, filePath, config, cssCache, aliases, AxeB
         await browserContext.close();
 
     } catch (error) {
-        p.log.error(`Error scanning ${filePath}: ${error.message}`);
+        if (!signal.cancelled) {
+            p.log.error(`Error scanning ${filePath}: ${error.message}`);
+        }
     }
 
     return { violations, warning };
