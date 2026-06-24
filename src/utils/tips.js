@@ -91,6 +91,14 @@ const FALLBACK_TIP = TIPS[0].text;
 const PROMO_TIP = 'Enjoying AllyCat? miew~ Star or share it — run allycat repo 🌟';
 const PROMO_TIP_CHANCE = 0.1;
 
+/**
+ * Returns a contextual tip when slow files were detected, or null otherwise.
+ */
+export function pickSlowFileTip(slowFiles) {
+    if (!slowFiles || slowFiles.length === 0) return null;
+    return 'Large or complex files slow down scans. Use --exclude to skip files you don\'t need, or split them into smaller components.';
+}
+
 export function pickTip({ scanMode, violationCount } = {}) {
     // Rare pre-roll: independent of pool size so adding tips never dilutes it.
     if (Math.random() < PROMO_TIP_CHANCE) return PROMO_TIP;

@@ -11,7 +11,8 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import { formatSummary, formatByFile } from '../../utils/violationFormatter.js';
 import { truncateSnippet } from '../../utils/sourceMapper.js';
-import { pickTip } from '../../utils/tips.js';
+import { pickTip, pickSlowFileTip } from '../../utils/tips.js';
+import { SLOW_FILE_THRESHOLD_MS } from '../../constants.js';
 
 // -----------------------------------------------------------------------------
 // Terminal Output
@@ -29,6 +30,7 @@ export function outputTerminal(violations, scanMode, options = {}, slowFiles = [
         p.outro(chalk.green('✔ No accessibility issues found!'));
         p.outro(chalk.gray.bold('Developer Tool Only. Limited Scope. Manual verification recommended.'));
         displaySlowFileWarning(slowFiles, options);
+        displayTerminalTips({ scanMode, violationCount: 0, options, slowFiles });
         return;
     }
 
@@ -54,7 +56,7 @@ export function outputTerminal(violations, scanMode, options = {}, slowFiles = [
     console.log(summary);
 
     displaySlowFileWarning(slowFiles, options);
-    displayTerminalTips({ scanMode, violationCount: violations.length, options });
+    displayTerminalTips({ scanMode, violationCount: violations.length, options, slowFiles });
 }
 
 // -----------------------------------------------------------------------------
@@ -78,6 +80,7 @@ export function outputTerminalWithBaseline({ newViolations, baselineViolations, 
         p.outro(chalk.green('✔ No accessibility issues found!'));
         p.outro(chalk.gray.bold('Developer Tool Only. Limited Scope. Manual verification recommended.'));
         displaySlowFileWarning(slowFiles, options);
+        displayTerminalTips({ scanMode, violationCount: 0, options, slowFiles });
         return;
     }
 
@@ -136,6 +139,7 @@ export function outputTerminalWithBaseline({ newViolations, baselineViolations, 
         scanMode,
         violationCount: newViolations.length + baselineViolations.length,
         options,
+        slowFiles,
     });
 }
 
@@ -181,8 +185,10 @@ function displaySlowFileWarning(slowFiles, options) {
     if (!slowFiles || slowFiles.length === 0) return;
     if (options.ci) return;
 
+    const thresholdSecs = (SLOW_FILE_THRESHOLD_MS / 1000).toFixed(0);
+
     console.log('');
-    console.log(chalk.yellow(`  ⚠  ${slowFiles.length} file${slowFiles.length !== 1 ? 's' : ''} exceeded ${chalk.bold('5s')} scan time:`));
+    console.log(chalk.yellow(`  ⚠  ${slowFiles.length} file${slowFiles.length !== 1 ? 's' : ''} took longer than ${chalk.bold(thresholdSecs + 's')} to scan:`));
     for (const { file, elapsed } of slowFiles) {
         const secs = (elapsed / 1000).toFixed(1);
         console.log(chalk.dim(`     ${file}`) + chalk.yellow(` (${secs}s)`));
@@ -197,36 +203,41 @@ function displaySlowFileWarning(slowFiles, options) {
  * @param {number} ctx.violationCount
  * @param {Object} ctx.options
  */
-function displayTerminalTips({ scanMode, violationCount, options }) {
+function displayTerminalTips({ scanMode, violationCount, options, slowFiles = [] }) {
     if (options.tips === false) return;
 
-    const tip = pickTip({ scanMode, violationCount });
+    const tips = [];
+    const slowFileTip = pickSlowFileTip(slowFiles);
+    if (slowFileTip) tips.push(slowFileTip);
+    tips.push(pickTip({ scanMode, violationCount }));
 
     const INNER = 48;
     const PAD   = 4;
-    // Wrapper splits on spaces only; assumes no single tip word exceeds MAX_TEXT.
-    // A longer token (e.g. a URL) would clamp pad to 0 and push the right border out.
     const MAX_TEXT = INNER - PAD;
 
-    const words = tip.split(' ');
-    const lines = [];
-    let line = '';
-    for (const word of words) {
-        const next = line ? `${line} ${word}` : word;
-        if (next.length > MAX_TEXT) {
-            lines.push(line);
-            line = word;
-        } else {
-            line = next;
+    const wrapText = (text) => {
+        const words = text.split(' ');
+        const wrapped = [];
+        let line = '';
+        for (const word of words) {
+            const next = line ? `${line} ${word}` : word;
+            if (next.length > MAX_TEXT) {
+                wrapped.push(line);
+                line = word;
+            } else {
+                line = next;
+            }
         }
-    }
-    if (line) lines.push(line);
+        if (line) wrapped.push(line);
+        return wrapped;
+    };
 
-    const titleLabel = ' Tip ';
+    const titleLabel = tips.length > 1 ? ' Tips ' : ' Tip ';
     const sideDashes = INNER - titleLabel.length;
     const boxTop    = chalk.dim('  ╭' + '─'.repeat(Math.floor(sideDashes / 2)) + titleLabel + '─'.repeat(Math.ceil(sideDashes / 2)) + '╮');
     const boxBottom = chalk.dim('  ╰' + '─'.repeat(INNER) + '╯');
     const boxEmpty  = chalk.dim('  │' + ' '.repeat(INNER) + '│');
+    const boxSep    = chalk.dim('  ├' + '┄'.repeat(INNER) + '┤');
 
     const boxRow = (text) => {
         const pad = ' '.repeat(Math.max(0, INNER - text.length - PAD));
@@ -235,11 +246,14 @@ function displayTerminalTips({ scanMode, violationCount, options }) {
 
     console.log('');
     console.log(boxTop);
-    console.log(boxEmpty);
-    for (const l of lines) {
-        console.log(boxRow(l));
+    for (let i = 0; i < tips.length; i++) {
+        if (i > 0) console.log(boxSep);
+        console.log(boxEmpty);
+        for (const l of wrapText(tips[i])) {
+            console.log(boxRow(l));
+        }
+        console.log(boxEmpty);
     }
-    console.log(boxEmpty);
     console.log(boxBottom);
     console.log('');
 }
