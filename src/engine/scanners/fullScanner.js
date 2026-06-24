@@ -22,7 +22,7 @@ import { readSourceFile } from '../../utils/fileUtils.js';
 import { getSafeConcurrencyCeiling } from '../../utils/configLoader.js';
 import * as p from '@clack/prompts';
 import { resolveFiles } from '../../utils/fileResolver.js';
-import { MESSAGES, SCAN_MODES, SCAN_TIMEOUT_MS } from '../../constants.js';
+import { MESSAGES, SCAN_MODES, SCAN_TIMEOUT_MS, SLOW_FILE_THRESHOLD_MS } from '../../constants.js';
 import { withTimeout } from '../../utils/timeout.js';
 import { getAxeTags } from '../../utils/axeConfig.js';
 import { processAxeViolations } from '../violations/violationProcessor.js';
@@ -102,7 +102,7 @@ export async function checkPlaywrightAvailable() {
  * @param {string|null} targetPath - Optional specific file/folder to scan
  * @returns {Promise<Array>} - Array of violation objects
  */
-export async function runFullAudit(config, targetPath = null, files = null, silent = false, excludes = []) {
+export async function runFullAudit(config, targetPath = null, files = null, silent = false, excludes = [], onProgress = () => {}) {
     const filesToScan = files ?? await resolveFiles(config, targetPath, excludes);
 
     if (filesToScan.length === 0) {
@@ -144,16 +144,28 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
         const results = await Promise.all(
             filesToScan.map(filePath =>
                 limiter(async () => {
+                    onProgress({ type: 'start', filePath, total: filesToScan.length });
+                    const start = performance.now();
+                    const slowTimer = setTimeout(() => {
+                        onProgress({ type: 'slow', filePath, elapsed: SLOW_FILE_THRESHOLD_MS });
+                    }, SLOW_FILE_THRESHOLD_MS);
                     const signal = { cancelled: false };
                     try {
-                        return await withTimeout(
+                        const result = await withTimeout(
                             scanSingleFile(browser, filePath, config, cssCache, aliases, AxeBuilder, signal),
                             SCAN_TIMEOUT_MS
                         );
+                        const elapsed = performance.now() - start;
+                        clearTimeout(slowTimer);
+                        onProgress({ type: 'done', filePath, elapsed });
+                        return { ...result, filePath, elapsed };
                     } catch (err) {
+                        const elapsed = performance.now() - start;
+                        clearTimeout(slowTimer);
                         signal.cancelled = true;
+                        onProgress({ type: 'done', filePath, elapsed });
                         p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
-                        return { violations: [], warning: null };
+                        return { violations: [], warning: null, filePath, elapsed, timedOut: true };
                     }
                 })
             )
@@ -161,7 +173,13 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
 
         const warnings = [...new Set(results.map(r => r.warning).filter(Boolean))];
         warnings.forEach(w => p.log.warn(w));
-        return { violations: results.flatMap(r => r.violations), warnings };
+
+        const slowFiles = results
+            .filter(r => r.elapsed >= SLOW_FILE_THRESHOLD_MS && !r.timedOut)
+            .sort((a, b) => b.elapsed - a.elapsed)
+            .map(r => ({ file: r.filePath, elapsed: Math.round(r.elapsed) }));
+
+        return { violations: results.flatMap(r => r.violations), warnings, slowFiles };
     } finally {
         await browser.close();
     }
