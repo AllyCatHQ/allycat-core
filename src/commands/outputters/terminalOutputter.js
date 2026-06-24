@@ -183,7 +183,6 @@ function formatViolationInline(violation) {
 
 function displaySlowFileWarning(slowFiles, options) {
     if (!slowFiles || slowFiles.length === 0) return;
-    if (options.ci) return;
 
     const thresholdSecs = (SLOW_FILE_THRESHOLD_MS / 1000).toFixed(0);
 
