@@ -28,6 +28,10 @@ export const SCAN_MODES = {
     FULL: 'full',
 };
 
+// ─── Scan Timeout ────────────────────────────────────────────────────────────
+
+export const SCAN_TIMEOUT_MS = 30_000;
+
 // ─── Accessibility Standards ──────────────────────────────────────────────────
 
 export const STANDARDS = {
