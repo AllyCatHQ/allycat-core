@@ -165,7 +165,7 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
                         signal.cancelled = true;
                         onProgress({ type: 'done', filePath, elapsed });
                         p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
-                        return { violations: [], warning: null, filePath, elapsed };
+                        return { violations: [], warning: null, filePath, elapsed, timedOut: true };
                     }
                 })
             )
@@ -175,7 +175,7 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
         warnings.forEach(w => p.log.warn(w));
 
         const slowFiles = results
-            .filter(r => r.elapsed >= SLOW_FILE_THRESHOLD_MS)
+            .filter(r => r.elapsed >= SLOW_FILE_THRESHOLD_MS && !r.timedOut)
             .sort((a, b) => b.elapsed - a.elapsed)
             .map(r => ({ file: r.filePath, elapsed: Math.round(r.elapsed) }));
 
