@@ -160,11 +160,12 @@ export async function runFullAudit(config, targetPath = null, files = null, sile
                         onProgress({ type: 'done', filePath, elapsed });
                         return { ...result, filePath, elapsed };
                     } catch (err) {
+                        const elapsed = performance.now() - start;
                         clearTimeout(slowTimer);
                         signal.cancelled = true;
-                        onProgress({ type: 'done', filePath, elapsed: 0 });
+                        onProgress({ type: 'done', filePath, elapsed });
                         p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
-                        return { violations: [], warning: null, filePath, elapsed: 0 };
+                        return { violations: [], warning: null, filePath, elapsed };
                     }
                 })
             )

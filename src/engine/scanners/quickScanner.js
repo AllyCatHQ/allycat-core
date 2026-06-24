@@ -73,10 +73,11 @@ export async function runQuickAudit(config, targetPath = null, files = null, sil
                     onProgress({ type: 'done', filePath, elapsed });
                     return { ...result, filePath, elapsed };
                 } catch (err) {
+                    const elapsed = performance.now() - start;
                     clearTimeout(slowTimer);
-                    onProgress({ type: 'done', filePath, elapsed: 0 });
+                    onProgress({ type: 'done', filePath, elapsed });
                     p.log.warn(`⚠ Skipped ${filePath}: ${err.message}`);
-                    return { violations: [], warning: null, filePath, elapsed: 0 };
+                    return { violations: [], warning: null, filePath, elapsed };
                 }
             })
         )
