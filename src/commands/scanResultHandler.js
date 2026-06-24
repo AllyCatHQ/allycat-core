@@ -23,7 +23,7 @@ import { saveBaseline, loadBaseline, classifyViolations, detectRenames, remapBas
  * @param {string} scanMode - 'quick' or 'full'
  * @param {Object} options - CLI options
  */
-export async function handleScanResult(violations, warnings, config, scanMode, options) {
+export async function handleScanResult(violations, warnings, config, scanMode, options, slowFiles = []) {
     // --save-baseline: snapshot current violations and always exit 0
     if (options.saveBaseline) {
         const dest = saveBaseline(violations, config, scanMode);
@@ -62,7 +62,7 @@ export async function handleScanResult(violations, warnings, config, scanMode, o
         }
     }
 
-    await outputResults(violations, config, scanMode, options, warnings, baselineResult);
+    await outputResults(violations, config, scanMode, options, warnings, baselineResult, slowFiles);
 
     // Exit code 4 takes priority over severity gates
     if (baselineResult && baselineResult.newViolations.length > 0) {

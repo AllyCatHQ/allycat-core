@@ -31,7 +31,7 @@ import { outputAiReport } from './reportOutputter.js';
  * @param {Array}       warnings       - Scan warnings
  * @param {Object|null} baselineResult - Classified violations from baselineManager, or null
  */
-export async function outputResults(violations, config, scanMode, options, warnings = [], baselineResult = null) {
+export async function outputResults(violations, config, scanMode, options, warnings = [], baselineResult = null, slowFiles = []) {
     if (options.jsonFile) {
         outputJsonFile(violations, config, scanMode, options.jsonFile, warnings);
     } else if (options.output === 'json') {
@@ -39,9 +39,9 @@ export async function outputResults(violations, config, scanMode, options, warni
     } else if (options.summary) {
         outputSummaryOnly(violations, scanMode, warnings, options.summaryStyle);
     } else if (baselineResult) {
-        outputTerminalWithBaseline(baselineResult, scanMode, options);
+        outputTerminalWithBaseline(baselineResult, scanMode, options, slowFiles);
     } else {
-        outputTerminal(violations, scanMode, options);
+        outputTerminal(violations, scanMode, options, slowFiles);
     }
     // Fix-prompt report: terminal mode only — not in json, json-file, or summary modes
     if (!options.jsonFile && options.output !== 'json' && !options.summary) {

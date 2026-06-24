@@ -150,10 +150,25 @@ export async function executeScan(config, scanMode, targetPath, preResolvedFiles
     const spinner = p.spinner();
     spinner.start(MESSAGES.ANALYZING);
 
+    let completed = 0;
+    let total = 0;
+
+    const onProgress = ({ type, filePath, elapsed, total: fileTotal }) => {
+        if (type === 'start' && fileTotal) total = fileTotal;
+        if (type === 'done') {
+            completed++;
+            spinner.message(`Scanning... (${completed}/${total})`);
+        }
+        if (type === 'slow') {
+            const name = path.basename(filePath);
+            spinner.message(`Scanning... (${completed}/${total}) — slow: ${name} (${(elapsed / 1000).toFixed(1)}s+)`);
+        }
+    };
+
     try {
         const result = scanMode === SCAN_MODES.FULL
-            ? await runFullAudit(config, targetPath, preResolvedFiles, false, excludes)
-            : await runQuickAudit(config, targetPath, preResolvedFiles, false, excludes);
+            ? await runFullAudit(config, targetPath, preResolvedFiles, false, excludes, onProgress)
+            : await runQuickAudit(config, targetPath, preResolvedFiles, false, excludes, onProgress);
 
         spinner.stop(chalk.green(MESSAGES.ANALYSIS_COMPLETE));
         return result;

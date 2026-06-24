@@ -23,11 +23,12 @@ import { pickTip } from '../../utils/tips.js';
  * @param {Array} violations - Scan violations
  * @param {string} scanMode - Current scan mode
  */
-export function outputTerminal(violations, scanMode, options = {}) {
+export function outputTerminal(violations, scanMode, options = {}, slowFiles = []) {
     if (violations.length === 0) {
         console.log('');
         p.outro(chalk.green('✔ No accessibility issues found!'));
         p.outro(chalk.gray.bold('Developer Tool Only. Limited Scope. Manual verification recommended.'));
+        displaySlowFileWarning(slowFiles, options);
         return;
     }
 
@@ -52,6 +53,7 @@ export function outputTerminal(violations, scanMode, options = {}) {
     const summary = formatSummary(violations, scanMode, summaryStyle);
     console.log(summary);
 
+    displaySlowFileWarning(slowFiles, options);
     displayTerminalTips({ scanMode, violationCount: violations.length, options });
 }
 
@@ -65,7 +67,7 @@ export function outputTerminal(violations, scanMode, options = {}) {
  * @param {{ newViolations: Array, baselineViolations: Array, staleCount: number }} baselineResult
  * @param {string} scanMode
  */
-export function outputTerminalWithBaseline({ newViolations, baselineViolations, staleCount }, scanMode, options = {}) {
+export function outputTerminalWithBaseline({ newViolations, baselineViolations, staleCount }, scanMode, options = {}, slowFiles = []) {
     const allViolations = [
         ...newViolations.map(v => ({ ...v, _baselineStatus: 'NEW' })),
         ...baselineViolations.map(v => ({ ...v, _baselineStatus: 'BASELINE' }))
@@ -75,6 +77,7 @@ export function outputTerminalWithBaseline({ newViolations, baselineViolations, 
         console.log('');
         p.outro(chalk.green('✔ No accessibility issues found!'));
         p.outro(chalk.gray.bold('Developer Tool Only. Limited Scope. Manual verification recommended.'));
+        displaySlowFileWarning(slowFiles, options);
         return;
     }
 
@@ -128,6 +131,7 @@ export function outputTerminalWithBaseline({ newViolations, baselineViolations, 
         console.log(chalk.dim(`✓ ${totalSup} baseline violation${totalSup !== 1 ? 's' : ''} suppressed (run --save-baseline to update baseline)`));
     }
 
+    displaySlowFileWarning(slowFiles, options);
     displayTerminalTips({
         scanMode,
         violationCount: newViolations.length + baselineViolations.length,
@@ -171,6 +175,18 @@ function formatViolationInline(violation) {
             return chalk.dim(`   ${label}: ${chalk.yellow(truncateSnippet(displaySnippet, 80))}`);
         })()
     ].filter(Boolean).join('\n');
+}
+
+function displaySlowFileWarning(slowFiles, options) {
+    if (!slowFiles || slowFiles.length === 0) return;
+    if (options.ci) return;
+
+    console.log('');
+    console.log(chalk.yellow(`  ⚠  ${slowFiles.length} file${slowFiles.length !== 1 ? 's' : ''} exceeded ${chalk.bold('5s')} scan time:`));
+    for (const { file, elapsed } of slowFiles) {
+        const secs = (elapsed / 1000).toFixed(1);
+        console.log(chalk.dim(`     ${file}`) + chalk.yellow(` (${secs}s)`));
+    }
 }
 
 /**
