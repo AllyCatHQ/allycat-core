@@ -155,6 +155,14 @@ AllyCat auto-computes the parallel scan limit from your machine's RAM and CPU. T
 | 16 GB | 8 | 32 | 8 |
 | 32 GB | 16 | 64 | 8 |
 
+### Scan timeouts and slow-file reporting
+
+Each file has a **30-second timeout**. If a file exceeds this limit it is automatically skipped with a warning — one stuck file cannot hang the entire scan.
+
+After every scan, files that took **longer than 5 seconds** are listed in a post-scan summary so you can spot bottlenecks and `--exclude` them if needed. Timed-out files are reported separately and do not appear in the slow-file list.
+
+Both thresholds are suppressed in `--ci` mode (consistent with tip suppression).
+
 ### Overriding the default
 
 To set a custom concurrency value, run `allycat init`, enable **advanced options**, and choose a preset or enter a custom value.
