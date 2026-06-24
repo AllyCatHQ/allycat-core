@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Slow-file detection with live progress** — the spinner shows a file counter
+  as files complete. Files exceeding 5 seconds trigger an inline warning on the
+  spinner, and a post-scan summary lists all slow files with their scan times.
 - **Per-file scan timeout** — files that take longer than 30 seconds to scan are
   automatically skipped with a warning, preventing a single file from hanging the
   entire scan.
