@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Config key validation** — unknown or misspelled keys in `allycat.config.json`
+  now emit a warning with a "did you mean" suggestion. Silent misconfiguration
+  caused by typos (e.g. `"selectedStandart"`) is no longer invisible.
 - **Slow-file visibility** — scans now report which files are slowest, so you can
   spot and exclude bottlenecks.
 - **Per-file scan timeout** — individual files can no longer hang the entire scan.

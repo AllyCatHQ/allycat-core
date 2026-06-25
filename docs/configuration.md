@@ -59,7 +59,15 @@ value or run `allycat init` to regenerate it.
   Valid values: wcag-aa, wcag-aaa, wcag-22-aa
 ```
 
-The warning is written to stderr, so it also shows up in CI logs and never corrupts
+If a key name itself is unknown or misspelled, AllyCat warns and suggests the correct name
+when the typo is close:
+
+```
+⚠  allycat.config.json: unknown key "selectedStandart" — did you mean "selectedStandard"?
+⚠  allycat.config.json: unknown key "foo" (ignored)
+```
+
+All warnings are written to stderr, so they show up in CI logs and never corrupt
 `--output json` results on stdout. The scan banner and reports always display the standard
 that actually ran.
 
@@ -114,6 +122,7 @@ Use AllyCat in CI to catch all automatable violations before deployment. Pair wi
 | Config is corrupt / invalid JSON / not a JSON object | Error message printed with file path, falls back to defaults — the file is left untouched |
 | Config is a valid object but missing keys (hand-edited) | Missing keys are filled from built-in defaults at load time; user-set values are kept |
 | Config has an invalid value (e.g. unknown `selectedStandard`) | Warning printed with the valid options; built-in default used for that field; the file is left untouched |
+| Config has an unknown or misspelled key name | Warning printed with a "did you mean" suggestion when the typo is close; the key is ignored and the scan continues |
 | Config file is not writable (read-only / CI sandbox) | Migration applies in-memory with a warning; retried on next run |
 
 Users do not need to do anything manually — migration is automatic and non-destructive.
