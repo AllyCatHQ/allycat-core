@@ -331,6 +331,21 @@ Valid standards are `wcag-aa` (default), `wcag-22-aa`, and `wcag-aaa`.
 
 → See [Configuration Reference](docs/configuration.md) for all fields, valid values, and manual editing details.
 
+### `.allycatignore`
+
+Create a `.allycatignore` file in your project root to permanently exclude paths from every scan. One glob pattern per line, `#` for comments:
+
+```
+# Generated files — do not scan
+src/generated/**
+public/vendor/**
+
+# Legacy code pending refactor
+src/legacy/**/*.html
+```
+
+Loaded automatically on every scan — no flag needed. Commit the file to share exclusions with your team. `.allycatignore` always wins: even if a path is explicitly targeted, this file blocks it. Use `--exclude` for per-run exclusions; both apply simultaneously.
+
 ---
 
 ## Supported File Types
@@ -342,7 +357,7 @@ Valid standards are `wcag-aa` (default), `wcag-22-aa`, and `wcag-aaa`.
 | Vue | `.vue` |
 | Angular | `.component.html`, `.component.ts` |
 
-Ignores `node_modules/`, `dist/`, `build/`, and `allycat-report.html` by default. Use `--exclude` to add more paths.
+Ignores `node_modules/`, `dist/`, `build/`, and `allycat-report.html` by default. Use `--exclude` for per-run exclusions or `.allycatignore` for project-wide permanent exclusions.
 
 ---
 
