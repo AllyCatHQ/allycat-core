@@ -184,3 +184,43 @@ If a manually set value exceeds the safe ceiling at scan time, it is clamped aut
 [allycat] performance.concurrency "40" exceeds safe limit for your system
 in quick mode. Clamped to 24.
 ```
+
+---
+
+## Excluding Files
+
+### `.allycatignore`
+
+Create a `.allycatignore` file in your project root to permanently exclude paths from every scan. One glob pattern per line. Lines starting with `#` are comments.
+
+```
+# .allycatignore
+
+src/generated/**
+public/vendor/**
+**/*.generated.html
+```
+
+The file is loaded automatically on every scan — no flag required. Commit it to share exclusions across your team.
+
+`.allycatignore` always wins: even if a path is explicitly passed as a scan target, a matching pattern blocks it.
+
+#### VS Code syntax highlighting
+
+VS Code does not recognise `.allycatignore` by default and may display it with JavaScript syntax highlighting, making comment lines and path patterns look misleading. Add this to your project's `.vscode/settings.json` to render it the same way as `.gitignore`:
+
+```json
+{
+  "files.associations": {
+    ".allycatignore": "ignore"
+  }
+}
+```
+
+### `--exclude`
+
+Use `--exclude` for per-run exclusions that you do not want to commit. Both sources apply simultaneously when present.
+
+```
+allycat scan --exclude dist/vendor.html
+```
