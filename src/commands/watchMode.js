@@ -24,7 +24,7 @@ import chokidar from 'chokidar';
 import chalk from 'chalk';
 import path from 'path';
 import * as p from '@clack/prompts';
-import { resolveFiles } from '../utils/fileResolver.js';
+import { resolveFiles, loadIgnoreFile } from '../utils/fileResolver.js';
 import { resolveExcludePatterns, matchesExcludePatterns, scopeExcludesTo } from '../utils/pathUtils.js';
 import { SUPPORTED_EXTENSIONS, SCAN_MODES, NEVER_SCAN } from '../constants.js';
 import { runQuickAudit } from '../engine/scanners/quickScanner.js';
@@ -45,7 +45,9 @@ import { clearScreen, printBanner, printBaselineSummary, printStatusLine, printR
  */
 export async function watchMode(target, config, scanMode, options = {}) {
     const excludes = options.exclude || [];
-    const files = await resolveFiles(config, target || null, excludes);
+    const ignoreFilePatterns = loadIgnoreFile();
+    const allExcludes = [...excludes, ...ignoreFilePatterns];
+    const files = await resolveFiles(config, target || null, allExcludes);
 
     if (files.length === 0) {
         p.log.warn('No scannable files found to watch.');
@@ -61,8 +63,8 @@ export async function watchMode(target, config, scanMode, options = {}) {
     const state = new Map(); // Map<normalizedPath, violation[]>
 
     const initialResult = scanMode === SCAN_MODES.FULL
-        ? await runFullAudit(config, target || null, files, false, excludes)
-        : await runQuickAudit(config, target || null, files, false, excludes);
+        ? await runFullAudit(config, target || null, files, false, allExcludes)
+        : await runQuickAudit(config, target || null, files, false, allExcludes);
 
     groupViolationsByFile(state, initialResult.violations);
 
@@ -83,7 +85,7 @@ export async function watchMode(target, config, scanMode, options = {}) {
     });
 
     const debounceTimers = new Map(); // debounce: filepath → timeout handle
-    const scopedExcludes = target ? scopeExcludesTo(excludes, target) : excludes;
+    const scopedExcludes = target ? scopeExcludesTo(allExcludes, target) : allExcludes;
     const excludePatterns = resolveExcludePatterns(scopedExcludes);
 
     const scheduleRescan = (filepath) => {

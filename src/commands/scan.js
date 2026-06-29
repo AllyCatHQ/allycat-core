@@ -11,6 +11,7 @@ import { loadConfig } from '../utils/configLoader.js';
 import { watchMode } from './watchMode.js';
 import { resolveInputFiles, executeScan, preflightScan } from './scanDispatcher.js';
 import { handleScanResult } from './scanResultHandler.js';
+import { loadIgnoreFile } from '../utils/fileResolver.js';
 import { SUPPORTED_EXTENSIONS_DISPLAY, MESSAGES, UI, SCAN_MODES, getStandardLabel } from '../constants.js';
 import { expandUserPath } from '../utils/pathUtils.js';
 
@@ -74,9 +75,11 @@ export async function scanCommand(target = null, options = {}) {
 
     const { targetPath, preResolvedFiles } = input;
 
-    displayScanConfiguration(config, scanMode, options, target);
+    const ignoreFilePatterns = loadIgnoreFile();
 
-    const result = await executeScan(config, scanMode, targetPath, preResolvedFiles, options.exclude || []);
+    displayScanConfiguration(config, scanMode, options, target, ignoreFilePatterns);
+
+    const result = await executeScan(config, scanMode, targetPath, preResolvedFiles, options.exclude || [], ignoreFilePatterns);
     if (result === null) {
         return;
     }
@@ -114,7 +117,7 @@ function determineScanMode(options, config) {
  * @param {Object} options - CLI options
  * @param {string|null} target - Target path
  */
-function displayScanConfiguration(config, scanMode, options, target) {
+function displayScanConfiguration(config, scanMode, options, target, ignoreFilePatterns = []) {
     const modeDisplay = scanMode === SCAN_MODES.FULL
         ? chalk.green(UI.SCAN_LABEL_FULL)
         : chalk.yellow(UI.SCAN_LABEL_QUICK);
@@ -141,12 +144,17 @@ function displayScanConfiguration(config, scanMode, options, target) {
         ? `Excluding: ${chalk.yellow(options.exclude.join(', '))}\n`
         : '';
 
+    const ignoreLine = ignoreFilePatterns.length
+        ? `Ignoring:  ${chalk.yellow(ignoreFilePatterns.join(', '))} ${chalk.dim('(.allycatignore)')}\n`
+        : '';
+
     p.note(
         `Mode:      ${modeDisplay}\n` +
         scopeLine +
         exitGateLine +
         baselineLine +
         excludeLine +
+        ignoreLine +
         `Standard:  ${chalk.bold(getStandardLabel(config.selectedStandard))}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Output:    ${chalk.bold(options.output || 'terminal')}\n` +
