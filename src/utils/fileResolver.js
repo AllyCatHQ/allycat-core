@@ -8,13 +8,29 @@
  */
 
 import { glob } from 'glob';
-import { statSync } from 'fs';
+import { statSync, existsSync, readFileSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
 import { normalizeForGlob, expandUserPath, resolveExcludePatterns, scopeExcludesTo } from './pathUtils.js';
-import { SUPPORTED_EXTENSIONS, NEVER_SCAN } from '../constants.js';
+import { SUPPORTED_EXTENSIONS, NEVER_SCAN, ALLYCATIGNORE_FILE } from '../constants.js';
 
 export { SUPPORTED_EXTENSIONS };
+
+/**
+ * Read and parse .allycatignore from the project root.
+ * Returns an empty array if the file does not exist.
+ *
+ * @param {string} root - Directory to look in (defaults to cwd)
+ * @returns {string[]} - Raw glob patterns, comments and blank lines stripped
+ */
+export function loadIgnoreFile(root = process.cwd()) {
+    const ignorePath = path.join(root, ALLYCATIGNORE_FILE);
+    if (!existsSync(ignorePath)) return [];
+    return readFileSync(ignorePath, 'utf8')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith('#'));
+}
 
 /**
  * Resolve the list of files to scan.
@@ -23,12 +39,16 @@ export { SUPPORTED_EXTENSIONS };
  * @param {string|null} targetPath - Optional specific file or directory
  * @returns {Promise<string[]>} - Resolved file paths
  */
-export async function resolveFiles(config, targetPath, excludes = []) {
+export async function resolveFiles(config, targetPath, excludes = [], ignoreFilePatterns = []) {
     if (targetPath) {
-        return await resolveTargetPath(targetPath, SUPPORTED_EXTENSIONS, excludes);
+        return await resolveTargetPath(targetPath, SUPPORTED_EXTENSIONS, excludes, ignoreFilePatterns);
     }
 
-    const ignore = [...NEVER_SCAN, ...resolveExcludePatterns(excludes)];
+    const ignore = [
+        ...NEVER_SCAN,
+        ...resolveExcludePatterns(excludes),
+        ...resolveExcludePatterns(ignoreFilePatterns),
+    ];
 
     const patterns = SUPPORTED_EXTENSIONS.map(ext => `**/*.${ext}`);
     const files = await glob(patterns, { ignore, dot: false });
@@ -36,7 +56,7 @@ export async function resolveFiles(config, targetPath, excludes = []) {
     return files;
 }
 
-export async function resolveTargetPath(targetPath, extensions, excludes = []) {
+export async function resolveTargetPath(targetPath, extensions, excludes = [], ignoreFilePatterns = []) {
     const stats = statSync(targetPath);
 
     if (stats.isFile()) {
@@ -54,7 +74,11 @@ export async function resolveTargetPath(targetPath, extensions, excludes = []) {
 
         const scopedExcludes = scopeExcludesTo(excludes, targetPath);
 
-        const ignore = [...NEVER_SCAN, ...resolveExcludePatterns(scopedExcludes)];
+        const ignore = [
+            ...NEVER_SCAN,
+            ...resolveExcludePatterns(scopedExcludes),
+            ...resolveExcludePatterns(ignoreFilePatterns),
+        ];
         return await glob(globPattern, { ignore });
     }
 
