@@ -136,11 +136,13 @@ async function resolveChangedFiles(target) {
  * @param {string[]|null} preResolvedFiles - Pre-resolved file list (--changed mode)
  * @returns {Promise<{violations: Array, warnings: Array}|null>} - Scan result or null on error
  */
-export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null, excludes = []) {
+export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null, excludes = [], ignoreFilePatterns = []) {
+    const allExcludes = [...excludes, ...ignoreFilePatterns];
+
     if (preResolvedFiles) {
         preResolvedFiles = filterNeverScan(preResolvedFiles);
-        if (excludes.length) {
-            const patterns = resolveExcludePatterns(excludes);
+        if (allExcludes.length) {
+            const patterns = resolveExcludePatterns(allExcludes);
             preResolvedFiles = preResolvedFiles.filter(
                 f => !matchesExcludePatterns(f.replace(/\\/g, '/'), patterns)
             );
@@ -167,8 +169,8 @@ export async function executeScan(config, scanMode, targetPath, preResolvedFiles
 
     try {
         const result = scanMode === SCAN_MODES.FULL
-            ? await runFullAudit(config, targetPath, preResolvedFiles, false, excludes, onProgress)
-            : await runQuickAudit(config, targetPath, preResolvedFiles, false, excludes, onProgress);
+            ? await runFullAudit(config, targetPath, preResolvedFiles, false, allExcludes, onProgress)
+            : await runQuickAudit(config, targetPath, preResolvedFiles, false, allExcludes, onProgress);
 
         spinner.stop(chalk.green(MESSAGES.ANALYSIS_COMPLETE));
         return result;

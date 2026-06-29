@@ -44,6 +44,9 @@ const TIPS = [
         text: 'Use --exclude <path> to skip folders or files',
     },
     {
+        text: 'Add a .allycatignore file to permanently exclude paths — works like .gitignore',
+    },
+    {
         text: 'Run allycat help examples for real-world usage patterns',
     },
     {

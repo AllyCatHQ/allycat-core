@@ -160,7 +160,7 @@ export function matchesExcludePatterns(filepath, patterns) {
     if (!patterns.length) return false;
     return patterns.some(pat => {
         if (pat.endsWith('/**')) return filepath.startsWith(pat.slice(0, -3) + '/');
-        if (/[*?{}\[\]!]/.test(pat)) return false; // true glob — needs a glob lib; skip
+        if (/[*?{}\[\]!]/.test(pat)) return false; // complex glob (e.g. **/*.min.js) — not matched here; glob() handles these during normal file resolution. --changed and watch-mode pre-filtering silently skip them.
         return filepath === pat || filepath.startsWith(pat + '/');
     });
 }

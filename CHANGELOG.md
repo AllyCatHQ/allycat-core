@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`.allycatignore` support** — create a `.allycatignore` file in your project root to
+  permanently exclude paths from all scans. One glob per line, `#` for comments. Loaded
+  automatically — no flag required. Stacks with `--exclude`. Active patterns are shown
+  in the scan configuration panel. Use `--no-ignore` to bypass the file for a single run.
 - **Config key validation** — unknown or misspelled keys in `allycat.config.json`
   now emit a warning with a "did you mean" suggestion. Silent misconfiguration
   caused by typos (e.g. `"selectedStandart"`) is no longer invisible.
