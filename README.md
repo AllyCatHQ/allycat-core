@@ -344,7 +344,7 @@ public/vendor/**
 src/legacy/**/*.html
 ```
 
-Loaded automatically on every scan — no flag needed. Commit the file to share exclusions with your team. `.allycatignore` always wins: even if a path is explicitly targeted, this file blocks it. Use `--exclude` for per-run exclusions; both apply simultaneously.
+Loaded automatically on every scan — no flag needed. Commit the file to share exclusions with your team. `.allycatignore` always wins: even if a path is explicitly targeted, this file blocks it. Use `--exclude` for per-run exclusions; both apply simultaneously. To bypass `.allycatignore` for a single run without editing the file, use `--no-ignore`.
 
 ---
 
