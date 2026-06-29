@@ -32,7 +32,7 @@ export const SCAN_MODES = {
 // ─── Scan Timeout ────────────────────────────────────────────────────────────
 
 export const SCAN_TIMEOUT_MS = 30_000;
-export const SLOW_FILE_THRESHOLD_MS = 5_000;
+export const SLOW_FILE_THRESHOLD_MS = 10_000;
 
 // ─── Accessibility Standards ──────────────────────────────────────────────────
 
