@@ -45,7 +45,7 @@ import { clearScreen, printBanner, printBaselineSummary, printStatusLine, printR
  */
 export async function watchMode(target, config, scanMode, options = {}) {
     const excludes = options.exclude || [];
-    const ignoreFilePatterns = loadIgnoreFile();
+    const ignoreFilePatterns = options.ignore ? loadIgnoreFile() : [];
     const allExcludes = [...excludes, ...ignoreFilePatterns];
     const files = await resolveFiles(config, target || null, allExcludes);
 

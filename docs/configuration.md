@@ -205,6 +205,12 @@ The file is loaded automatically on every scan — no flag required. Commit it t
 
 `.allycatignore` always wins: even if a path is explicitly passed as a scan target, a matching pattern blocks it.
 
+To bypass `.allycatignore` entirely for a single run without editing the file, use `--no-ignore`:
+
+```
+allycat scan --no-ignore
+```
+
 #### VS Code syntax highlighting
 
 VS Code does not recognise `.allycatignore` by default and may display it with JavaScript syntax highlighting, making comment lines and path patterns look misleading. Add this to your project's `.vscode/settings.json` to render it the same way as `.gitignore`:

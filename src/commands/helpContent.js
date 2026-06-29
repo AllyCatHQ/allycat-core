@@ -213,7 +213,10 @@ ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).j
    your team.
 
    Use ${chalk.cyan('--exclude')} for per-run exclusions, ${chalk.yellow('.allycatignore')} for project-wide ones.
-   Both apply simultaneously.`
+   Both apply simultaneously.
+
+   To bypass ${chalk.yellow('.allycatignore')} entirely for a single run:
+   ${chalk.yellow(`${CLI.SCAN} --no-ignore`)}`
     }
 ];
 
@@ -292,7 +295,8 @@ export const EXAMPLE_SECTIONS = [
             { cmd: `${CLI.SCAN} --exclude "**/*.stories.*"`,               desc: 'Skip all Storybook stories (glob)' },
             { cmd: `${CLI.SCAN} scripts --exclude test.html`,              desc: 'Scan scripts/ — auto-resolves to scripts/test.html' },
             { cmd: `${CLI.SCAN} src/components --exclude fixtures`,        desc: 'Scan src/components — auto-resolves to src/components/fixtures' },
-            { cmd: `${CLI.SCAN} src/test --exclude __mocks__`,             desc: 'Scan src/test — auto-resolves to src/test/__mocks__' }
+            { cmd: `${CLI.SCAN} src/test --exclude __mocks__`,             desc: 'Scan src/test — auto-resolves to src/test/__mocks__' },
+            { cmd: `${CLI.SCAN} --no-ignore`,                              desc: 'Bypass .allycatignore — scan all files regardless of ignore rules' }
         ]
     },
     {

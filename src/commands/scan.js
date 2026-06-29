@@ -75,7 +75,7 @@ export async function scanCommand(target = null, options = {}) {
 
     const { targetPath, preResolvedFiles } = input;
 
-    const ignoreFilePatterns = loadIgnoreFile();
+    const ignoreFilePatterns = options.ignore ? loadIgnoreFile() : [];
 
     displayScanConfiguration(config, scanMode, options, target, ignoreFilePatterns);
 
@@ -141,12 +141,14 @@ function displayScanConfiguration(config, scanMode, options, target, ignoreFileP
             : '';
 
     const excludeLine = options.exclude?.length
-        ? `Excluding: ${chalk.yellow(options.exclude.join(', '))}\n`
+        ? `Excluding: ${chalk.yellow(options.exclude.length === 1 ? options.exclude[0] : `${options.exclude.length} patterns`)}\n`
         : '';
 
-    const ignoreLine = ignoreFilePatterns.length
-        ? `Ignoring:  ${chalk.yellow(ignoreFilePatterns.join(', '))} ${chalk.dim('(.allycatignore)')}\n`
-        : '';
+    const ignoreLine = !options.ignore
+        ? `Ignoring:  ${chalk.dim('.allycatignore bypassed (--no-ignore)')}\n`
+        : ignoreFilePatterns.length
+            ? `Ignoring:  ${chalk.yellow(ignoreFilePatterns.length === 1 ? ignoreFilePatterns[0] : `${ignoreFilePatterns.length} patterns`)}\n`
+            : '';
 
     p.note(
         `Mode:      ${modeDisplay}\n` +
