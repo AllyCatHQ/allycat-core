@@ -119,6 +119,7 @@ export const AI_REPORT_BEHAVIORS = {
     AUTO_OPEN:  'auto-open',
     PATH_ONLY:  'path-only',
     ASK:        'ask',
+    NEVER:      'never',
 };
 
 // ─── Supported File Extensions ────────────────────────────────────────────────
