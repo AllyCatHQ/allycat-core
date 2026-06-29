@@ -168,7 +168,7 @@ AllyCat auto-computes the parallel scan limit from your machine's RAM and CPU. T
 
 Each file has a **30-second timeout**. If a file exceeds this limit it is automatically skipped with a warning — one stuck file cannot hang the entire scan.
 
-After every scan, files that took **longer than 5 seconds** are listed in a post-scan summary so you can spot bottlenecks and `--exclude` them if needed. Timed-out files are reported separately and do not appear in the slow-file list.
+After every scan, files that took **longer than 10 seconds** are listed in a post-scan summary so you can spot bottlenecks and `--exclude` them if needed. Timed-out files are reported separately and do not appear in the slow-file list.
 
 The slow-file summary appears in all modes, including `--ci`, so bottlenecks are visible in CI logs.
 

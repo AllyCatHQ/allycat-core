@@ -55,7 +55,7 @@ console.log('\n  slowFiles collection pipeline\n');
 
 {
     const results = [
-        { filePath: 'slow-a.html', elapsed: 7000, timedOut: false },
+        { filePath: 'slow-a.html', elapsed: 11000, timedOut: false },
         { filePath: 'slow-b.html', elapsed: 12000, timedOut: false },
         { filePath: 'fast.html', elapsed: 100, timedOut: false },
     ];
@@ -75,7 +75,7 @@ console.log('\n  slowFiles collection pipeline\n');
 {
     const results = [
         { filePath: 'timedout.html', elapsed: 30000, timedOut: true },
-        { filePath: 'slow.html', elapsed: 8000, timedOut: false },
+        { filePath: 'slow.html', elapsed: 11000, timedOut: false },
     ];
     const slow = collectSlowFiles(results);
     assert('timed-out files are excluded', slow.length === 1 && slow[0].file === 'slow.html');
@@ -91,10 +91,10 @@ console.log('\n  slowFiles collection pipeline\n');
 
 {
     const results = [
-        { filePath: 'a.html', elapsed: 6000.7, timedOut: false },
+        { filePath: 'a.html', elapsed: 11000.7, timedOut: false },
     ];
     const slow = collectSlowFiles(results);
-    assert('elapsed is rounded to integer', slow[0].elapsed === 6001);
+    assert('elapsed is rounded to integer', slow[0].elapsed === 11001);
 }
 
 // -----------------------------------------------------------------------------
