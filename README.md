@@ -145,7 +145,7 @@ Prompts for:
 - Default scan mode (quick or full)
 - AI-ready fix prompts (enabled/disabled)
 - AI agent preference — Claude, Cursor, ChatGPT, Gemini, Copilot, Other / Skip (shown when AI is enabled)
-- Report delivery — Auto-open in browser / Save and print path / Ask each time (shown when AI is enabled)
+- Report delivery — Auto-open in browser / Save and print path / Ask each time / Never generate (shown when AI is enabled)
 - Concurrency override (optional advanced setting)
 
 > No framework selection needed — the scanner automatically detects `.html`, `.jsx`, `.tsx`, `.vue`, and Angular template files.
