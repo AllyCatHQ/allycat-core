@@ -43,7 +43,7 @@ Running `allycat init` creates `allycat.config.json` in your project root. You c
 | `scan.defaultMode` | `quick`, `full` | Default scan mode when no flag is passed |
 | `ai.enabled` | `true`, `false` | Generate HTML report with AI-ready fix prompts after each scan |
 | `ai.agent` | `claude`, `cursor`, `chatgpt`, `gemini`, `copilot`, `generic` | AI agent used to generate fix prompt style (set by `allycat init`) |
-| `ai.reportBehavior` | `auto-open`, `path-only`, `ask` | How the fix-prompt HTML report is delivered after each scan. `auto-open` = opens in browser automatically, `path-only` = prints relative + absolute path to terminal, `ask` = prompts you each time. Defaults to `path-only` if unset. |
+| `ai.reportBehavior` | `auto-open`, `path-only`, `ask`, `never` | How the fix-prompt HTML report is delivered after each scan. `auto-open` = opens in browser automatically, `path-only` = prints relative + absolute path to terminal, `ask` = prompts you each time, `never` = no file written (use `allycat report` to generate on demand). Defaults to `path-only` if unset. |
 | `performance.concurrency` | integer or `null` | Files scanned in parallel. `null` = auto (computed from RAM + CPU) |
 
 ### Invalid values

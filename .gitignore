@@ -7,6 +7,7 @@ allycat-baseline.json
 .allycatignore
 test-page.html
 test-page2.html
+allycat-graduation-plan.html
 allycat-report*.html
 docs/private/
 CLAUDE.md
