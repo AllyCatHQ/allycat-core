@@ -11,7 +11,7 @@ import { glob } from 'glob';
 import { statSync, existsSync, readFileSync } from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
-import { normalizeForGlob, expandUserPath, resolveExcludePatterns, scopeExcludesTo } from './pathUtils.js';
+import { normalizeForGlob, expandUserPath, resolveExcludePatterns, matchesExcludePatterns, scopeExcludesTo } from './pathUtils.js';
 import { SUPPORTED_EXTENSIONS, NEVER_SCAN, ALLYCATIGNORE_FILE } from '../constants.js';
 
 export { SUPPORTED_EXTENSIONS };
@@ -64,6 +64,14 @@ export async function resolveTargetPath(targetPath, extensions, excludes = [], i
         const isSupported = extensions.some(ext => fileName.endsWith(`.${ext}`));
         if (!isSupported) {
             p.log.warn(`File extension not in supported list: ${extensions.join(', ')}`);
+        }
+        const allExcludes = [...excludes, ...ignoreFilePatterns];
+        if (allExcludes.length) {
+            const patterns = resolveExcludePatterns(allExcludes);
+            if (matchesExcludePatterns(normalizeForGlob(targetPath), patterns)) {
+                p.log.warn(`Skipped: ${targetPath} (blocked by .allycatignore)`);
+                return [];
+            }
         }
         return [targetPath];
     }
