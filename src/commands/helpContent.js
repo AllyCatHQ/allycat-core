@@ -197,6 +197,26 @@ ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).j
    Stacks on top of the built-in ignores (node_modules, dist, build).
    Works in both normal scan and watch mode.
    When scanning a scoped path, --exclude names are automatically resolved relative to that target — no need to type the full path.`
+    },
+    {
+        q: 'How do I permanently exclude paths from every scan?',
+        a: `Create a ${chalk.yellow('.allycatignore')} file in your project root.
+   One glob pattern per line. Lines starting with ${chalk.cyan('#')} are comments.
+
+   ${chalk.dim('# .allycatignore')}
+   ${chalk.yellow('src/generated/**')}
+   ${chalk.yellow('public/vendor/**')}
+   ${chalk.yellow('src/legacy/**/*.html')}
+
+   Patterns are resolved relative to the project root and loaded automatically
+   on every scan — no flag required. Commit the file to share exclusions with
+   your team.
+
+   Use ${chalk.cyan('--exclude')} for per-run exclusions, ${chalk.yellow('.allycatignore')} for project-wide ones.
+   Both apply simultaneously.
+
+   To bypass ${chalk.yellow('.allycatignore')} entirely for a single run:
+   ${chalk.yellow(`${CLI.SCAN} --no-ignore`)}`
     }
 ];
 
@@ -275,7 +295,8 @@ export const EXAMPLE_SECTIONS = [
             { cmd: `${CLI.SCAN} --exclude "**/*.stories.*"`,               desc: 'Skip all Storybook stories (glob)' },
             { cmd: `${CLI.SCAN} scripts --exclude test.html`,              desc: 'Scan scripts/ — auto-resolves to scripts/test.html' },
             { cmd: `${CLI.SCAN} src/components --exclude fixtures`,        desc: 'Scan src/components — auto-resolves to src/components/fixtures' },
-            { cmd: `${CLI.SCAN} src/test --exclude __mocks__`,             desc: 'Scan src/test — auto-resolves to src/test/__mocks__' }
+            { cmd: `${CLI.SCAN} src/test --exclude __mocks__`,             desc: 'Scan src/test — auto-resolves to src/test/__mocks__' },
+            { cmd: `${CLI.SCAN} --no-ignore`,                              desc: 'Bypass .allycatignore — scan all files regardless of ignore rules' }
         ]
     },
     {

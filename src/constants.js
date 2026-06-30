@@ -2,6 +2,7 @@
 
 export const CONFIG_FILE_NAME  = 'allycat.config.json';
 export const BASELINE_FILE     = 'allycat-baseline.json';
+export const ALLYCATIGNORE_FILE = '.allycatignore';
 export const DEFAULT_REPORT_NAME = 'allycat-report';
 
 // Bump ONLY when allycat.config.json schema changes (not on every release).
@@ -27,6 +28,11 @@ export const SCAN_MODES = {
     QUICK: 'quick',
     FULL: 'full',
 };
+
+// ─── Scan Timeout ────────────────────────────────────────────────────────────
+
+export const SCAN_TIMEOUT_MS = 30_000;
+export const SLOW_FILE_THRESHOLD_MS = 10_000;
 
 // ─── Accessibility Standards ──────────────────────────────────────────────────
 
@@ -113,6 +119,7 @@ export const AI_REPORT_BEHAVIORS = {
     AUTO_OPEN:  'auto-open',
     PATH_ONLY:  'path-only',
     ASK:        'ask',
+    NEVER:      'never',
 };
 
 // ─── Supported File Extensions ────────────────────────────────────────────────

@@ -136,11 +136,13 @@ async function resolveChangedFiles(target) {
  * @param {string[]|null} preResolvedFiles - Pre-resolved file list (--changed mode)
  * @returns {Promise<{violations: Array, warnings: Array}|null>} - Scan result or null on error
  */
-export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null, excludes = []) {
+export async function executeScan(config, scanMode, targetPath, preResolvedFiles = null, excludes = [], ignoreFilePatterns = []) {
+    const allExcludes = [...excludes, ...ignoreFilePatterns];
+
     if (preResolvedFiles) {
         preResolvedFiles = filterNeverScan(preResolvedFiles);
-        if (excludes.length) {
-            const patterns = resolveExcludePatterns(excludes);
+        if (allExcludes.length) {
+            const patterns = resolveExcludePatterns(allExcludes);
             preResolvedFiles = preResolvedFiles.filter(
                 f => !matchesExcludePatterns(f.replace(/\\/g, '/'), patterns)
             );
@@ -150,10 +152,25 @@ export async function executeScan(config, scanMode, targetPath, preResolvedFiles
     const spinner = p.spinner();
     spinner.start(MESSAGES.ANALYZING);
 
+    let completed = 0;
+    let total = 0;
+
+    const onProgress = ({ type, filePath, elapsed, total: fileTotal }) => {
+        if (type === 'start' && fileTotal) total = fileTotal;
+        if (type === 'done') {
+            completed++;
+            spinner.message(`Scanning... (${completed}/${total})`);
+        }
+        if (type === 'slow') {
+            const name = path.basename(filePath);
+            spinner.message(`Scanning... (${completed}/${total}) — slow: ${name} (${(elapsed / 1000).toFixed(1)}s+)`);
+        }
+    };
+
     try {
         const result = scanMode === SCAN_MODES.FULL
-            ? await runFullAudit(config, targetPath, preResolvedFiles, false, excludes)
-            : await runQuickAudit(config, targetPath, preResolvedFiles, false, excludes);
+            ? await runFullAudit(config, targetPath, preResolvedFiles, false, allExcludes, onProgress)
+            : await runQuickAudit(config, targetPath, preResolvedFiles, false, allExcludes, onProgress);
 
         spinner.stop(chalk.green(MESSAGES.ANALYSIS_COMPLETE));
         return result;

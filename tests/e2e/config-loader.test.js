@@ -283,6 +283,84 @@ console.log('\n-- e2e: scan with invalid selectedStandard ---------------------'
 }
 
 // -----------------------------------------------------------------------------
+// 8. Config key validation: unknown and misspelled keys warn with suggestions
+// -----------------------------------------------------------------------------
+
+console.log('\n-- config key validation (unknown / misspelled keys) -----------');
+
+{
+    // Top-level typo with a close match → "did you mean" suggestion.
+    const dir = makeConfigDir(JSON.stringify({ selectedStandart: 'wcag-aa' }));
+    const { warnings } = loadCapturingWarnings(dir);
+    assert('top-level typo warns',
+        warnings.some(w => w.includes('"selectedStandart"')));
+    assert('top-level typo suggests correction',
+        warnings.some(w => w.includes('did you mean "selectedStandard"')));
+}
+
+{
+    // Top-level key with no close match → "(ignored)" with no suggestion.
+    const dir = makeConfigDir(JSON.stringify({ foo: true }));
+    const { warnings } = loadCapturingWarnings(dir);
+    assert('far-off top-level key warns as ignored',
+        warnings.some(w => w.includes('"foo" (ignored)')));
+    assert('far-off top-level key has no suggestion',
+        !warnings.some(w => w.includes('did you mean')));
+}
+
+{
+    // Nested typo with a close match → scoped "did you mean" suggestion.
+    const dir = makeConfigDir(JSON.stringify({ scan: { defautMode: 'quick' } }));
+    const { warnings } = loadCapturingWarnings(dir);
+    assert('nested typo warns',
+        warnings.some(w => w.includes('"scan.defautMode"')));
+    assert('nested typo suggests scoped correction',
+        warnings.some(w => w.includes('did you mean "scan.defaultMode"')));
+}
+
+{
+    // Nested key with no close match → "(ignored)" with no suggestion.
+    const dir = makeConfigDir(JSON.stringify({ scan: { zzz: 1 } }));
+    const { warnings } = loadCapturingWarnings(dir);
+    assert('far-off nested key warns as ignored',
+        warnings.some(w => w.includes('"scan.zzz" (ignored)')));
+}
+
+{
+    // Fully valid config → zero key warnings.
+    const dir = makeConfigDir(JSON.stringify({ configVersion: 1, selectedStandard: 'wcag-aa' }));
+    const { warnings } = loadCapturingWarnings(dir);
+    assert('valid config emits no key warnings',
+        !warnings.some(w => w.includes('unknown key')));
+}
+
+{
+    // Full allycat init output — every key it writes must be recognised.
+    const dir = makeConfigDir(JSON.stringify({
+        configVersion:    1,
+        selectedStandard: 'wcag-aa',
+        rules:            { rtl: false, level: 'AA' },
+        scan:             { defaultMode: 'quick' },
+        ai:               { enabled: true, agent: 'claude', reportBehavior: 'path-only' },
+        performance:      { concurrency: null },
+    }));
+    const { warnings } = loadCapturingWarnings(dir);
+    assert('full init-generated config emits no key warnings',
+        !warnings.some(w => w.includes('unknown key')));
+}
+
+{
+    // warnOnce dedup: same bad key loaded twice → warning fires exactly once.
+    const dir = makeConfigDir(JSON.stringify({ uniqueDeduplicationKey: true }));
+    const { warnings: first } = loadCapturingWarnings(dir);
+    assert('first load of unknown key warns',
+        first.some(w => w.includes('"uniqueDeduplicationKey"')));
+    const { warnings: second } = loadCapturingWarnings(dir);
+    assert('second load of same key does not re-warn', second.length === 0,
+        second.join(' | '));
+}
+
+// -----------------------------------------------------------------------------
 // Summary
 // -----------------------------------------------------------------------------
 

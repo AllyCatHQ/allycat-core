@@ -11,6 +11,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { CONFIG_FILE_NAME, SCAN_MODES, STANDARDS, AI_REPORT_BEHAVIORS, CURRENT_CONFIG_VERSION } from '../constants.js';
+import { closestKey } from './stringUtils.js';
 
 // -----------------------------------------------------------------------------
 // Default Configuration
@@ -29,6 +30,19 @@ export const DEFAULT_CONFIG = {
     rules:            { rtl: false },
     ai:               { enabled: false },
     performance:      { concurrency: null },
+};
+
+// Single source of truth for all valid allycat.config.json keys.
+// Update here whenever DEFAULT_CONFIG or sanitizeConfig() gains or loses a key.
+const TOP_LEVEL_KEYS = new Set([
+    'selectedStandard', 'scan', 'rules', 'ai', 'performance', 'configVersion'
+]);
+
+const NESTED_KEYS = {
+    scan:        new Set(['defaultMode']),
+    rules:       new Set(['rtl', 'level']),
+    ai:          new Set(['enabled', 'reportBehavior', 'agent']),
+    performance: new Set(['concurrency']),
 };
 
 // -----------------------------------------------------------------------------
@@ -245,6 +259,39 @@ function migrateConfig(raw) {
 // -----------------------------------------------------------------------------
 
 /**
+ * Warn about unknown top-level and one-level-deep keys in a raw config object.
+ * Provides "did you mean" suggestions for common typos.
+ * Uses warnOnce so repeated loads (watch mode, dual-load in scan.js) never duplicate.
+ *
+ * @param {Object} raw - Raw parsed JSON config (pre-migration, pre-sanitization)
+ */
+export function validateConfigKeys(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
+
+    for (const key of Object.keys(raw)) {
+        if (TOP_LEVEL_KEYS.has(key)) continue;
+        const suggestion = closestKey(key, TOP_LEVEL_KEYS);
+        warnOnce(suggestion
+            ? `⚠  allycat.config.json: unknown key "${key}" — did you mean "${suggestion}"?`
+            : `⚠  allycat.config.json: unknown key "${key}" (ignored)`
+        );
+    }
+
+    for (const [section, knownKeys] of Object.entries(NESTED_KEYS)) {
+        const nested = raw[section];
+        if (!nested || typeof nested !== 'object' || Array.isArray(nested)) continue;
+        for (const key of Object.keys(nested)) {
+            if (knownKeys.has(key)) continue;
+            const suggestion = closestKey(key, knownKeys);
+            warnOnce(suggestion
+                ? `⚠  allycat.config.json: unknown key "${section}.${key}" — did you mean "${section}.${suggestion}"?`
+                : `⚠  allycat.config.json: unknown key "${section}.${key}" (ignored)`
+            );
+        }
+    }
+}
+
+/**
  * Load configuration from the project root.
  * Falls back to DEFAULT_CONFIG if no file exists — never returns null.
  * Sanitizes and clamps all numeric values before returning.
@@ -280,6 +327,8 @@ export function loadConfig(scanMode = SCAN_MODES.QUICK) {
         );
         return { ...sanitizeConfig(DEFAULT_CONFIG, scanMode), configIsDefault: true };
     }
+
+    validateConfigKeys(raw);
 
     const version = raw.configVersion ?? 0;
 

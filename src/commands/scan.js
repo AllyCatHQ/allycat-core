@@ -11,6 +11,7 @@ import { loadConfig } from '../utils/configLoader.js';
 import { watchMode } from './watchMode.js';
 import { resolveInputFiles, executeScan, preflightScan } from './scanDispatcher.js';
 import { handleScanResult } from './scanResultHandler.js';
+import { loadIgnoreFile } from '../utils/fileResolver.js';
 import { SUPPORTED_EXTENSIONS_DISPLAY, MESSAGES, UI, SCAN_MODES, getStandardLabel } from '../constants.js';
 import { expandUserPath } from '../utils/pathUtils.js';
 
@@ -74,15 +75,17 @@ export async function scanCommand(target = null, options = {}) {
 
     const { targetPath, preResolvedFiles } = input;
 
-    displayScanConfiguration(config, scanMode, options, target);
+    const ignoreFilePatterns = options.ignore ? loadIgnoreFile() : [];
 
-    const result = await executeScan(config, scanMode, targetPath, preResolvedFiles, options.exclude || []);
+    displayScanConfiguration(config, scanMode, options, target, ignoreFilePatterns);
+
+    const result = await executeScan(config, scanMode, targetPath, preResolvedFiles, options.exclude || [], ignoreFilePatterns);
     if (result === null) {
         return;
     }
 
-    const { violations, warnings } = result;
-    await handleScanResult(violations, warnings, config, scanMode, options);
+    const { violations, warnings, slowFiles } = result;
+    await handleScanResult(violations, warnings, config, scanMode, options, slowFiles);
 }
 
 // -----------------------------------------------------------------------------
@@ -114,7 +117,7 @@ function determineScanMode(options, config) {
  * @param {Object} options - CLI options
  * @param {string|null} target - Target path
  */
-function displayScanConfiguration(config, scanMode, options, target) {
+function displayScanConfiguration(config, scanMode, options, target, ignoreFilePatterns = []) {
     const modeDisplay = scanMode === SCAN_MODES.FULL
         ? chalk.green(UI.SCAN_LABEL_FULL)
         : chalk.yellow(UI.SCAN_LABEL_QUICK);
@@ -138,8 +141,14 @@ function displayScanConfiguration(config, scanMode, options, target) {
             : '';
 
     const excludeLine = options.exclude?.length
-        ? `Excluding: ${chalk.yellow(options.exclude.join(', '))}\n`
+        ? `Excluding: ${chalk.yellow(options.exclude.length === 1 ? options.exclude[0] : `${options.exclude.length} patterns`)}\n`
         : '';
+
+    const ignoreLine = !options.ignore
+        ? `Ignoring:  ${chalk.dim('.allycatignore bypassed (--no-ignore)')}\n`
+        : ignoreFilePatterns.length
+            ? `Ignoring:  ${chalk.yellow(ignoreFilePatterns.length === 1 ? ignoreFilePatterns[0] : `${ignoreFilePatterns.length} patterns`)}\n`
+            : '';
 
     p.note(
         `Mode:      ${modeDisplay}\n` +
@@ -147,6 +156,7 @@ function displayScanConfiguration(config, scanMode, options, target) {
         exitGateLine +
         baselineLine +
         excludeLine +
+        ignoreLine +
         `Standard:  ${chalk.bold(getStandardLabel(config.selectedStandard))}\n` +
         `RTL Check: ${config.rules.rtl ? chalk.green('Enabled') : chalk.dim('Disabled')}\n` +
         `Output:    ${chalk.bold(options.output || 'terminal')}\n` +

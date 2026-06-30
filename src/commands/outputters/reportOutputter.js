@@ -2,7 +2,7 @@
  * Report Outputter
  *
  * Generates the fix-prompt HTML report and delivers it according to the
- * user's configured reportBehavior: auto-open, path-only, or ask each time.
+ * user's configured reportBehavior: auto-open, path-only, ask, or never.
  * Only active in terminal output mode when ai.enabled is true in config.
  *
  * @module commands/outputters/reportOutputter
@@ -25,6 +25,8 @@ import { AI_REPORT_BEHAVIORS } from '../../constants.js';
 export async function outputAiReport(violations, config, scanMode) {
     try {
         const behavior = config?.ai?.reportBehavior ?? AI_REPORT_BEHAVIORS.PATH_ONLY;
+
+        if (behavior === AI_REPORT_BEHAVIORS.NEVER) return;
 
         if (behavior === AI_REPORT_BEHAVIORS.ASK) {
             // Non-interactive environments (CI, piped stdin) can't prompt — fall back to path-only

@@ -130,6 +130,7 @@ export async function initCommand() {
                         { value: AI_REPORT_BEHAVIORS.ASK,       label: '❓ Ask me each time',       hint: 'Prompts you after each scan with violations' },
                         { value: AI_REPORT_BEHAVIORS.AUTO_OPEN, label: '🌐 Auto-open in browser',  hint: 'Opens automatically after every scan with violations' },
                         { value: AI_REPORT_BEHAVIORS.PATH_ONLY, label: '📄 Save and print path',    hint: 'Saves the file and prints a clickable path in the terminal' },
+                        { value: AI_REPORT_BEHAVIORS.NEVER,     label: '🚫 Never generate',         hint: 'No file written — use allycat report to generate on demand' },
                     ],
                 }),
             advancedOpts: () => p.confirm({

@@ -96,6 +96,7 @@ program
   .option('--no-tips', 'Hide the tip box after scan results')
   .option('--summary-style <style>', 'Summary display style: default, compact', 'default')
   .option('--exclude <path>', 'Exclude a path or glob from the scan (repeatable)', collectRepeatable, [])
+  .option('--no-ignore', 'Bypass .allycatignore — scan all files regardless of ignore rules')
   .option('--ci', 'CI preset: compact output + fail on critical (activates --no-snippet, --no-help, --no-wcag, --no-selector, --no-affected, --no-tips, --summary-style compact, --fail-on-critical)')
   .addHelpText('after', `
 ${chalk.bold('Arguments:')}
@@ -140,6 +141,7 @@ ${chalk.bold('Examples:')}
   ${chalk.cyan('$')} allycat scan --exclude tests --exclude src/generated ${chalk.dim('# Skip multiple paths')}
   ${chalk.cyan('$')} allycat scan --exclude "**/*.stories.*" ${chalk.dim('# Skip all Storybook stories')}
   ${chalk.cyan('$')} allycat scan --watch --exclude tests  ${chalk.dim('# Watch mode — excluded paths ignored on every rescan too')}
+  ${chalk.cyan('$')} allycat scan --no-ignore             ${chalk.dim('# Bypass .allycatignore and scan everything')}
 `)
   .action((target, options) => scanCommand(target, options));
 
