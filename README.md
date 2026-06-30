@@ -16,11 +16,11 @@
 
 > **A source-first accessibility scanner** — catch WCAG violations in your editor, on every save, or as a CI gate that blocks inaccessible code from shipping.
 >
-> While 1 in 4 adults has a disability and web accessibility lawsuits are on the rise, most violations still make it into production. *Why?* There's no real check in the development process. *AllyCat closes that gap.*
+> Most accessibility violations reach production because the tools that catch them need a deployed app — too late, and disconnected from the code that caused them. *AllyCat closes that gap.*
 >
-> *Built for the way developers actually work — source files, pre-commit hooks, and CI pipelines. No deployed app required.*
+> *Built for how developers actually work: a **CLI** that scans your **source files**, jumps to the **exact line** with a clickable link, and feeds your **AI agent** ready-made fix prompts that **save tokens**. Runs in **pre-commit hooks and CI** — **no deployed app required.***
 
-**Supports**: JSX/TSX, Vue, Angular, HTML • RTL support (experimental) • Quick (JSDOM) & Full (Playwright) modes
+**Supports**: JSX/TSX, Vue, Angular, HTML • RTL (experimental) • Contrast checking
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/AllyCatHQ/allycat-core/main/assets/demo-optimize.gif" alt="AllyCat scanning files — violations found and reported" />
