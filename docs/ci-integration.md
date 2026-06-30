@@ -8,6 +8,7 @@ This guide covers exit codes, baseline workflows, CI mode, and pipeline examples
 - [Violation Baseline](#violation-baseline)
 - [CI Mode](#ci-mode)
 - [JSON Report Structure](#json-report-structure)
+- [Pre-commit Hook](#pre-commit-hook)
 - [Pipeline Examples](#pipeline-examples)
 
 ---
@@ -189,6 +190,25 @@ When using `--json-file` or `-o json`, the output follows this shape:
     }
   ]
 }
+```
+
+---
+
+## Pre-commit Hook
+
+Run a gate locally before each commit so violations never reach the remote. Git checks only the hook's exit code, so any `--fail-on-*` gate works:
+
+```sh
+#!/bin/sh
+# Save as .git/hooks/pre-commit and run: chmod +x .git/hooks/pre-commit
+allycat scan --fail-on-critical
+```
+
+To check only what changed instead of the whole project, add `--changed`. It runs `git diff --name-only HEAD~1` against your working tree, so it picks up your staged and unstaged changes to tracked files — note that it also re-scans the previous commit's files and requires at least two commits to exist. See [`changed-flag.md`](technical/changed-flag.md) for full behavior.
+
+```sh
+#!/bin/sh
+allycat scan --changed --fail-on-critical
 ```
 
 ---

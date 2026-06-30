@@ -2,8 +2,8 @@
 
 ## What It Does
 
-`--changed` (`-c`) limits the scan to files that were modified in the **last git commit** (`HEAD~1..HEAD`).
-It is designed for pre-commit hooks and CI pipelines where you only want to check what changed, not the entire project.
+`--changed` (`-c`) limits the scan to files reported by `git diff --name-only HEAD~1` — the difference between the commit *before* `HEAD` and your current **working tree**. Because the comparison is against the working tree (a single ref, not a `HEAD~1..HEAD` range), it includes the last commit's files **plus** anything currently staged or modified in tracked files.
+It is designed for fast feedback where you only want to check what changed, not the entire project — useful for CI / PR pipelines and pre-commit hooks alike. Note that it requires at least two commits to exist.
 
 ## Git Requirement
 
@@ -28,8 +28,9 @@ After `git diff --name-only HEAD~1` runs, the file list is filtered:
 
 ## What Is NOT Included
 
-- **Unstaged edits** — files edited but not committed are not picked up
-- **Staged-only changes** — only committed diffs are considered (the `HEAD~1` reference means "since the commit before HEAD")
+- **Untracked files** — brand-new files that have never been `git add`-ed do not appear in `git diff` output
+- **Deleted files** — present in the diff but removed from disk; dropped by the existence check (step 2 above)
+- **Before the second commit** — `HEAD~1` does not resolve until at least two commits exist (see [Error Cases](#error-cases))
 
 ## Scoping by Directory
 

@@ -188,7 +188,7 @@ allycat scan --summary  # counts only — no per-violation details
 allycat scan --watch              # re-scans on every save
 allycat scan --watch --existing   # include pre-existing violations on startup
 allycat scan --watch --summary    # watch mode with counts only
-allycat scan --changed            # git-changed files only (great for pre-commit hooks)
+allycat scan --changed            # git-changed files only (great for CI / PR pipelines)
 allycat scan --changed ./src      # scoped to a directory
 
 # After each save, watch mode shows a delta:
@@ -237,7 +237,7 @@ allycat scan --json-file                              # auto-named: allycat-repo
 allycat scan --json-file ci-report                    # custom name: ci-report.json
 ```
 
-→ See [CI/CD Integration Guide](docs/ci-integration.md) for exit code reference, baseline workflow, and full pipeline examples.
+→ See [CI/CD Integration Guide](docs/ci-integration.md) for exit code reference, baseline workflow, pre-commit hooks, and full pipeline examples.
 
 #### Output
 
