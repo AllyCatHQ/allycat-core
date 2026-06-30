@@ -7,23 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.8.0] - 2026-06-30
 
 ### Added
-- **`ai.reportBehavior: never`** — users who want fix prompts enabled but don't want an HTML file
-  written on every scan can now choose "Never generate" in `allycat init`. The report can still
-  be generated on demand with `allycat report`.
 - **`.allycatignore` support** — create a `.allycatignore` file in your project root to
   permanently exclude paths from all scans. One glob per line, `#` for comments. Loaded
   automatically — no flag required. Stacks with `--exclude`. Active patterns are shown
   in the scan configuration panel. Use `--no-ignore` to bypass the file for a single run.
-- **Config key validation** — unknown or misspelled keys in `allycat.config.json`
-  now emit a warning with a "did you mean" suggestion. Silent misconfiguration
-  caused by typos (e.g. `"selectedStandart"`) is no longer invisible.
+- **`ai.reportBehavior: never`** — users who want fix prompts enabled but don't want an HTML file
+  written on every scan can now choose "Never generate" in `allycat init`. The report can still
+  be generated on demand with `allycat report`.
 - **Slow-file visibility** — scans now report which files are slowest, so you can
   spot and exclude bottlenecks.
 - **Per-file scan timeout** — individual files can no longer hang the entire scan.
   Stuck files are automatically skipped with a warning.
+- **Config key validation** — unknown or misspelled keys in `allycat.config.json`
+  now emit a warning with a "did you mean" suggestion. Silent misconfiguration
+  caused by typos (e.g. `"selectedStandart"`) is no longer invisible
 
 ---
 
