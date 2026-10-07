@@ -1,51 +1,80 @@
-import chalk from 'chalk';
-import { writeFileSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { openInTerminal } from '../utils/terminalOpener.js';
+/**
+ * Fix Command
+ *
+ * Hands the violations saved by the last `allycat scan` to Claude Code,
+ * opened in a new terminal tab. Never scans and never modifies the saved file.
+ *
+ * Test hook: ALLYCAT_NO_LAUNCH=1 prints the command instead of opening a terminal.
+ */
 
-// Hardcoded dummy violation — just to prove the prompt-passing mechanism works.
-// Stage 2 will replace this with violations loaded from the stored scan.
-const DUMMY_VIOLATION = {
-    file: 'src/components/Button.tsx',
-    ruleId: 'image-alt',
-    impact: 'critical',
-    line: 14,
-    snippet: '<img src={icon} className="submit-icon" />',
-    description: 'Image elements must have an alt attribute describing the image.',
-};
+import chalk from 'chalk';
+import path from 'path';
+import { openInTerminal } from '../utils/terminalOpener.js';
+import { getLastScanPath, loadLastScan } from '../utils/lastScanStore.js';
+
+// -----------------------------------------------------------------------------
+// Public API
+// -----------------------------------------------------------------------------
 
 export function fixCommand() {
-    const v = DUMMY_VIOLATION;
+    const scanPath = getLastScanPath();
+    const result = loadLastScan();
 
-    const prompt = `\
-# AllyCat — Accessibility Fix Request
+    if (result.status === 'missing') {
+        console.log(chalk.yellow('No scan found. Run `allycat scan` first.'));
+        process.exitCode = 1;
+        return;
+    }
 
-## File
-${v.file}
+    if (result.status === 'invalid') {
+        console.log(chalk.yellow('The saved scan could not be read. Run `allycat scan` again.'));
+        process.exitCode = 1;
+        return;
+    }
 
-## Violation
-- Rule: ${v.ruleId}
-- Impact: ${v.impact}
-- Line: ${v.line}
-- Description: ${v.description}
+    const { cwd, violations } = result.data;
 
-## Code
-\`\`\`
-${v.snippet}
-\`\`\`
+    if (!isSameFolder(cwd, process.cwd())) {
+        console.log(chalk.yellow(`Last scan was for \`${cwd}\`, not this folder. Run \`allycat scan\` here first.`));
+        process.exitCode = 1;
+        return;
+    }
 
-## Task
-Fix the accessibility violation above in ${v.file}.
-Make targeted edits only — do not rewrite the file.
-`;
+    if (violations.length === 0) {
+        console.log(chalk.green('Nothing to fix — the last scan found no violations.'));
+        return;
+    }
 
-    const tmpPath = join(tmpdir(), `allycat-fix-${Date.now()}.md`);
-    writeFileSync(tmpPath, prompt, 'utf8');
+    const count = `${violations.length} violation${violations.length !== 1 ? 's' : ''}`;
+    const prompt = `Read ${scanPath} — it lists ${count} found by AllyCat, an accessibility scanner. ` +
+        `Make targeted fixes to each violation it lists. Do not rewrite whole files.`;
 
-    console.log(chalk.dim('Violation to fix:'));
-    console.log(`  ${chalk.red(v.impact.toUpperCase())} ${chalk.cyan(v.ruleId)} — ${v.file}:${v.line}`);
-    console.log(chalk.dim('\nOpening Claude Code in a new terminal tab...'));
+    console.log(chalk.dim(`Handing ${count} to Claude Code...`));
 
-    openInTerminal('claude', [`Read ${tmpPath} and follow the instructions inside it.`], { cwd: process.cwd() });
+    if (process.env.ALLYCAT_NO_LAUNCH === '1') {
+        console.log(`claude "${prompt}"`);
+        return;
+    }
+
+    openInTerminal('claude', [prompt], { cwd: process.cwd() });
+}
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+/**
+ * Compare two folder paths. On Windows, case and slash direction are ignored.
+ *
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean}
+ */
+function isSameFolder(a, b) {
+    if (typeof a !== 'string') return false;
+    const normalize = (p) => {
+        const resolved = path.resolve(p);
+        return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+    };
+    return normalize(a) === normalize(b);
 }

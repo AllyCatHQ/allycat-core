@@ -1,7 +1,8 @@
 /**
  * Scan Result Handler
  *
- * Owns the post-scan phase: output routing and CI exit code enforcement.
+ * Owns the post-scan phase: saving the last scan for `allycat fix`,
+ * output routing and CI exit code enforcement.
  * Called once a scan completes successfully.
  */
 
@@ -9,6 +10,7 @@ import * as p from '@clack/prompts';
 import chalk from 'chalk';
 import { outputResults } from './outputters/index.js';
 import { saveBaseline, loadBaseline, classifyViolations, detectRenames, remapBaselineFiles } from '../utils/baselineManager.js';
+import { saveLastScan } from '../utils/lastScanStore.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -24,6 +26,13 @@ import { saveBaseline, loadBaseline, classifyViolations, detectRenames, remapBas
  * @param {Object} options - CLI options
  */
 export async function handleScanResult(violations, warnings, config, scanMode, options, slowFiles = []) {
+    // Save for `allycat fix` first — before any early return or process.exit below
+    try {
+        saveLastScan(violations);
+    } catch {
+        // Best-effort: failing to save must never break the scan
+    }
+
     // --save-baseline: snapshot current violations and always exit 0
     if (options.saveBaseline) {
         const dest = saveBaseline(violations, config, scanMode);
