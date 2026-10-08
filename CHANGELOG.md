@@ -7,15 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
-
-### Changed
-- **`allycat fix`** uses a single Claude Code session for most projects, which uses far
-  fewer tokens. Only very large fixes are split up, and into a set number of parts.
-
----
-
-## [1.9.0] - 2026-10-08
+## [1.9.0] - 2026-10-09
 
 ### Added
 - **`allycat fix`** — run `allycat scan`, then `allycat fix` to open Claude Code in a new
@@ -24,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Shows how old the scan is, and warns when files have changed since then.
   - Stops with a clear message if there is no scan yet, the scan was run in a different
     folder, or Claude Code is not installed.
-  - Large fixes are split up so Claude Code can work through them in parallel.
+  - Most projects are fixed in a single Claude Code session, which keeps token use low.
+    Only very large fixes are split up so Claude Code can work through them in parallel.
   - If a new terminal can't be opened, prints the command to run yourself.
 - **`fix` in help** — `allycat help`, `allycat help faq`, and `allycat help examples` now
   cover the scan → fix workflow.
