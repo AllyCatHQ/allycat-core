@@ -10,6 +10,7 @@ import { reportCommand } from './commands/report.js';
 import { feedbackCommand } from './commands/feedback.js';
 import { repoCommand } from './commands/repo.js';
 import { updateCommand } from './commands/update.js';
+import { fixCommand } from './commands/fix.js';
 import { UI, APP_LINKS, SUPPORTED_EXTENSIONS_DISPLAY } from './constants.js';
 
 const require = createRequire(import.meta.url);
@@ -165,6 +166,13 @@ program
   .command('repo')
   .description('Open the AllyCat GitHub repository in your browser')
   .action(repoCommand);
+
+// Fix Command
+
+program
+  .command('fix')
+  .description('Open Claude Code to fix the violations from your last scan')
+  .action(fixCommand);
 
 // Update Command
 

@@ -91,7 +91,7 @@ console.log('\n-- config panel output ------------------------------------------
 }
 {
     const { output } = run([FIXTURES, '--exclude', 'tests/fixtures', '--exclude', 'src/commands', '--summary']);
-    assertContains('multiple excludes: both paths shown in panel', output, 'tests/fixtures, src/commands');
+    assertContains('multiple excludes: pattern count shown in panel', output, '2 patterns');
 }
 
 // -- Exit code: folder-level exclusion ----------------------------------------
