@@ -43,10 +43,9 @@ export function formatScanAge(scannedAtMs, nowMs = Date.now()) {
  * @returns {number}
  */
 export function countChangedFiles(violations, cwd, scannedAtMs) {
-    const files = new Set(violations.map(v => v.file).filter(f => typeof f === 'string'));
     let changed = 0;
 
-    for (const file of files) {
+    for (const file of distinctFiles(violations)) {
         try {
             if (fs.statSync(path.resolve(cwd, file)).mtimeMs > scannedAtMs) changed++;
         } catch (err) {
@@ -54,6 +53,16 @@ export function countChangedFiles(violations, cwd, scannedAtMs) {
         }
     }
     return changed;
+}
+
+/**
+ * Distinct file paths the violations point at. Violations without a string `file` are skipped.
+ *
+ * @param {Array<{file?: string}>} violations
+ * @returns {Set<string>}
+ */
+export function distinctFiles(violations) {
+    return new Set(violations.map(v => v.file).filter(f => typeof f === 'string'));
 }
 
 /**
