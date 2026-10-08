@@ -51,10 +51,13 @@ const SHELL_ENV = { ...process.env, PATH: ORIGINAL_PATH };
 const quoting = await tryImport('../../src/utils/shellQuote.js');
 const opener  = await tryImport('../../src/utils/terminalOpener.js');
 
-const POSIX_PROMPT = 'Read /var/folders/xy/T/allycat-last-scan.json — it lists 5 violations found by AllyCat, ' +
-    'an accessibility scanner. Make targeted fixes to each violation it lists. Do not rewrite whole files.';
-const WIN_PROMPT = 'Read C:\\Users\\a\\AppData\\Local\\Temp\\allycat-last-scan.json — it lists 5 violations found by AllyCat, ' +
-    'an accessibility scanner. Make targeted fixes to each violation it lists. Do not rewrite whole files.';
+/** The large-scan prompt `allycat fix` ships: base text plus the subagent hint. */
+const PROMPT_TAIL = 'an accessibility scanner. Make targeted fixes to each violation it lists. Do not rewrite whole files. ' +
+    'Violations of the same rule usually need the same fix, so work rule by rule. ' +
+    'This touches 12 files. Split the work by file across subagents, never giving the same file to two agents. ' +
+    'Before starting, tell the user how you split it.';
+const POSIX_PROMPT = 'Read /var/folders/xy/T/allycat-last-scan.json — it lists 60 violations found by AllyCat, ' + PROMPT_TAIL;
+const WIN_PROMPT = 'Read C:\\Users\\a\\AppData\\Local\\Temp\\allycat-last-scan.json — it lists 60 violations found by AllyCat, ' + PROMPT_TAIL;
 
 /** Everything a shell might try to interpret. */
 const NASTY = `x; rm -rf ~ $(whoami) \`id\` $HOME "dq" it's \\ & | > < * ? ! # ‘smart’ — end`;
