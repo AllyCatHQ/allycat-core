@@ -43,6 +43,21 @@ jobs:
       - name: E2E — concurrency ceilings
         run: node tests/e2e/concurrency.test.js
 
+      - name: E2E — fix command
+        run: node tests/e2e/fix.test.js
+
+      - name: E2E — fix scan freshness
+        run: node tests/e2e/fix-freshness.test.js
+
+      - name: E2E — fix Claude Code install check
+        run: node tests/e2e/fix-claude-check.test.js
+
+      - name: E2E — fix terminal opener
+        run: node tests/e2e/terminal-opener.test.js
+
+      - name: E2E — fix prompt size
+        run: node tests/e2e/fix-prompt-size.test.js
+
       - name: Path separator test (Windows only)
         if: matrix.os == 'windows-latest'
         shell: pwsh
