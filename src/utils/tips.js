@@ -71,6 +71,11 @@ const TIPS = [
         when: ({ violationCount }) => violationCount > 0,
     },
     {
+        text: 'Using Claude Code? Run allycat fix to fix every violation from your last scan',
+        when: ({ violationCount }) => violationCount > 0,
+        weight: 2,
+    },
+    {
         text: 'Use --fail-on-serious or --fail-on-any for stricter CI gates',
     },
     {
