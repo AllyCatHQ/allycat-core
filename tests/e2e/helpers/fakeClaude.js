@@ -16,10 +16,11 @@ import path from 'path';
  * Create a fresh folder holding a fake `claude` executable:
  * `claude.cmd` on Windows, an executable `claude` script elsewhere.
  *
+ * @param {string} [prefix='allycat-fake-claude-'] - Folder name prefix (e.g. one with spaces)
  * @returns {string} The folder, ready to put on PATH
  */
-export function makeFakeClaudeDir() {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'allycat-fake-claude-'));
+export function makeFakeClaudeDir(prefix = 'allycat-fake-claude-') {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
     if (process.platform === 'win32') {
         fs.writeFileSync(path.join(dir, 'claude.cmd'), '@echo off\r\n', 'utf8');
     } else {

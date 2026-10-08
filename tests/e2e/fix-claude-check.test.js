@@ -18,6 +18,11 @@
  * Not automated: E2 "folder that can't be read" — not portable to set up; verify manually.
  * Windows: E1 "PATH unset" checks isCommandOnPath directly — Node always re-adds PATH to child processes there.
  *
+ * Quoted PATH entries (spec Q1–Q4, QE1–QE4, P1, F1):
+ *   - Windows: every `"` is removed from a PATH entry before it's searched; an entry
+ *     that's empty after that is skipped. macOS/Linux: entries are used as written.
+ *   - Q1–Q4, QE1–QE4 and P1 call isCommandOnPath directly; F1 runs `allycat fix` end to end.
+ *
  * Usage:
  *   node tests/e2e/fix-claude-check.test.js
  */
@@ -86,6 +91,17 @@ function runFix(tmpDir, pathValue) {
 }
 
 const joinPath = (...dirs) => dirs.join(path.delimiter);
+
+const quote = (dir) => `"${dir}"`;
+
+/** isCommandOnPath('claude') for an exact PATH value; 'threw' if it throws. */
+function lookup(pathValue) {
+    try {
+        return isCommandOnPath('claude', { PATH: pathValue });
+    } catch (err) {
+        return `threw: ${err.message}`;
+    }
+}
 
 /** True when `fix` launched (or, under ALLYCAT_NO_LAUNCH, would launch) claude. */
 function launchedClaude(output) {
@@ -287,6 +303,73 @@ if (!IS_WINDOWS) {
         writeValidScan(tmp);
         expectMissing(runFix(tmp, bin));
     }
+}
+
+// =============================================================================
+// Quoted PATH entries
+// =============================================================================
+
+function assertLookup(label, pathValue, expected) {
+    const actual = lookup(pathValue);
+    assert(label, actual === expected, `PATH=${pathValue} → expected ${expected}, got ${actual}`);
+}
+
+if (IS_WINDOWS) {
+    console.log('\n-- Q1 (Windows): quoted entry → found -----------------------------');
+    assertLookup('"<dir>" finds claude', quote(makeFakeClaudeDir()), true);
+
+    console.log('\n-- Q2 (Windows): quoted entry with spaces → found -----------------');
+    {
+        const dir = makeFakeClaudeDir('allycat fake claude ');
+        assertLookup('"<dir with spaces>" finds claude', quote(dir), true);
+    }
+
+    console.log('\n-- Q3 (Windows): quoted entry between plain ones → found ----------');
+    {
+        const missingA = path.join(os.tmpdir(), 'allycat-no-such-a-' + Date.now());
+        const missingB = path.join(os.tmpdir(), 'allycat-no-such-b-' + Date.now());
+        assertLookup('plain;"<dir>";plain finds claude',
+            joinPath(missingA, quote(makeFakeClaudeDir()), missingB), true);
+    }
+
+    console.log('\n-- Q4 (Windows): plain entry unchanged → found --------------------');
+    assertLookup('<dir> with no quotes finds claude', makeFakeClaudeDir(), true);
+
+    console.log('\n-- QE1 (Windows): only one quote → found, no throw ----------------');
+    assertLookup('"<dir> (leading quote only) finds claude', `"${makeFakeClaudeDir()}`, true);
+    assertLookup('<dir>" (trailing quote only) finds claude', `${makeFakeClaudeDir()}"`, true);
+
+    console.log('\n-- QE2 (Windows): "" entry is skipped ------------------------------');
+    assertLookup('"";<dir> finds claude', joinPath('""', makeFakeClaudeDir()), true);
+    {
+        // "" must not be read as the current folder: run from a folder that holds claude
+        const savedCwd = process.cwd();
+        process.chdir(makeFakeClaudeDir());
+        try {
+            assertLookup('"" alone does not search the current folder', '""', false);
+        } finally {
+            process.chdir(savedCwd);
+        }
+    }
+
+    console.log('\n-- QE3 (Windows): quoted folder that does not exist → not found ---');
+    {
+        const missing = path.join(os.tmpdir(), 'allycat-no-such-folder-' + Date.now());
+        assertLookup('"<missing dir>" returns false', quote(missing), false);
+    }
+
+    console.log('\n-- QE4 (Windows): quoted folder without claude → not found --------');
+    assertLookup('"<empty dir>" returns false', quote(makeEmptyBinDir()), false);
+
+    console.log('\n-- F1 (Windows): fix with claude in a quoted PATH entry ----------');
+    {
+        const tmp = makeTmpDir();
+        writeValidScan(tmp);
+        expectInstalled(runFix(tmp, quote(makeFakeClaudeDir())));
+    }
+} else {
+    console.log('\n-- P1 (POSIX): quotes are kept → not found -----------------------');
+    assertLookup('"<dir>" is a different folder, returns false', quote(makeFakeClaudeDir()), false);
 }
 
 // -----------------------------------------------------------------------------
