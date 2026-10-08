@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.0] - 2026-10-08
+
+### Added
+- **`allycat fix`** — run `allycat scan`, then `allycat fix` to open Claude Code in a new
+  terminal with every violation from the scan, ready to fix. Requires
+  [Claude Code](https://code.claude.com/docs/en/quickstart) to be installed.
+  - Shows how old the scan is, and warns when files have changed since then.
+  - Stops with a clear message if there is no scan yet, the scan was run in a different
+    folder, or Claude Code is not installed.
+  - Large fixes are split up so Claude Code can work through them in parallel.
+  - If a new terminal can't be opened, prints the command to run yourself.
+- **`fix` in help** — `allycat help`, `allycat help faq`, and `allycat help examples` now
+  cover the scan → fix workflow.
+
+---
+
 ## [1.8.0] - 2026-06-30
 
 ### Added
