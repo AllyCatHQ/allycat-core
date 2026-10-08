@@ -12,6 +12,9 @@ import path from 'path';
 import { openInTerminal } from '../utils/terminalOpener.js';
 import { getLastScanPath, loadLastScan } from '../utils/lastScanStore.js';
 import { formatScanAge, countChangedFiles, plural } from '../utils/scanFreshness.js';
+import { isCommandOnPath } from '../utils/commandOnPath.js';
+
+const CLAUDE_INSTALL_URL = 'https://code.claude.com/docs/en/quickstart#step-1-install-claude-code';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -43,6 +46,12 @@ export function fixCommand() {
 
     if (violations.length === 0) {
         console.log(chalk.green('Nothing to fix — the last scan found no violations.'));
+        return;
+    }
+
+    if (!isCommandOnPath('claude')) {
+        console.log(chalk.yellow(`Claude Code is not installed. Install it from ${CLAUDE_INSTALL_URL}, then run \`allycat fix\` again.`));
+        process.exitCode = 1;
         return;
     }
 
