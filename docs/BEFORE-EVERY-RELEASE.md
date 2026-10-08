@@ -124,7 +124,7 @@ npx license-checker --production --summary
 - [ ] No GPL, LGPL, AGPL, or unknown-license packages in `dependencies` (devDependencies are excluded from the bundle)
 - [ ] If any copyleft license appears — stop and investigate before publishing
 
-> **Known acceptable outlier:** `@babel/template` reports MPL-2.0 (Mozilla Public License). MPL-2.0 is **not** copyleft in the GPL sense — it only requires you to open-source modifications to the MPL-2.0 files themselves, not your entire project. Using and distributing it as an npm dependency is fully permitted. This entry is expected and does not block publish.
+> **Known acceptable outliers:** `axe-core` and `@axe-core/playwright` report MPL-2.0 (Mozilla Public License). MPL-2.0 is **not** copyleft in the GPL sense — it only requires you to open-source modifications to the MPL-2.0 files themselves, not your entire project. Using and distributing it as an npm dependency is fully permitted. This entry is expected and does not block publish.
 
 ### Code ownership
 - [ ] No copy-pasted code blocks from Stack Overflow, blog posts, or other projects without attribution
@@ -137,7 +137,7 @@ npx license-checker --production --summary
 - [ ] No fonts, icons, or images embedded in `src/engine/report/generator.js` that require attribution
 
 ### axe-core
-- [ ] axe-core is MIT licensed — no special attribution required beyond listing it as a dependency
+- [ ] axe-core is MPL-2.0 licensed — we use it unmodified, so no special attribution required beyond listing it as a dependency
 - [ ] `axe-core` and `@axe-core/playwright` are in `dependencies` / `devDependencies` correctly
 
 ---
