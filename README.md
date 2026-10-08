@@ -51,6 +51,7 @@
 - 🔤 **RTL support** (experimental) — opt-in for Hebrew, Arabic, Persian interfaces
 - 📍 **Exact line numbers** with clickable VS Code links
 - 📋 **AI-ready fix prompts** — copy-paste into your AI agent (no API key, no data sent)
+- 🤖 **One-command fixes** — `allycat fix` hands your last scan to Claude Code
 - ⚙️ **Watch mode** with NEW/FIXED delta detection
 - 🛠️ **CI-ready** — baselines, exit codes, and `--changed` git scoping
 - 📊 Terminal, JSON, and self-contained HTML outputs
@@ -291,6 +292,24 @@ allycat report
 ```
 
 Run `allycat scan` first. Prints a message and exits if no report file is found.
+
+---
+
+### `allycat fix`
+
+Opens [Claude Code](https://code.claude.com/docs/en/quickstart) in a new terminal and hands it every violation from your last scan to fix.
+
+```bash
+allycat scan      # 1. Find the violations
+allycat fix       # 2. Claude Code fixes them
+```
+
+- **Requires Claude Code.** If it isn't installed, `fix` tells you where to get it.
+- **Uses your last scan.** `fix` doesn't scan again, so run `allycat scan` in the same folder first.
+- **Warns about stale results.** If files changed since the scan, `fix` tells you and still continues.
+- **Never gets stuck.** If a new terminal can't be opened, `fix` prints the command to run yourself.
+
+`fix` runs Claude Code with your own account and settings. Review its changes before committing, then run `allycat scan` again to confirm.
 
 ---
 
