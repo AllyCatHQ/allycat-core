@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`fix` in help** — `allycat help`, `allycat help faq`, and `allycat help examples` now
   cover the scan → fix workflow.
 
+### Security
+- Updated dependencies to address published security advisories.
+
 ---
 
 ## [1.8.0] - 2026-06-30
