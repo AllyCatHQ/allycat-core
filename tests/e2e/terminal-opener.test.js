@@ -163,7 +163,9 @@ function runSh(script, args = []) {
 /** A folder whose name is hard to quote. Windows forbids " < > | ? * : in names. */
 function makeNastyDir() {
     const name = IS_WINDOWS ? "allycat it's $x ;a ‘b’ `c [1] &" : "allycat it's $x ;a \"b\" `c [1] &";
-    const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'allycat-term-')), name);
+    // Resolve symlinks (macOS: /var -> /private/var) so the shell's $PWD matches.
+    const base = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'allycat-term-')));
+    const dir = path.join(base, name);
     fs.mkdirSync(dir);
     return dir;
 }
