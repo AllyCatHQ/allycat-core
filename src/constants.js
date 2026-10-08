@@ -37,10 +37,15 @@ export const SLOW_FILE_THRESHOLD_MS = 10_000;
 
 // ─── Fix Prompt ──────────────────────────────────────────────────────────────
 
-/** When `allycat fix` asks Claude to split the work across subagents (by file). */
+/**
+ * How much one Claude session handles before `allycat fix` splits the work
+ * across subagents (by file). Each agent costs ~50K tokens just to start, so
+ * one session is cheaper until its context would grow past ~100–120K.
+ */
 export const FIX_SUBAGENT = {
-    MIN_FILES:      10,
-    MIN_VIOLATIONS: 50,   // only counts when there are at least 2 files to split
+    MAX_VIOLATIONS_PER_AGENT: 300,
+    MAX_FILES_PER_AGENT:      50,
+    MAX_AGENTS:               8,
 };
 
 // ─── Accessibility Standards ──────────────────────────────────────────────────

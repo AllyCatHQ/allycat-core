@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+- **`allycat fix`** uses a single Claude Code session for most projects, which uses far
+  fewer tokens. Only very large fixes are split up, and into a set number of parts.
+
+---
+
 ## [1.9.0] - 2026-10-08
 
 ### Added
