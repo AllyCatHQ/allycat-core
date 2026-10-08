@@ -167,11 +167,11 @@ program
   .description('Open the AllyCat GitHub repository in your browser')
   .action(repoCommand);
 
-// Fix Command (Phase 3a)
+// Fix Command
 
 program
   .command('fix')
-  .description('[WIP] Open Claude Code to fix accessibility violations in a file')
+  .description('Open Claude Code to fix the violations from your last scan')
   .action(fixCommand);
 
 // Update Command

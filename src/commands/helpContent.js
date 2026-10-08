@@ -217,6 +217,21 @@ ${SUPPORTED_FRAMEWORKS.map(f => `   • ${f.extensions.map(e => chalk.cyan(e)).j
 
    To bypass ${chalk.yellow('.allycatignore')} entirely for a single run:
    ${chalk.yellow(`${CLI.SCAN} --no-ignore`)}`
+    },
+    {
+        q: 'How do I fix violations with Claude Code?',
+        a: `Scan first, then hand the results to Claude Code:
+
+   ${chalk.yellow(CLI.SCAN)}
+   ${chalk.yellow(CLI.FIX)}
+
+   ${chalk.cyan(CLI.FIX)} opens Claude Code in a new terminal with every violation
+   from your last scan. It does not scan again, so run ${chalk.cyan(CLI.SCAN)} in the
+   same folder first.
+
+   • Requires ${chalk.bold('Claude Code')} to be installed
+   • Warns if files changed since the scan (Claude re-reads them before editing)
+   • If a terminal can't be opened, prints the command to run yourself`
     }
 ];
 
@@ -305,6 +320,13 @@ export const EXAMPLE_SECTIONS = [
             { cmd: `${CLI.SCAN} ./src --full --summary`, desc: 'Full scan, summary only' },
             { cmd: `${CLI.SCAN} ./src -f --json-file`,   desc: 'Full scan to JSON file' },
             { cmd: `${CLI.SCAN} ./src -q -s`,            desc: 'Quick scan, summary (fastest)' }
+        ]
+    },
+    {
+        title: 'Fixing with Claude Code',
+        examples: [
+            { cmd: `${CLI.SCAN} && ${CLI.FIX}`, desc: 'Scan, then open Claude Code to fix every violation found' },
+            { cmd: `${CLI.SCAN} ./src && ${CLI.FIX}`, desc: 'Fix only what was found in ./src' }
         ]
     },
     {

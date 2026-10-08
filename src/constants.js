@@ -17,6 +17,7 @@ export const CLI = {
     INIT:     'allycat init',
     HELP:     'allycat help',
     REPORT:   'allycat report',
+    FIX:      'allycat fix',
     FEEDBACK: 'allycat feedback',
     REPO:     'allycat repo',
     UPDATE:   'allycat update',
