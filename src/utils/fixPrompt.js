@@ -24,15 +24,25 @@ export function buildFixPrompt(scanPath, violations) {
         'an accessibility scanner. Make targeted fixes to each violation it lists. Do not rewrite whole files. ' +
         'Violations of the same rule usually need the same fix, so work rule by rule.';
 
-    if (!isLargeScan(fileCount, violations.length)) return prompt;
+    const agents = agentCount(fileCount, violations.length);
+    if (agents === 0) return prompt;
 
     return `${prompt} This touches ${plural(fileCount, 'file')}. ` +
-        'Split the work by file across subagents, never giving the same file to two agents. ' +
-        'Before starting, tell the user how you split it.';
+        `Split the work by file across exactly ${agents} subagents, never giving the same file to two agents. ` +
+        'Ask each agent to report back in 5 lines or fewer.';
 }
 
-/** Big enough to split, and more than one file to split by. */
-function isLargeScan(fileCount, violationCount) {
-    return fileCount >= FIX_SUBAGENT.MIN_FILES ||
-        (violationCount >= FIX_SUBAGENT.MIN_VIOLATIONS && fileCount >= 2);
+/**
+ * How many subagents the scan needs: 0 while one session can handle it,
+ * otherwise enough that none exceeds the per-agent limits (capped, and never
+ * more agents than files).
+ */
+function agentCount(fileCount, violationCount) {
+    const { MAX_VIOLATIONS_PER_AGENT, MAX_FILES_PER_AGENT, MAX_AGENTS } = FIX_SUBAGENT;
+    const needed = Math.max(
+        Math.ceil(violationCount / MAX_VIOLATIONS_PER_AGENT),
+        Math.ceil(fileCount / MAX_FILES_PER_AGENT),
+    );
+    if (needed <= 1 || fileCount < 2) return 0;
+    return Math.min(needed, MAX_AGENTS, fileCount);
 }
