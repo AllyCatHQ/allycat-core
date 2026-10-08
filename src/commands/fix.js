@@ -11,6 +11,7 @@ import chalk from 'chalk';
 import path from 'path';
 import { openInTerminal } from '../utils/terminalOpener.js';
 import { getLastScanPath, loadLastScan } from '../utils/lastScanStore.js';
+import { formatScanAge, countChangedFiles, plural } from '../utils/scanFreshness.js';
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -45,7 +46,9 @@ export function fixCommand() {
         return;
     }
 
-    const count = `${violations.length} violation${violations.length !== 1 ? 's' : ''}`;
+    const count = plural(violations.length, 'violation');
+    printFreshness(result.data, count);
+
     const prompt = `Read ${scanPath} — it lists ${count} found by AllyCat, an accessibility scanner. ` +
         `Make targeted fixes to each violation it lists. Do not rewrite whole files.`;
 
@@ -62,6 +65,29 @@ export function fixCommand() {
 // -----------------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------------
+
+/**
+ * Print the scan's age and, if any scanned files changed since, a warning.
+ * Warn only — never blocks. An unknown scan time skips the file check.
+ *
+ * @param {{ scannedAt?: string, cwd: string, violations: Array }} data - Saved scan
+ * @param {string} count - e.g. "5 violations"
+ */
+function printFreshness({ scannedAt, cwd, violations }, count) {
+    const scannedAtMs = Date.parse(scannedAt);
+
+    if (Number.isNaN(scannedAtMs)) {
+        console.log(`Using scan from an unknown time (${count})`);
+        return;
+    }
+
+    console.log(`Using scan from ${formatScanAge(scannedAtMs)} (${count})`);
+
+    const changed = countChangedFiles(violations, cwd, scannedAtMs);
+    if (changed > 0) {
+        console.log(chalk.yellow(`⚠ ${plural(changed, 'file')} changed since this scan. Run \`allycat scan\` to refresh.`));
+    }
+}
 
 /**
  * Compare two folder paths. On Windows, case and slash direction are ignored.
