@@ -21,14 +21,15 @@ const DEFAULT_PATHEXT = '.COM;.EXE;.BAT;.CMD';
  * True when `name` is an executable in one of the PATH folders.
  * Windows: `name` + any PATHEXT extension (a bare `name` doesn't count).
  * Elsewhere: a regular file named `name` with execute permission.
- * Missing, empty or unreadable PATH entries are skipped.
+ * Missing, empty or unreadable PATH entries are skipped. Windows: quotes
+ * around an entry are ignored.
  *
  * @param {string} name - Command name, e.g. 'claude'
  * @param {NodeJS.ProcessEnv} [env=process.env]
  * @returns {boolean}
  */
 export function isCommandOnPath(name, env = process.env) {
-    const dirs = (env.PATH || '').split(path.delimiter).filter(Boolean);
+    const dirs = (env.PATH || '').split(path.delimiter).map(unquote).filter(Boolean);
     const candidates = candidateNames(name, env);
     return dirs.some(dir => candidates.some(file => isExecutableFile(path.join(dir, file))));
 }
@@ -36,6 +37,18 @@ export function isCommandOnPath(name, env = process.env) {
 // -----------------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------------
+
+/**
+ * PATH entry with its quotes removed on Windows, where `"C:\Tools"` is valid
+ * and `"` can't appear in a real path. Elsewhere `"` is a legal file name
+ * character, so the entry is returned as written.
+ *
+ * @param {string} entry
+ * @returns {string}
+ */
+function unquote(entry) {
+    return process.platform === 'win32' ? entry.replaceAll('"', '') : entry;
+}
 
 /**
  * File names that count as `name` on this platform.
