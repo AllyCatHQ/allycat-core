@@ -23,6 +23,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { makeFakeClaudeDir } from './helpers/fakeClaude.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -31,6 +32,8 @@ const CLI       = path.join(ROOT, 'src', 'index.js');
 const CRITICAL  = 'tests/fixtures/fail-on-critical.html';   // 1 critical violation
 const CLEAN     = 'tests/fixtures/fail-on-clean.html';      // 0 violations
 const SCAN_FILE = 'allycat-last-scan.json';
+
+const FAKE_CLAUDE_DIR = makeFakeClaudeDir();
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -45,9 +48,10 @@ function run(command, args, tmpDir, cwd = ROOT) {
     const env = { ...process.env, ALLYCAT_TMPDIR: tmpDir, ALLYCAT_NO_LAUNCH: '1', NO_COLOR: '1' };
     // Safety net: strip PATH for `fix` so no real terminal can ever open,
     // even if ALLYCAT_NO_LAUNCH is ignored (e.g. before it's implemented).
+    // A fake `claude` stays on PATH so the "Claude installed" check passes.
     if (command === 'fix') {
         delete env.Path;
-        env.PATH = path.dirname(process.execPath);
+        env.PATH = [FAKE_CLAUDE_DIR, path.dirname(process.execPath)].join(path.delimiter);
     }
     const result = spawnSync(process.execPath, [CLI, command, ...args], { encoding: 'utf8', cwd, env });
     return { status: result.status, output: (result.stdout || '') + (result.stderr || '') };
