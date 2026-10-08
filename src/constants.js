@@ -34,6 +34,14 @@ export const SCAN_MODES = {
 export const SCAN_TIMEOUT_MS = 30_000;
 export const SLOW_FILE_THRESHOLD_MS = 10_000;
 
+// ─── Fix Prompt ──────────────────────────────────────────────────────────────
+
+/** When `allycat fix` asks Claude to split the work across subagents (by file). */
+export const FIX_SUBAGENT = {
+    MIN_FILES:      10,
+    MIN_VIOLATIONS: 50,   // only counts when there are at least 2 files to split
+};
+
 // ─── Accessibility Standards ──────────────────────────────────────────────────
 
 export const STANDARDS = {

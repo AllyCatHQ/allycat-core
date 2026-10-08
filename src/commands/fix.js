@@ -13,6 +13,7 @@ import { openInTerminal } from '../utils/terminalOpener.js';
 import { getLastScanPath, loadLastScan } from '../utils/lastScanStore.js';
 import { formatScanAge, countChangedFiles, plural } from '../utils/scanFreshness.js';
 import { isCommandOnPath } from '../utils/commandOnPath.js';
+import { buildFixPrompt } from '../utils/fixPrompt.js';
 
 const CLAUDE_INSTALL_URL = 'https://code.claude.com/docs/en/quickstart#step-1-install-claude-code';
 
@@ -58,8 +59,7 @@ export function fixCommand() {
     const count = plural(violations.length, 'violation');
     printFreshness(result.data, count);
 
-    const prompt = `Read ${scanPath} — it lists ${count} found by AllyCat, an accessibility scanner. ` +
-        `Make targeted fixes to each violation it lists. Do not rewrite whole files.`;
+    const prompt = buildFixPrompt(scanPath, violations);
 
     console.log(chalk.dim(`Handing ${count} to Claude Code...`));
 
