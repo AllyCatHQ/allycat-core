@@ -1,6 +1,6 @@
 # CI/CD Workflows
 
-AllyCat Core uses four GitHub Actions workflows. This document explains what each one does, when it runs, what it checks, and how to maintain it.
+AllyCat Core uses five GitHub Actions workflows. This document explains what each one does, when it runs, what it checks, and how to maintain it.
 
 ---
 
@@ -9,7 +9,7 @@ AllyCat Core uses four GitHub Actions workflows. This document explains what eac
 | Workflow | File | Triggers | Purpose |
 |---|---|---|---|
 | CI | `ci.yml` | push to `main`, any PR | Lint + security audit + E2E tests |
-| Cross-Platform | `cross-platform.yml` | push to `main`, any PR | Smoke tests across OS × Node matrix |
+| Cross-Platform | `cross-platform.yml` | push to `main` or `develop`, any PR | Smoke tests across OS × Node matrix |
 | Dependency Review | `dependency-review.yml` | PRs only | Blocks PRs that add vulnerable dependencies |
 | CodeQL | `codeql.yml` | push to `main`, any PR, weekly | Static security analysis |
 | Publish | `publish.yml` | GitHub Release published | Gated automated publish to npm |
@@ -39,7 +39,7 @@ AllyCat Core uses four GitHub Actions workflows. This document explains what eac
 ## 2. Cross-Platform (`cross-platform.yml`)
 
 **Runs on:** ubuntu-latest, macos-latest, windows-latest × Node 20, Node 22
-**Triggers:** every push to `main` and every pull request
+**Triggers:** every push to `main` or `develop`, and every pull request
 
 ### Steps
 1. `node src/index.js --version` — confirms the CLI boots on all platforms
@@ -105,7 +105,7 @@ Runs GitHub's static analysis engine against `src/`. Uses the `security-and-qual
 3. Pack validation — runs `npm pack --dry-run` and fails if test fixtures or dotfiles appear in the output (guards against accidental file leaks or missing `src/` files)
 4. `node tests/e2e/thresholds.test.js`
 5. `node tests/e2e/concurrency.test.js`
-6. `npm publish --access public` — publishes to the npm registry
+6. `npm publish --access public --provenance` — publishes to the npm registry with a provenance attestation
 
 ### What fails it
 - Any CVE in the dependency tree
@@ -115,46 +115,35 @@ Runs GitHub's static analysis engine against `src/`. Uses the `security-and-qual
 ### Authentication method
 This workflow uses **npm Trusted Publishing (OIDC)** — no token or secret is stored anywhere.
 GitHub and npm authenticate via a cryptographic handshake at publish time.
-See [Setting up Trusted Publishing](#setting-up-trusted-publishing-one-time) below.
+See [Trusted Publishing setup](#trusted-publishing-setup) below.
 
 ---
 
-## Setting up Trusted Publishing (one-time)
+## Trusted Publishing setup
 
-> **Status: PENDING** — waiting for the first manual publish to complete.
-> Trusted Publishing requires the package to already exist on npm before it can be configured.
+> **Status: DONE** (configured 2026-06-03, commit `d263bf9`). Every release since 1.2.0 has published this way.
+> Nothing needs renewing. Only revisit this section if the npm settings or `publish.yml` change.
 
-### Step 0 — First publish (manual, one time only)
+### npm side (package settings)
 
-The package does not exist on npm yet. Before Trusted Publishing can be configured,
-the package must be created by publishing manually from the terminal:
+npmjs.com → `allycat` package → **Settings** → **Trusted Publisher**, configured as:
+- **Publisher:** GitHub Actions
+- **Repository owner:** `AllyCatHQ`
+- **Repository name:** `allycat-core`
+- **Workflow filename:** `publish.yml`
+- **Environment:** blank
 
-```bash
-npm login
-npm publish --access public
-```
+### Workflow side (`publish.yml`)
 
-Do this once. After this, all future releases go through the automated workflow.
+These parts must stay in place, or npm will reject the publish:
+- `permissions: id-token: write`, which lets the job request the short-lived OIDC identity from GitHub
+- `registry-url: 'https://registry.npmjs.org'` on `actions/setup-node`
+- `npm publish --access public --provenance`, with **no** `NODE_AUTH_TOKEN` env var
+- The file name `publish.yml`, because npm matches on it. Renaming the file means updating the npm setting too.
 
-### Step 1 — Configure Trusted Publishing on npm
+### Leftover tokens
 
-1. Go to [npmjs.com](https://www.npmjs.com) and log in
-2. Navigate to the `allycat` package page → **Settings** → **Publishing** → **Trusted Publishers**
-3. Click **Add a publisher** and fill in:
-   - **Publisher:** GitHub Actions
-   - **Repository owner:** `AllyCatHQ`
-   - **Repository name:** `allycat-core`
-   - **Workflow filename:** `publish.yml`
-   - **Environment:** leave blank
-4. Save
-
-### Step 2 — Update publish.yml
-
-After Step 1, update `.github/workflows/publish.yml` to use OIDC instead of a token:
-- Add `id-token: write` to the job permissions
-- Replace the `NODE_AUTH_TOKEN` env var with the `--provenance` flag on `npm publish`
-
-Ask Claude to do this update — it's a small change to the workflow file.
+The `NPM_TOKEN` GitHub secret and the npm granular token `github-actions-publish` belong to the old token-based setup. The workflow does not reference them. npm's "token expiring" emails about them can be ignored, and both can be deleted.
 
 ### Why Trusted Publishing instead of a token?
 

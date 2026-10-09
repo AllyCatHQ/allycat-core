@@ -19,24 +19,33 @@ When you publish a GitHub Release, the workflow:
 
 **You never run `npm publish` manually.**
 
+**Only "Publish release" triggers it.** Pushing commits or pushing a tag on its own does not publish anything to npm.
+
 ---
 
-## NPM_TOKEN Secret — Maintenance
+## How npm Knows the Workflow Is Allowed (No Token)
 
-The workflow authenticates to npm using the `NPM_TOKEN` secret stored in GitHub.
+Publishing uses **npm Trusted Publishing**. There is **no npm token and no GitHub secret** involved, so there is nothing to rotate or renew.
 
-**Location:** GitHub repo → Settings → Secrets and variables → Actions → `NPM_TOKEN`
+Think of it as a guest list at a door:
 
-**Important:** This token must be set to **No expiration** when generated on npmjs.com.
-If it expires, the publish step will fail silently with a 401 error.
+- **The guest list (set up once on npm):** the `allycat` package settings on npmjs.com list one trusted publisher: GitHub Actions, repo `AllyCatHQ/allycat-core`, workflow `publish.yml`.
+- **The ID badge (created fresh every run):** when the workflow reaches `npm publish`, GitHub hands npm a short-lived ID that says "I am `publish.yml` from `AllyCatHQ/allycat-core`". The `id-token: write` permission in `publish.yml` is what lets the workflow ask for it.
+- **The check:** npm compares the ID to the guest list. If they match, the version goes live.
 
-**How to rotate the token (if ever needed):**
-1. Go to npmjs.com → Avatar → Access Tokens → Generate New Token (Granular)
-2. Set **Packages and scopes → Permissions** to `Read and write`
-3. Set **Expiration** to `No expiration`
-4. Copy the token
-5. Go to GitHub repo → Settings → Secrets and variables → Actions
-6. Delete the old `NPM_TOKEN` → Add new secret with the same name
+Because of `--provenance`, each published version also shows a **Provenance** badge on npmjs.com that links back to the exact GitHub Actions run that built it.
+
+### "Your access token is expiring" emails from npm
+
+You can ignore them for releases. npm warns about every token on the account, whether or not anything uses it. Old tokens such as `github-actions-publish`, and the `NPM_TOKEN` secret in GitHub, date from before the switch to Trusted Publishing (June 2026). The workflow does not read them, and both can be deleted.
+
+### If the "Publish" step fails with 401 / 403 / ENEEDAUTH
+
+1. Check npmjs.com → `allycat` → **Settings** → **Trusted Publisher** still lists `AllyCatHQ/allycat-core` / `publish.yml`
+2. Check the workflow file is still named `publish.yml` (renaming it breaks the match)
+3. Check `publish.yml` still has `id-token: write` under `permissions`
+
+Full setup details: [`docs/technical/ci-cd-workflows.md`](technical/ci-cd-workflows.md#trusted-publishing-setup)
 
 ---
 
