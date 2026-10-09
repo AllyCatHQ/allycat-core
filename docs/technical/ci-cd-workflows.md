@@ -45,11 +45,13 @@ AllyCat Core uses five GitHub Actions workflows. This document explains what eac
 1. `node src/index.js --version` — confirms the CLI boots on all platforms
 2. Quick scan of `tests/fixtures/sample.html` — confirms scan pipeline works
 3. Full E2E threshold + concurrency tests
-4. (Ubuntu only) Playwright install + CSS delivery E2E test
+4. `allycat fix` E2E tests — `fix`, `fix-freshness`, `fix-claude-check`, `terminal-opener`, `fix-prompt-size`
+5. (Ubuntu only) Playwright install + CSS delivery E2E test
 
 ### What fails it
 - CLI crashes on boot on any OS/Node combination
 - Scan pipeline throws on a known-good fixture
+- `allycat fix` regression on any OS (e.g. terminal opening, Claude Code detection, PATH handling)
 - CSS delivery regression (Ubuntu only)
 
 ---
@@ -171,7 +173,7 @@ Everything CI runs can be run locally:
 ```bash
 npm audit                          # dependency CVE check
 npm run lint                       # ESLint
-npm test                           # both E2E tests (thresholds + concurrency)
+npm test                           # full E2E suite (see "test" in package.json)
 npm pack --dry-run                 # preview what gets published
 node tests/e2e/css-delivery.test.js  # CSS delivery (requires Playwright)
 ```
