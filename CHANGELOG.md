@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - If a new terminal can't be opened, prints the command to run yourself.
 - **`fix` in help** — `allycat help`, `allycat help faq`, and `allycat help examples` now
   cover the scan → fix workflow.
+- **`fix` tip** — when a scan finds violations, the tip box may suggest running `allycat fix`.
 
 ### Security
 - Updated dependencies to address published security advisories.

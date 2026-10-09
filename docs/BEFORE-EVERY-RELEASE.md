@@ -222,12 +222,17 @@ rm allycat-<version>.tgz
 
 ## 10. Publish
 
+Never run `npm publish` manually. Publishing a GitHub Release triggers `.github/workflows/publish.yml`, which publishes to npm through Trusted Publishing (no token).
+Full flow: [`docs/RELEASE-WORKFLOW.md`](./RELEASE-WORKFLOW.md)
+
+1. Merge `develop` into `main` and push
+2. On GitHub, create a Release with tag `v<version>` (e.g. `v1.9.0`) targeting `main`, then click **Publish release**
+3. Watch the **Publish to npm** workflow in the Actions tab until it passes
+
 ```bash
-npm whoami                   # confirm logged in
-npm publish --access public
 npm info allycat version   # confirm live version updated
 ```
 
-- [ ] Published successfully
+- [ ] **Publish to npm** workflow passed
 - [ ] Live version on npmjs.com matches expected version
 - [ ] Post-publish: fresh install test (`npm install -g allycat && allycat --version`)
